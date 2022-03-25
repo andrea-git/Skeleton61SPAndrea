@@ -1,0 +1,72 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Rpt.Occurs Control Generation Rule.  2001/04/19
+;
+; Remarks:
+;   1. We allow several SubReport Controls in one section, So the Naming
+;      of Paragraph should depend on the Control Name, not Report Name.
+;
+;   2. We don't allow there's SubReport Control in the SubReport, to
+;      avoid recursive.
+;
+;   3. The unfixed-heigh control, like SubReport / Grid and Occurs, would
+;      affect the next control's position. So CodeGen would prepare the
+;      order of control by the high, or it would cause mess.
+;
+; HTML :
+;
+; ===================================================================
+;
+@#DEF_SET#@ @!L_TDATTR!@     @""@
+@#DEF_SET#@ @!L_DIV!@        @""@
+@#DEF_SET#@ @!L_ENDDIV!@     @""@
+;
+;
+  @#DEF_IF#@ @#EXP: NOT ((@+_CELL_SYS_COLSPAN+@ EQUAL @"0"@) OR (@+_CELL_SYS_COLSPAN+@ EQUAL @"1"@)) #@
+     @#DEF_APPEND#@ @!L_TDATTR!@ @" COLSPAN=\"@+_CELL_SYS_COLSPAN+@\" "@
+  @#END_IF#@
+  @#DEF_IF#@ @#EXP: NOT ((@+_CELL_SYS_ROWSPAN+@ EQUAL @"0"@) OR (@+_CELL_SYS_ROWSPAN+@ EQUAL @"1"@)) #@
+     @#DEF_APPEND#@ @!L_TDATTR!@ @" ROWSPAN=\"@+_CELL_SYS_ROWSPAN+@\" "@
+  @#END_IF#@
+  @#DEF_APPEND#@ @!L_TDATTR!@ @" WIDTH=\"@+_CELL_SYS_WIDTH+@\" "@
+  @#DEF_APPEND#@ @!L_TDATTR!@ @" HEIGHT=\"@+_CELL_SYS_HEIGHT+@\" "@
+  @#DEF_APPEND#@ @!L_TDATTR!@ @" VALIGN=TOP "@
+;
+@$SECTION-PRINT-PROCEDURE$@
+      * RPT.SubReport : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.SubReport:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.SubReport"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+               INITIALIZE PRINT-BUF
+               MOVE '      <!-- SubReport (@+_RPT_ATR_NAME+@) -->' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               MOVE '           <TD @!L_TDATTR!@ >' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+      *
+               PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-BEFORE-PRINT
+               PERFORM @!G_REPORTNAME!@-BACKUP-KEY
+               PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-PRINT-LOOP
+               PERFORM @!G_REPORTNAME!@-RESTORE-KEY
+               PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-AFTER-PRINT
+      *
+               INITIALIZE PRINT-BUF
+               MOVE '           </TD>' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               MOVE @!G_SCREENINDEX!@ TO TOTEM-Form-Index
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.SubReport:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.SubReport"@ @"AfterPrint"@
+      * <TOTEM:END>
+;

@@ -1,0 +1,200 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Frame Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+;  Program
+;     |----Form
+;     |--   |----Controls ...
+;           |----Frames ...
+;           |--     |-----Controls ...
+;
+;  So at the end of this Skeleton, you should still get the child
+;  Controls of this Frame to generate their codes.
+;
+; ===================================================================
+;
+; ================== SCR -- DB -- SCREEN  SECTION ===================
+;
+@$SCREEN$@
+      * FRAME
+       @+_OBJ_SYS_LEVEL+@
+           @+_OBJ_ATR_NAME+@, 
+           Frame, 
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@ PIXELS,
+  @#ELSE#@
+           COL @+_OBJ_ATR_COLUMNINPIXELS+@ PIXELS, 
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_COLUMN+@
+           COL @+_OBJ_ATR_COLUMN+@, 
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CCOL+@
+           CCOL @+_OBJ_ATR_CCOL+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@ PIXELS,
+  @#ELSE#@
+           LINE @+_OBJ_ATR_LINEINPIXELS+@ PIXELS,
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_LINE+@
+           LINE @+_OBJ_ATR_LINE+@,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CLINE+@
+           CLINE @+_OBJ_ATR_CLINE+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_LINESUNIT+@ EQUAL @"PIXELS"@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+           LINES @+_OBJ_ATR_LINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINESINPIXELS+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+           LINES @+_OBJ_ATR_LINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINES+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CLINES+@
+           CLINES @+_OBJ_ATR_CLINES+@ @+_OBJ_SYS_CLINESUNIT+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_SIZEUNIT+@ EQUAL @"PIXELS"@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZEVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZEINPIXELS+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZEVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CSIZE+@
+           CSIZE @+_OBJ_ATR_CSIZE+@ @+_OBJ_SYS_CSIZEUNIT+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_3DSTYLE+@
+           @+_OBJ_ATR_3DSTYLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ALTERNATE+@
+           ALTERNATE,
+@#END_IF#@
+@#DEF_CASE#@ @+_OBJ_ATR_DESTROYTYPE+@
+  @#CASE#@ @"PERMANENT"@
+           PERMANENT,
+  @#CASE#@ @"TEMPORARY"@
+           TEMPORARY,
+@#END_CASE#@
+@#DEF_IF#@ @+_OBJ_ATR_COLORVARIABLE+@
+           COLOR IS @+_OBJ_ATR_COLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_COLOR+@
+           COLOR IS @+_OBJ_ATR_COLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FILLCOLOR+@
+           FILL-COLOR   @+_OBJ_ATR_FILLCOLOR+@,
+           FILL-PERCENT @+_OBJ_SYS_FILLPERCENT+@,
+  @#DEF_IF#@ @+_OBJ_SYS_FILLCOLOR2+@
+           FILL-COLOR2  @+_OBJ_SYS_FILLCOLOR2+@,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FULLHEIGHT+@
+           FULL-HEIGHT,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FONTVARIABLE+@
+           FONT IS @+_OBJ_ATR_FONTVARIABLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HELPIDVARIABLE+@
+           HELP-ID @+_OBJ_ATR_HELPIDVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HELPID+@
+           HELP-ID @+_OBJ_ATR_HELPID+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HIGHCOLORVARIABLE+@
+           HIGH-COLOR @+_OBJ_ATR_HIGHCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HIGHCOLOR+@
+           HIGH-COLOR @+_OBJ_ATR_HIGHCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_IDVARIABLE+@
+           ID IS @+_OBJ_ATR_IDVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_ID+@
+           ID IS @+_OBJ_ATR_ID+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEIGHTINCELLS+@
+           HEIGHT-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_WIDTHINCELLS+@
+           WIDTH-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FORMATPICTURE+@
+           PIC @+_OBJ_ATR_FORMATPICTURE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_KEYVARIABLE+@
+           KEY IS @+_OBJ_ATR_KEYVARIABLE+@,
+@#ELSE_IF#@ @#EXP: NOT (@+_OBJ_ATR_KEY+@ EQUAL @""@) #@
+           KEY IS "@+_OBJ_ATR_KEY+@",
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_LOWCOLORVARIABLE+@
+           LOW-COLOR @+_OBJ_ATR_LOWCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_LOWCOLOR+@
+           LOW-COLOR @+_OBJ_ATR_LOWCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_THICKNESS+@
+           @+_OBJ_ATR_THICKNESS+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_TITLEVARIABLE+@
+           TITLE @+_OBJ_ATR_TITLEVARIABLE+@,
+@#ELSE_IF#@ @#EXP: NOT (@+_OBJ_ATR_TITLE+@ EQUAL @"\"\""@) #@
+           TITLE @+_OBJ_ATR_TITLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_TITLEPOSITION+@
+           TITLE-POSITION @+_OBJ_ATR_TITLEPOSITION+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEVARIABLE+@
+           VISIBLE @+_OBJ_ATR_VISIBLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"1"@ #@
+           VISIBLE 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"2"@ #@
+           VISIBLE 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ADDITIONALPROPERTIES+@
+    @<_SET_OBJ_ADDITIONALLINE>@
+    @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+       @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+    @#END_LOOP#@
+@#END_IF#@
+           .
+
+;
+; ======================= PRD -- FONT PROCESS =======================
+;
+@$FONT_PROCESS$@
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+   @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_OBJ_ATR_FONTVARIABLE+@
+   @%FontProcess.Skl%@
+@#END_IF#@
+;
+; ============== PREPARE THE SUB-CONTROLS OF THE FRAME ==============
+;
+@<_PUSH_MEM>@
+@<_SET_OBJ_CTRLCHILD>@
+   @#DEF_LOOP#@ @+_OBJ_SYS_CTRLNO+@
+      @<_FETCH_NEXT_OBJ_CTRL>@
+      @%DispatchCtrl.Skl%@
+   @#END_LOOP#@
+@<_POP_MEM>@
+;

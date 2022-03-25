@@ -1,0 +1,370 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; 1-M Form Relations Generation Rule.  2001/11/02
+;
+; Remarks:
+;   The purpose we need to generate serveral -REF-s base on Form is
+;   because that each Form had its own Fld-To-Buf.
+;   So do Report.
+;
+;  Local Variables Listing :
+;
+;    1. @!L_SLAVEKEY!@ :
+;      To record the first Master / Slave Key Item of the Relation.
+;      No matter it's multi or single Key. Just for convenience.
+;
+;    2. @!L_SLAVERECORDNAME!@ :
+;      To record the Record's Name of Relation's Slave FD.
+;
+; ===================================================================
+;
+@$COMPARE_CONDITION$@
+    @#GET_ENTRYPOINT#@ @"CODEGEN"@ @"CODEGEN"@ @"CODE_RELATION_MAPCONDITION"@
+@#DEF_SETMEM#@ @!L_COMSTR!@ @"COMPARE_CONDITION"@
+@#CLEAR_MEM#@ @"COMPARE_CONDITION"@
+;
+; ===================== PRD -- -REF-'s EVALUATE =====================
+;
+; Remark: Each form contains its own -REF- paragraph, so we evaluate
+;         it by TOTEM-Form-Index.
+;
+@$REL1M_FORDISPATCH_@+_DATASET_SYS_NAME+@_@+_FDSL_RELATION_SLAVEFD+@$@
+           IF TOTEM-Form-Index = @!G_SCREENINDEX!@ AND TOTEM-Frame-Index = @!G_FRAMEINDEX!@
+               PERFORM @!G_FRAMENAME!@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-P@!G_MODE!@
+               EXIT PARAGRAPH
+           END-IF
+;
+;
+; ====================== PRD -- FORM BASE -REF- =====================
+;
+@#DEF_SET#@ @!L_SLAVEKEY!@  @+_RELATION_KEY_SLAVE+@
+@#DEF_IF#@ @#EXP: NOT (@+_RELATION_SYS_KEYNO+@ EQUAL @"0"@) #@
+@<_PUSH_MEM>@
+   @<_SET_RELATION_KEYSLAVE>@
+   @#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+      @#DEF_SET#@ @!L_SLAVEKEY!@  @"@+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF"@
+   @#END_IF#@
+@<_POP_MEM>@
+@#END_IF#@
+;
+;
+@#DEF_SET#@ @!L_SEQFILE!@ @""@
+@<_PUSH_MEM>@
+   @<_SET_SLAVEFD_FDSL>@
+      @#DEF_SET#@ @!L_SEQFILE!@         @+_FDSL_SYS_SLREADTYPE+@
+      @#DEF_SET#@ @!L_SLAVERECORDNAME!@ @+_FDSL_SYS_FDRECORDNAME+@
+      @#DEF_SET#@ @!L_SLAVESTATUS88!@ @+_FDSL_SYS_FILESTATUS88+@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+      @#DEF_SET#@ @!L_ISRELATIVE!@      @+_FDSL_SYS_FDKEY+@
+   @#END_IF#@
+@<_POP_MEM>@
+;
+;
+  @<_PUSH_MEM>@
+  @<_SET_SLAVEFD_FDSL>@
+  @<_SET_FDSL_RELATION>@
+      @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+         @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@ #@
+@$NEXT-FDSL-M$@
+                 PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+            @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_INSERT+@ EQUAL @"RESTRICTED"@) #@
+@$NEXT-FDSL-M-INS$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS
+            @#END_IF#@
+            @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_UPDATE+@ EQUAL @"RESTRICTED"@) #@
+@$NEXT-FDSL-M-UPD$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD
+            @#END_IF#@
+            @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+@$NEXT-FDSL-M-DEL$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-DEL
+            @#END_IF#@
+         @#ELSE#@
+@$NEXT-FDSL-S$@
+                 PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+            @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_INSERT+@ EQUAL @"RESTRICTED"@) #@
+@$NEXT-FDSL-S-INS$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS
+            @#END_IF#@
+            @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_UPDATE+@ EQUAL @"RESTRICTED"@) #@
+@$NEXT-FDSL-S-UPD$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD
+            @#END_IF#@
+            @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+@$NEXT-FDSL-S-DEL$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-DEL
+            @#END_IF#@
+         @#END_IF#@
+      @#END_LOOP#@
+  @<_POP_MEM>@
+;
+;
+@$REL1M_FORFORM$@
+       @!G_FRAMENAME!@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-P@!G_MODE!@.
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INITREC
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INITSTART
+           MOVE @!L_SLAVERECORDNAME!@ OF @+_FDSL_RELATION_SLAVEFD+@ TO TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-BUF
+      @#DEF_IF#@ @!L_ISRELATIVE!@
+           MOVE 0 TO TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-RELIDX
+      @#END_IF#@
+           @#GET_MEM#@   @"REL1M_FRMHEAD_@+_FDSL_RELATION_NAME+@"@
+           @#CLEAR_MEM#@ @"REL1M_FRMHEAD_@+_FDSL_RELATION_NAME+@"@
+   @#DEF_IF#@ @#EXP: @!L_SEQFILE!@ EQUAL @"DYNAMIC"@ #@ 
+   ; ===================================================================
+   ; If the SlaveFD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-EXPRESSION
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-START
+           IF @!L_SLAVESTATUS88!@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Read-Next
+           END-IF
+           PERFORM UNTIL NOT @!L_SLAVESTATUS88!@
+      @#DEF_IF#@ @!L_COMSTR!@
+                 OR (@!L_SLAVESTATUS88!@
+                     AND NOT (@!L_COMSTR!@))
+      @#END_IF#@
+      @#DEF_IF#@ @+_RELATION_SYS_CONDITION+@
+      * CONDITION : @+_RELATION_SYS_CONDITION+@
+              IF (@+_RELATION_SYS_CONDITION+@)
+      @#ELSE#@
+      * CONDITION : NONE
+              IF @!L_SLAVESTATUS88!@
+      @#END_IF#@
+                 @#GET_MEM#@ @"NEXT-FDSL-M"@
+                 @#GET_MEM#@ @"NEXT-FDSL-S"@
+                 PERFORM @!G_FRAMENAME!@-Fld-To-Buf@!G_MODE!@
+                 @#GET_MEM#@   @"REL1M_FRMBODY_@+_FDSL_RELATION_NAME+@"@
+                 @#CLEAR_MEM#@ @"REL1M_FRMBODY_@+_FDSL_RELATION_NAME+@"@
+                 MOVE @!L_SLAVERECORDNAME!@ OF @+_FDSL_RELATION_SLAVEFD+@ TO 
+                    TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-BUF
+              ELSE
+                 PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-INITREC
+              END-IF
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Read-Next
+           END-PERFORM
+           MOVE TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-BUF TO
+              @!L_SLAVERECORDNAME!@ OF @+_FDSL_RELATION_SLAVEFD+@
+      @#DEF_IF#@ @!L_ISRELATIVE!@
+           MOVE TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-RELIDX TO @!L_ISRELATIVE!@
+      @#END_IF#@
+   @#ELSE_IF#@ @#EXP: @!L_SEQFILE!@ EQUAL @"SEQUENTIAL"@ #@
+   ; ===================================================================
+   ; If the SlaveFD is Sequential or it's AccessMode is Sequential.
+   ; And it's I/O Mode is "INPUT".
+   ; ===================================================================
+           CLOSE @+_FDSL_RELATION_SLAVEFD+@
+           PERFORM OPEN-@+_FDSL_RELATION_SLAVEFD+@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-EXPRESSION
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-READ UNTIL NOT @!L_SLAVESTATUS88!@
+              IF (@+_RELATION_SYS_CONDITION+@)
+                 PERFORM @!G_FRAMENAME!@-Fld-To-Buf@!G_MODE!@
+                 @#GET_MEM#@   @"REL1M_BODY_@+_FDSL_RELATION_NAME+@"@
+                 @#CLEAR_MEM#@ @"REL1M_BODY_@+_FDSL_RELATION_NAME+@"@
+                 MOVE @!L_SLAVERECORDNAME!@ OF @+_FDSL_RELATION_SLAVEFD+@ TO
+                    TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-BUF
+      @#DEF_IF#@ @!L_ISRELATIVE!@
+                 MOVE @!L_ISRELATIVE!@ TO TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-RELIDX
+      @#END_IF#@
+              END-IF
+           END-PERFORM
+           MOVE TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-BUF TO
+              @!L_SLAVERECORDNAME!@ OF @+_FDSL_RELATION_SLAVEFD+@
+   @#END_IF#@
+           @#GET_MEM#@   @"REL1M_FRMTAIL_@+_FDSL_RELATION_NAME+@"@
+           @#CLEAR_MEM#@ @"REL1M_FRMTAIL_@+_FDSL_RELATION_NAME+@"@
+           .
+
+;
+; ===================================================================
+;   FOR INSERT (CASCADE FOR GRID)
+; ===================================================================
+;
+@#DEF_IF#@ @#EXP: @+_RELATION_RI_INSERT+@ EQUAL @"CASCADE FOR GRID"@ #@
+;
+@$REL1M_FORDISPATCH_INS_@+_DATASET_SYS_NAME+@_@+_FDSL_RELATION_SLAVEFD+@$@
+           IF TOTEM-Form-Index = @!G_SCREENINDEX!@ AND TOTEM-Frame-Index = @!G_FRAMEINDEX!@
+               PERFORM @!G_FRAMENAME!@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS-P@!G_MODE!@
+               EXIT PARAGRAPH
+           END-IF
+@$REL1M_FORFORM_INS$@
+       @!G_FRAMENAME!@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS-P@!G_MODE!@.
+           @#GET_MEM#@   @"REL1M_FRMINS_@+_FDSL_RELATION_NAME+@"@
+           @#CLEAR_MEM#@ @"REL1M_FRMINS_@+_FDSL_RELATION_NAME+@"@
+           .
+
+@#ELSE_IF#@ @#EXP: @+_RELATION_RI_INSERT+@ EQUAL @"CASCADE"@ #@
+; ===================================================================
+;   FOR INSERT (CASCADE)
+; ===================================================================
+@$REL1M_FORDISPATCH_INS_@+_DATASET_SYS_NAME+@_@+_FDSL_RELATION_SLAVEFD+@$@
+           IF TOTEM-Form-Index = @!G_SCREENINDEX!@ AND TOTEM-Frame-Index = @!G_FRAMEINDEX!@
+               PERFORM @!G_FRAMENAME!@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS-P@!G_MODE!@
+               EXIT PARAGRAPH
+           END-IF
+@$REL1M_FORFORM_INS$@
+       @!G_FRAMENAME!@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS-P@!G_MODE!@.
+   @#DEF_IF#@ @#EXP: @!L_SEQFILE!@ EQUAL @"DYNAMIC"@ #@ 
+   ; ===================================================================
+   ; If the SlaveFD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY
+           PERFORM @!G_FRAMENAME!@-Buf-To-Fld@!G_MODE!@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-EXPRESSION
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-Read
+           IF NOT @!L_SLAVESTATUS88!@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Write
+              @#GET_MEM#@   @"NEXT-FDSL-M-INS"@
+              @#GET_MEM#@   @"NEXT-FDSL-S-INS"@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-START
+           IF @!L_SLAVESTATUS88!@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Read-Next
+           END-IF
+           PERFORM UNTIL NOT @!L_SLAVESTATUS88!@
+      @#DEF_IF#@ @!L_COMSTR!@
+                 OR (@!L_SLAVESTATUS88!@ 
+                     AND NOT (@!L_COMSTR!@))
+      @#END_IF#@
+      @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+                   OR TOTEM-TRANSACTION-FLAG NOT = SPACES
+      @#END_IF#@
+              @#GET_MEM#@   @"NEXT-FDSL-M-INS"@
+              @#GET_MEM#@   @"NEXT-FDSL-S-INS"@
+              PERFORM @!G_FRAMENAME!@-Fld-To-Buf@!G_MODE!@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Rewrite
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Read-Next
+           END-PERFORM
+   @#END_IF#@
+           .
+
+@#END_IF#@
+;
+; ===================================================================
+;   FOR UPDATE
+; ===================================================================
+;
+@#DEF_IF#@ @#EXP: @+_RELATION_RI_UPDATE+@ EQUAL @"CASCADE FOR GRID"@ #@
+;
+@$REL1M_FORDISPATCH_UPD_@+_DATASET_SYS_NAME+@_@+_FDSL_RELATION_SLAVEFD+@$@
+           IF TOTEM-Form-Index = @!G_SCREENINDEX!@ AND TOTEM-Frame-Index = @!G_FRAMEINDEX!@
+               PERFORM @!G_FRAMENAME!@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD-P@!G_MODE!@
+               EXIT PARAGRAPH
+           END-IF
+@$REL1M_FORFORM_UPD$@
+       @!G_FRAMENAME!@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD-P@!G_MODE!@.
+           @#GET_MEM#@   @"REL1M_FRMUPD_@+_FDSL_RELATION_NAME+@"@
+           @#CLEAR_MEM#@ @"REL1M_FRMUPD_@+_FDSL_RELATION_NAME+@"@
+           .
+
+@#ELSE_IF#@ @#EXP: @+_RELATION_RI_UPDATE+@ EQUAL @"CASCADE"@ #@
+; ===================================================================
+;   FOR UPDATE (CASCADE)
+; ===================================================================
+@$REL1M_FORDISPATCH_UPD_@+_DATASET_SYS_NAME+@_@+_FDSL_RELATION_SLAVEFD+@$@
+           IF TOTEM-Form-Index = @!G_SCREENINDEX!@ AND TOTEM-Frame-Index = @!G_FRAMEINDEX!@
+               PERFORM @!G_FRAMENAME!@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD-P@!G_MODE!@
+               EXIT PARAGRAPH
+           END-IF
+@$REL1M_FORFORM_UPD$@
+       @!G_FRAMENAME!@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD-P@!G_MODE!@.
+   @#DEF_IF#@ @#EXP: @!L_SEQFILE!@ EQUAL @"DYNAMIC"@ #@ 
+   ; ===================================================================
+   ; If the SlaveFD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY
+           PERFORM @!G_FRAMENAME!@-Buf-To-Fld@!G_MODE!@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-EXPRESSION
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-Read
+           IF NOT @!L_SLAVESTATUS88!@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Write
+              @#GET_MEM#@   @"NEXT-FDSL-M-UPD"@
+              @#GET_MEM#@   @"NEXT-FDSL-S-UPD"@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-START
+           IF @!L_SLAVESTATUS88!@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Read-Next
+           END-IF
+           PERFORM UNTIL NOT @!L_SLAVESTATUS88!@
+      @#DEF_IF#@ @!L_COMSTR!@
+                 OR (@!L_SLAVESTATUS88!@ 
+                     AND NOT (@!L_COMSTR!@))
+      @#END_IF#@
+      @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+                   OR TOTEM-TRANSACTION-FLAG NOT = SPACES
+      @#END_IF#@
+              @#GET_MEM#@   @"NEXT-FDSL-M-UPD"@
+              @#GET_MEM#@   @"NEXT-FDSL-S-UPD"@
+              PERFORM @!G_FRAMENAME!@-Fld-To-Buf@!G_MODE!@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Rewrite
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Read-Next
+           END-PERFORM
+   @#END_IF#@
+           .
+
+@#END_IF#@
+;
+; ===================================================================
+;   FOR DELETE
+; ===================================================================
+;
+@#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+;
+@$REL1M_FORDISPATCH_DEL_@+_DATASET_SYS_NAME+@_@+_FDSL_RELATION_SLAVEFD+@$@
+           IF TOTEM-Form-Index = @!G_SCREENINDEX!@ AND TOTEM-Frame-Index = @!G_FRAMEINDEX!@
+               PERFORM @!G_FRAMENAME!@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-DEL-P@!G_MODE!@
+               EXIT PARAGRAPH
+           END-IF
+@$REL1M_FORFORM_DEL$@
+       @!G_FRAMENAME!@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-DEL-P.
+   @#DEF_IF#@ @#EXP: @!L_SEQFILE!@ EQUAL @"DYNAMIC"@ #@ 
+   ; ===================================================================
+   ; If the SlaveFD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+      * DELETE ALL DATA FROM FD
+           INITIALIZE @!L_SLAVEKEY!@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INITSTART
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-EXPRESSION
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-START
+           IF @!L_SLAVESTATUS88!@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Read-Next
+           END-IF
+           PERFORM UNTIL NOT @!L_SLAVESTATUS88!@
+      @#DEF_IF#@ @!L_COMSTR!@
+                 OR (@!L_SLAVESTATUS88!@ 
+                     AND NOT (@!L_COMSTR!@))
+      @#END_IF#@
+      @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+                   OR TOTEM-TRANSACTION-FLAG NOT = SPACES
+      @#END_IF#@
+      @#DEF_IF#@ @+_RELATION_SYS_CONDITION+@
+              IF (@+_RELATION_SYS_CONDITION+@)
+                 PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Delete
+                 @#GET_MEM#@   @"NEXT-FDSL-M-DEL"@
+                 @#GET_MEM#@   @"NEXT-FDSL-S-DEL"@
+              END-IF
+      @#ELSE#@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Delete
+              @#GET_MEM#@   @"NEXT-FDSL-M-DEL"@
+              @#GET_MEM#@   @"NEXT-FDSL-S-DEL"@
+      @#END_IF#@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Read-Next
+           END-PERFORM
+   @#END_IF#@
+           .
+
+@#END_IF#@
+;
+@#CLEAR_MEM#@ @"NEXT-FDSL-M"@
+@#CLEAR_MEM#@ @"NEXT-FDSL-M-INS"@
+@#CLEAR_MEM#@ @"NEXT-FDSL-M-UPD"@
+@#CLEAR_MEM#@ @"NEXT-FDSL-M-DEL"@
+@#CLEAR_MEM#@ @"NEXT-FDSL-S"@
+@#CLEAR_MEM#@ @"NEXT-FDSL-S-INS"@
+@#CLEAR_MEM#@ @"NEXT-FDSL-S-UPD"@
+@#CLEAR_MEM#@ @"NEXT-FDSL-S-DEL"@
+;

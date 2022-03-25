@@ -1,0 +1,271 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report Section Generation Rule.  2001/11/02
+;
+; Remarks:
+;    
+; ===================================================================
+;
+@#DEF_CASE#@ @+_RPT_SYS_SECTIONTYPE+@
+;    
+; ============================ PAGE HEADER ==========================
+;
+@#CASE#@ @"Page-Header"@
+@$SUB-PHEADER-PARAGRAPH$@
+  @#DEF_IF#@ @#EXP: NOT @!G_DONTPAGEHEADER!@ #@
+    @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+      * VISIBLEVARIABLE CHECKING
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ = 0
+               EXIT PARAGRAPH
+           END-IF
+    @#ELSE_IF#@ @#EXP: NOT @+_RPT_ATR_VISIBLE+@ #@
+      * VISIBLE IS FALSE
+           EXIT PARAGRAPH
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+           IF NOT (@+_RPT_ATR_PRINTCONDITION+@)
+               EXIT PARAGRAPH
+           END-IF
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_ATR_NOPRINTFIRSTPAGE+@
+      * NO PRINT FIRST PAGE : TRUE
+           IF TOTEM-PAGENUM-SYS = 1
+              EXIT PARAGRAPH
+           END-IF.
+      * END : NO PRINT FIRST PAGE
+    @#END_IF#@
+           MOVE 0 TO RPT-RETURN-VALUE 
+           IF CURRENT-TEXTLINE < @+_RPT_ATR_LINES+@
+              PERFORM @+_RPT_ATR_NAME+@-PRINT-RTN-T
+              MOVE 1 TO RPT-RETURN-VALUE
+           END-IF
+    @#DEF_IF#@ @+_RPT_ATR_RESETPAGENUMBER+@
+           MOVE 1 TO TOTEM-PAGENUM
+    @#END_IF#@
+  @#END_IF#@
+;    
+; ============================ PAGE FOOTER ==========================
+;
+@#CASE#@ @"Page-Footer"@
+@$SUB-PFOOTER-PARAGRAPH$@
+  @#DEF_IF#@ @#EXP: NOT @!G_DONTPAGEHEADER!@ #@
+    @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+      * VISIBLEVARIABLE CHECKING
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ = 0
+               EXIT PARAGRAPH
+           END-IF
+    @#ELSE_IF#@ @#EXP: NOT @+_RPT_ATR_VISIBLE+@ #@
+      * VISIBLE IS FALSE
+           EXIT PARAGRAPH
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+           IF NOT (@+_RPT_ATR_PRINTCONDITION+@)
+               EXIT PARAGRAPH
+           END-IF
+    @#END_IF#@
+           COMPUTE TMP-PIXELS = CURRENT-TEXTLINE + CURRENT-HEIGHT + @+_RPT_ATR_LINES+@
+           IF TMP-PIXELS > PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT-T OR
+                 SYS-SHOWPAGEFOOTER > 0
+              MOVE 0 TO SYS-SHOWPAGEFOOTER
+    @#DEF_IF#@ @+_RPT_ATR_NOPRINTFIRSTPAGE+@
+      * BEGIN : NO PRINT FIRST PAGE : TRUE
+               IF ((TOTEM-PAGENUM-SYS <= 1) AND (CNT-PIXELS < PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT-T))
+                   COMPUTE TMP-PIXELS = CNT-INPAGEPIXELS + CURRENT-HEIGHT
+                   IF TMP-PIXELS > PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT-T
+                       PERFORM @!G_REPORTNAME!@-Page-BREAK-RTN-T
+                   END-IF
+                   EXIT PARAGRAPH
+               END-IF
+      * END : NO PRINT FIRST PAGE
+    @#END_IF#@
+              COMPUTE TMP-PIXELS = PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT-T - CURRENT-TEXTLINE - @+_RPT_ATR_LINES+@ + 1
+              PERFORM VARYING TOTEM-IDX2 FROM 1 BY 1 UNTIL TOTEM-IDX2 > TMP-PIXELS
+                 INITIALIZE PRINT-BUF
+                 PERFORM PRINT-LINE-T
+              END-PERFORM
+    @#DEF_IF#@ @+_RPT_ATR_RESETPAGENUMBER+@
+      * RESET PAGE NUMBER : TRUE
+              MOVE 1 TO TOTEM-PAGENUM
+    @#END_IF#@
+              PERFORM @+_RPT_ATR_NAME+@-PRINT-RTN-T
+              PERFORM @!G_REPORTNAME!@-Page-BREAK-RTN-T
+           END-IF
+  @#END_IF#@
+;    
+; ============================== DETAIL =============================
+;
+@#CASE#@ @"Detail"@
+@$SUB-DETAIL-PARAGRAPH$@
+           PERFORM RPT-@+_RPT_ATR_NAME+@-DETAIL-BY-@!G_CTRLSUBREPORT!@-T
+@$RPT-OTHER-PARAGRAPH$@
+       RPT-@+_RPT_ATR_NAME+@-DETAIL-BY-@!G_CTRLSUBREPORT!@-T.
+           MOVE @+_RPT_ATR_LINES+@ TO CURRENT-HEIGHT
+           PERFORM RPT-@!G_CTRLSUBREPORT!@-PFOOT-SUB-T
+           PERFORM RPT-@!G_CTRLSUBREPORT!@-PHEAD-SUB-T
+    @#DEF_IF#@ @+_RPT_ATR_RESETPAGENUMBER+@
+      * RESET PAGE NUMBER : TRUE
+           MOVE 1 TO TOTEM-PAGENUM
+    @#END_IF#@
+           PERFORM @+_RPT_ATR_NAME+@-PRINT-RTN-T
+           .
+
+;
+; =========================== GROUP HEADER ==========================
+;
+@#CASE#@ @"Group-Header"@
+;
+@$SUB-GROUP-HEADER-PARAGRAPH$@
+           PERFORM @+_RPT_ATR_NAME+@-SUBRPT-BY-@!G_CTRLSUBREPORT!@-T.
+;
+;
+@$RPT-OTHER-PARAGRAPH$@
+       @+_RPT_ATR_NAME+@-SUBRPT-BY-@!G_CTRLSUBREPORT!@-T.
+      * <TOTEM:EPT. REPORT:@!G_SUBRPTNAME!@, SECTION:@+_RPT_ATR_NAME+@, BeforeSectionPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"SECTION"@ @"BeforeSectionPrint"@
+      * <TOTEM:END>
+      * GROUP-HEADER : @+_RPT_ATR_NAME+@
+    @#DEF_IF#@ @#EXP: @+_RPT_SYS_GROUPTYPE+@ EQUAL @"FIELD"@ #@
+           IF @+_RPT_ATR_NAME+@-GROUPBY-BUF-T NOT = @+_RPT_SYS_GROUPBY+@
+    @#ELSE#@
+           IF @+_RPT_ATR_NAME+@-GROUPBY-BUF-T > @+_RPT_SYS_GROUPBY+@
+               MOVE 1 TO @+_RPT_ATR_NAME+@-GROUPBY-BUF-T
+    @#END_IF#@
+               MOVE @+_RPT_ATR_LINES+@ TO CURRENT-HEIGHT
+    @#DEF_IF#@ @+_RPT_ATR_SKIPPAGEBEFOREPRINT+@
+      * SKIP PAGE BEFORE PRINT : TRUE
+               MOVE 1 TO SYS-SHOWPAGEFOOTER
+    @#END_IF#@
+               PERFORM RPT-@!G_CTRLSUBREPORT!@-PFOOT-SUB-T
+               PERFORM RPT-@!G_CTRLSUBREPORT!@-PHEAD-SUB-T
+    @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+      * VISIBLEVARIABLE CHECKING
+               IF @+_RPT_ATR_VISIBLEVARIABLE+@ = 0
+                   MOVE @+_RPT_SYS_GROUPBY+@ TO @+_RPT_ATR_NAME+@-GROUPBY-BUF-T
+                   EXIT PARAGRAPH
+               END-IF
+    @#ELSE_IF#@ @#EXP: NOT @+_RPT_ATR_VISIBLE+@ #@
+      * VISIBLE IS FALSE
+               MOVE @+_RPT_SYS_GROUPBY+@ TO @+_RPT_ATR_NAME+@-GROUPBY-BUF-T
+               EXIT PARAGRAPH
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+               IF NOT (@+_RPT_ATR_PRINTCONDITION+@)
+                   EXIT PARAGRAPH
+               END-IF
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_ATR_RESETPAGENUMBER+@
+      * RESET PAGE NUMBER : TRUE
+               MOVE 1 TO TOTEM-PAGENUM
+    @#END_IF#@
+               PERFORM @+_RPT_ATR_NAME+@-PRINT-RTN-T
+    @#DEF_IF#@ @+_RPT_SYS_NEXTGROUPNAME+@
+               PERFORM @!G_SUBRPTNAME!@-@+_RPT_SYS_NEXTGROUPNAME+@-RESET-T
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: @+_RPT_SYS_GROUPTYPE+@ EQUAL @"FIELD"@ #@
+               MOVE @+_RPT_SYS_GROUPBY+@ TO @+_RPT_ATR_NAME+@-GROUPBY-BUF-T
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_ATR_SKIPPAGEAFTERPRINT+@
+      * SKIP PAGE AFTER PRINT : TRUE
+               MOVE 1 TO SYS-SHOWPAGEFOOTER
+               PERFORM RPT-@!G_SUBRPTNAME!@-PAGE-FOOTER-T
+    @#END_IF#@
+           END-IF
+    @#DEF_IF#@ @#EXP: @+_RPT_SYS_GROUPTYPE+@ EQUAL @"FIELD"@ #@
+    @#ELSE#@
+           ADD 1 TO @+_RPT_ATR_NAME+@-GROUPBY-BUF-T
+    @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_SUBRPTNAME!@, SECTION:@+_RPT_ATR_NAME+@, AfterSectionPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"SECTION"@ @"AfterSectionPrint"@
+      * <TOTEM:END>
+           .
+
+;
+; =========================== GROUP FOOTER ==========================
+;
+@#CASE#@ @"Group-Footer"@
+@$SUB-GROUP-FOOTER-PARAGRAPH$@
+           @#CLEAR_MEM#@ @"SUB-GROUP-FOOTER-PARAGRAPH"@
+           PERFORM @+_RPT_ATR_NAME+@-SUBRPT-BY-@!G_CTRLSUBREPORT!@-T.
+;
+;
+@$RPT-OTHER-PARAGRAPH$@
+       @+_RPT_ATR_NAME+@-SUBRPT-BY-@!G_CTRLSUBREPORT!@-T.
+      * <TOTEM:EPT. REPORT:@!G_SUBRPTNAME!@, SECTION:@+_RPT_ATR_NAME+@, BeforeSectionPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"SECTION"@ @"BeforeSectionPrint"@
+      * <TOTEM:END>
+    @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+      * VISIBLEVARIABLE CHECKING
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ = 0
+               MOVE @+_RPT_SYS_GROUPBY+@ TO @+_RPT_ATR_NAME+@-GROUPBY-BUF-T
+               EXIT PARAGRAPH
+           END-IF
+    @#ELSE_IF#@ @#EXP: NOT @+_RPT_ATR_VISIBLE+@ #@
+      * VISIBLE IS FALSE
+           MOVE @+_RPT_SYS_GROUPBY+@ TO @+_RPT_ATR_NAME+@-GROUPBY-BUF-T
+           EXIT PARAGRAPH
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+           IF NOT (@+_RPT_ATR_PRINTCONDITION+@)
+               EXIT PARAGRAPH
+           END-IF
+    @#END_IF#@
+      * GROUP-FOOTER : @+_RPT_ATR_NAME+@
+    @#DEF_IF#@ @#EXP: @+_RPT_SYS_GROUPTYPE+@ EQUAL @"FIELD"@ #@
+           IF ((@+_RPT_ATR_NAME+@-GROUPBY-BUF-T NOT = @+_RPT_SYS_GROUPBY+@) AND
+               (@+_RPT_ATR_NAME+@-GROUPBY-BUF-T NOT = HIGH-VALUE)) OR 
+              (@+_RPT_ATR_NAME+@-MUST-DISPLAY-T NOT = 0)
+    @#ELSE#@
+           IF (@+_RPT_ATR_NAME+@-GROUPBY-BUF-T > @+_RPT_SYS_GROUPBY+@) OR
+              (@+_RPT_ATR_NAME+@-MUST-DISPLAY-T NOT = 0)
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_SYS_NEXTGROUPNAME+@
+               PERFORM RPT-@!G_SUBRPTNAME!@-GROUP-MUSTDSP-T
+               PERFORM @+_RPT_SYS_NEXTGROUPNAME+@-SUBRPT-BY-@!G_CTRLSUBREPORT!@-T
+               PERFORM RPT-@!G_SUBRPTNAME!@-GROUP-NOMUSTDSP-T
+    @#END_IF#@
+      * GROUP-FOOTER
+               MOVE @+_RPT_ATR_LINES+@ TO CURRENT-HEIGHT
+    @#DEF_IF#@ @+_RPT_ATR_SKIPPAGEBEFOREPRINT+@
+      * SKIP PAGE BEFORE PRINT : TRUE
+               MOVE 1 TO SYS-SHOWPAGEFOOTER
+    @#END_IF#@
+               PERFORM RPT-@!G_CTRLSUBREPORT!@-PFOOT-SUB-T
+               PERFORM RPT-@!G_CTRLSUBREPORT!@-PHEAD-SUB-T
+    @#DEF_IF#@ @+_RPT_ATR_RESETPAGENUMBER+@
+      * RESET PAGE NUMBER : TRUE
+               MOVE 1 TO TOTEM-PAGENUM
+    @#END_IF#@
+      * BACK TO PREVIOUS RECORD DATA
+               MOVE RPT-@!G_SUBRPTNAME!@-PRE-BUF-T TO RPT-@!G_SUBRPTNAME!@-BUF-T
+               PERFORM @+_RPT_ATR_NAME+@-PRINT-RTN-T
+      * RESTORE THE CURRENT RECORD DATA
+               PERFORM RPT-@!G_SUBRPTNAME!@-Fld-To-Buf-T
+      * END OF GROUP-FOOTER PRINT
+    @#DEF_IF#@ @#EXP: @+_RPT_SYS_GROUPTYPE+@ EQUAL @"FIELD"@ #@
+               MOVE @+_RPT_SYS_GROUPBY+@ TO @+_RPT_ATR_NAME+@-GROUPBY-BUF-T
+    @#ELSE#@
+               MOVE 1 TO @+_RPT_ATR_NAME+@-GROUPBY-BUF-T
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_ATR_SKIPPAGEAFTERPRINT+@
+      * SKIP PAGE AFTER PRINT : TRUE
+               MOVE 1 TO SYS-SHOWPAGEFOOTER
+               PERFORM RPT-@!G_SUBRPTNAME!@-PAGE-FOOTER-T
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_SYS_NEXTGROUPNAME+@
+           ELSE
+               PERFORM @+_RPT_SYS_NEXTGROUPNAME+@-GROUP-PRINT-T
+    @#END_IF#@
+           END-IF
+    @#DEF_IF#@ @#EXP: @+_RPT_SYS_GROUPTYPE+@ EQUAL @"FIELD"@ #@
+           MOVE @+_RPT_SYS_GROUPBY+@ TO @+_RPT_ATR_NAME+@-GROUPBY-BUF-T
+    @#ELSE#@
+           ADD 1 TO @+_RPT_ATR_NAME+@-GROUPBY-BUF-T
+    @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_SUBRPTNAME!@, SECTION:@+_RPT_ATR_NAME+@, AfterSectionPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"SECTION"@ @"AfterSectionPrint"@
+      * <TOTEM:END>
+           .
+
+;
+@#END_CASE#@
+;

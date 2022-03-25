@@ -1,0 +1,44 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Exception Value Variable / Termination Value Variable
+;                                        Generation Rule. 2001/04/19
+;
+; ===================================================================
+;
+; ========================== PRD -- LINK TO =========================
+;
+@#DEF_IF#@ @+_OBJ_EVT_LINKTO+@
+   @#DEF_IF#@ @#EXP: @+_OBJ_ATR_EXCEPTIONVARIABLE+@ OR @+_OBJ_ATR_EXCEPTIONVALUE+@ #@
+@$CONTROL-EVALUATE$@
+      @#DEF_IF#@ @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+         @#DEF_SET#@ @!G_CHECK88PARA!@ @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+         @%Check88.Skl%@
+         @#DEF_IF#@ @#EXP: @!G_CHECK88PARA!@ EQUAL @+_OBJ_ATR_EXCEPTIONVARIABLE+@ #@  
+              WHEN @+_KEYSTATUS_SYS_ITEMNAME+@ = @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+         @#ELSE#@
+              WHEN @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+         @#END_IF#@
+                 PERFORM @+_OBJ_EVT_LINKTO+@
+      @#ELSE#@
+              WHEN @+_KEYSTATUS_SYS_ITEMNAME+@ = @+_OBJ_ATR_EXCEPTIONVALUE+@
+                 PERFORM @+_OBJ_EVT_LINKTO+@
+      @#END_IF#@
+   @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_TERMINATIONVARIABLE+@ OR @+_OBJ_ATR_TERMINATIONVALUE+@ #@
+@$CONTROL-TERMINATION$@
+      @#DEF_IF#@ @+_OBJ_ATR_TERMINATIONVARIABLE+@
+         @#DEF_SET#@ @!G_CHECK88PARA!@ @+_OBJ_ATR_TERMINATIONVARIABLE+@
+         @%Check88.Skl%@
+         @#DEF_IF#@ @#EXP: @!G_CHECK88PARA!@ EQUAL @+_OBJ_ATR_TERMINATIONVARIABLE+@ #@  
+                 WHEN @+_KEYSTATUS_SYS_ITEMNAME+@ = @+_OBJ_ATR_TERMINATIONVARIABLE+@
+                    PERFORM @+_OBJ_EVT_LINKTO+@
+         @#ELSE#@
+                 WHEN @+_OBJ_ATR_TERMINATIONVARIABLE+@
+                    PERFORM @+_OBJ_EVT_LINKTO+@
+         @#END_IF#@
+      @#ELSE#@
+                 WHEN @+_KEYSTATUS_SYS_ITEMNAME+@ = @+_OBJ_ATR_TERMINATIONVALUE+@
+                    PERFORM @+_OBJ_EVT_LINKTO+@
+      @#END_IF#@
+   @#END_IF#@
+@#END_IF#@
+;

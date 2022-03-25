@@ -1,0 +1,77 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; CodeGen by Option Generation Rule.  2001/11/02
+;
+; Remarks :
+;
+;  This Skeleton will decide which .cbl or .cpy should be generated
+;  by Options. Only < Merge to one program file > and 
+;  < split with progrom file > would call MainPrg.Skl.
+;
+; ===================================================================
+;
+@%MainComment.Skl%@
+;
+@%MainPrepareTag.Skl%@
+;
+@#DEF_IF#@ @+_SYS_PROGRAMFILE+@
+    @%MainPrg.Skl%@
+@#END_IF#@
+@#DEF_IF#@ @+_SYS_ISGENCOPY+@
+    @#DEF_IF#@ @#EXP: @+_SYS_WORKINGSTORAGE+@ AND (NOT @+_PRG_SYS_ISIMPORT+@) #@ 
+        @#PUT_FILE#@ @"@+_PRJ_SYS_DIRCOPYLIB+@\\@+_PRG_ATR_ID+@.wrk"@ @"COPYLIB"@ @+_SYS_COPYFILEREADONLY+@
+           @#GET_MEM#@ @"WORKING_COMMHEAD"@
+           @#GET_MEM#@ @"WORKING-NEED"@
+           @#GET_MEM#@ @"WORKING-HEAD"@
+           @#GET_MEM#@ @"WORKING"@
+           @#GET_MEM#@ @"WORKING-OTHER"@
+        @#END_PUT_FILE#@
+        @#SHOW_MSG#@ @"Msg2"@
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: @+_SYS_LINKAGESECTION+@ AND (NOT @+_PRG_SYS_ISIMPORT+@) #@ 
+        @#PUT_FILE#@ @"@+_PRJ_SYS_DIRCOPYLIB+@\\@+_PRG_ATR_ID+@.lks"@ @"COPYLIB"@ @+_SYS_COPYFILEREADONLY+@
+           @#GET_MEM#@ @"LINKAGE_COMMHEAD"@
+           @#GET_MEM#@ @"LINKAGE-WRK"@
+           @#GET_MEM#@ @"LINKAGE-OTHER"@
+        @#END_PUT_FILE#@
+        @#SHOW_MSG#@ @"Msg8"@
+    @#END_IF#@
+    @#DEF_IF#@ @+_SYS_SCREENSECTION+@
+        @#PUT_FILE#@ @"@+_PRJ_SYS_DIRSCREEN+@\\@+_PRG_ATR_ID+@.scr"@ @"SCREEN"@ @+_SYS_COPYFILEREADONLY+@
+           @#GET_MEM#@ @"FORMSCREEN_COMMHEAD"@
+           @#GET_MEM#@ @"FORMSCREEN"@
+        @#END_PUT_FILE#@
+        @#SHOW_MSG#@ @"Msg3"@
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: @+_SYS_PROCEDUREDIVISION+@ AND (NOT @+_PRG_SYS_ISIMPORT+@) #@ 
+        @#PUT_FILE#@ @"@+_PRJ_SYS_DIRCOPYLIB+@\\@+_PRG_ATR_ID+@.prd"@ @"COPYLIB"@ @+_SYS_COPYFILEREADONLY+@
+            @#GET_MEM#@ @"PROCEDURE_COMMHEAD"@
+            @#GET_MEM#@ @"PROCEDURE-HEAD"@
+            @#GET_MEM#@ @"PROCEDURE"@
+        @#END_PUT_FILE#@
+        @#SHOW_MSG#@ @"Msg4"@
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: @+_SYS_MENUPARAGRAPH+@ AND (NOT @+_PRG_SYS_ISIMPORT+@) #@ 
+        @#PUT_FILE#@ @"@+_PRJ_SYS_DIRCOPYLIB+@\\@+_PRG_ATR_ID+@.mnu"@ @"COPYLIB"@ @+_SYS_COPYFILEREADONLY+@
+            @#GET_MEM#@ @"MENU_COMMHEAD"@
+            @#GET_MEM#@ @"MENU"@
+        @#END_PUT_FILE#@
+        @#SHOW_MSG#@ @"Msg5"@
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: @+_SYS_EVENTPARAGRAPH+@ AND (NOT @+_PRG_SYS_ISIMPORT+@) #@ 
+        @#PUT_FILE#@ @"@+_PRJ_SYS_DIRCOPYLIB+@\\@+_PRG_ATR_ID+@.evt"@ @"COPYLIB"@ @+_SYS_COPYFILEREADONLY+@
+            @#GET_MEM#@ @"EVENT_COMMHEAD"@
+            @#GET_MEM#@ @"EVENT"@
+        @#END_PUT_FILE#@
+        @#SHOW_MSG#@ @"Msg6"@
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: @+_SYS_REPORTPARAGRAPH+@ AND (NOT @+_PRG_SYS_ISIMPORT+@) #@ 
+        @#PUT_FILE#@ @"@+_PRJ_SYS_DIRREPORT+@\\@+_PRG_ATR_ID+@.rpt"@ @"REPORT"@ @+_SYS_COPYFILEREADONLY+@
+            @#GET_MEM#@ @"REPORT_COMMHEAD"@
+            @#GET_MEM#@ @"REPORT"@
+        @#END_PUT_FILE#@
+        @#SHOW_MSG#@ @"Msg7"@
+    @#END_IF#@
+@#END_IF#@
+@#SHOW_MSG#@ @"Msg10"@
+;

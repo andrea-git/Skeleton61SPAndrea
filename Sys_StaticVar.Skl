@@ -1,0 +1,68 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Static Variables Generation Rule.  2001/04/19
+;
+; Remarks:
+;
+; ===================================================================
+;
+; DARWIN - MODIFICA SKELETON DA INGLESE A ITALIANO
+; ==================================================
+;@#DEF_SET#@ @!S_MSG10!@  @"No more data."@
+@#DEF_SET#@ @!S_MSG10!@  @"Nessun altro dato."@
+;@#DEF_SET#@ @!S_MSG22!@  @"Key duplication."@
+@#DEF_SET#@ @!S_MSG22!@  @"Chiave Duplicata."@
+;@#DEF_SET#@ @!S_MSG23!@  @"Record not found."@
+@#DEF_SET#@ @!S_MSG23!@  @"Raggiunta fine file."@
+;@#DEF_SET#@ @!S_MSG101!@ @"Quit?"@
+@#DEF_SET#@ @!S_MSG101!@ @"Terminare l'applicazione?"@
+;@#DEF_SET#@ @!S_MSG201!@ @"Add Record?"@
+@#DEF_SET#@ @!S_MSG201!@ @"Aggiungere un nuovo record?"@
+;@#DEF_SET#@ @!S_MSG202!@ @"Update Record?"@
+@#DEF_SET#@ @!S_MSG202!@ @"Aggiornare il Record?"@
+;@#DEF_SET#@ @!S_MSG203!@ @"Delete Record?"@
+@#DEF_SET#@ @!S_MSG203!@ @"Cancellare il Record?"@
+;@#DEF_SET#@ @!S_MSG204!@ @"Key duplication."@
+@#DEF_SET#@ @!S_MSG204!@ @"Chiave duplicata."@
+;@#DEF_SET#@ @!S_MSG301!@ @"Add Successful."@
+@#DEF_SET#@ @!S_MSG301!@ @"Inserimento avvenuto con Successo."@
+;@#DEF_SET#@ @!S_MSG302!@ @"Update Successful."@
+@#DEF_SET#@ @!S_MSG302!@ @"Aggiornamento avvenuto con Successo."@
+;@#DEF_SET#@ @!S_MSG303!@ @"Delete Successful."@
+@#DEF_SET#@ @!S_MSG303!@ @"Cancellazione avvenuta con Successo."@
+;@#DEF_SET#@ @!S_MSG401!@ @"Shell not found."@
+@#DEF_SET#@ @!S_MSG401!@ @"Shell non trovata."@
+;@#DEF_SET#@ @!S_MSG501!@ @"Do you want to update this row?"@
+@#DEF_SET#@ @!S_MSG501!@ @"Aggiornare il record corrente?"@
+;@#DEF_SET#@ @!S_MSGTRAN_01!@ @"RollBack transaction."@
+@#DEF_SET#@ @!S_MSGTRAN_01!@ @"Transazione terminata con Rollback."@
+;
+; ===================================================================
+;  For Title of Navigator
+; ===================================================================
+;
+; DARWIN - MODIFICA DICITURE DA INGLESE A ITALIANO
+; ================================================
+;@#DEF_SET#@ @!S_NAFIRST!@ @"First"@
+@#DEF_SET#@ @!S_NAFIRST!@ @"Primo"@
+;@#DEF_SET#@ @!S_NAPREV!@  @"Previous"@
+@#DEF_SET#@ @!S_NAPREV!@  @"Precedente"@
+;@#DEF_SET#@ @!S_NANEXT!@  @"Next"@
+@#DEF_SET#@ @!S_NANEXT!@  @"Successivo"@
+;@#DEF_SET#@ @!S_NALAST!@  @"Last"@
+@#DEF_SET#@ @!S_NALAST!@  @"Ultimo"@
+;@#DEF_SET#@ @!S_NACURR!@  @"Current"@
+@#DEF_SET#@ @!S_NACURR!@  @"Corrente"@
+;@#DEF_SET#@ @!S_NAREFR!@  @"Refresh"@
+@#DEF_SET#@ @!S_NAREFR!@  @"Riaggiorna Situazione"@
+;@#DEF_SET#@ @!S_NAADD!@   @"Add"@
+@#DEF_SET#@ @!S_NAADD!@   @"Aggiungi"@
+;@#DEF_SET#@ @!S_NAUPD!@   @"Update"@
+@#DEF_SET#@ @!S_NAUPD!@   @"Aggiorna"@
+;@#DEF_SET#@ @!S_NADEL!@   @"Delete"@
+@#DEF_SET#@ @!S_NADEL!@   @"Cancella"@
+;@#DEF_SET#@ @!S_NACLEAR!@ @"Clear"@
+@#DEF_SET#@ @!S_NACLEAR!@ @"Pulisci"@
+;@#DEF_SET#@ @!S_NAEXIT!@  @"Exit"@
+@#DEF_SET#@ @!S_NAEXIT!@  @"Esci"@
+;

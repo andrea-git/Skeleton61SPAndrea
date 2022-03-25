@@ -1,0 +1,85 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Linkage Section Generation Rule.  2001/11/02
+;
+; Remarks:
+;   @<_SET_PRG_WORKINGLINE>@ and @<_SET_PRG_LINKAGELINE>@ would depend
+;   on Option/AnsiFormat or TerminalFormat to decide offset from begin.
+;   So you can't leave any space before the @+_OBJ_SYS_LINEINDEX+@.
+;
+;  Global Variables Listing :
+;
+;    1. @!G_EXISTLINKAGESECTION!@ :
+;      MainPrg.Skl will check this Variable to figure out if there's
+;      Linkage Section exist.
+;
+; ===================================================================
+;
+; ===================== LNK -- LINKAGE SECTION ======================
+;
+@#DEF_SET#@ @!G_KEYSTATUS27!@ @"@+_KEYSTATUS_SYS_ITEMNAME+@ = 27"@
+@#DEF_SET#@ @!G_KEYSTATUS96!@ @"@+_KEYSTATUS_SYS_ITEMNAME+@ = 96"@
+;
+@$WORKING-HEAD$@
+; 2001.9.24 Itally's bug
+;it's possible to have a program without Screen but with Key-Status set in the "Program Properties".
+;@<_SET_OBJ_SCREEN>@
+;@#DEF_IF#@ @#EXP: @+_PRG_SYS_SRNNO+@ #@
+      * Key Status
+  @#DEF_IF#@ @#EXP: @+_OBJ_SYS_NOTGENCRTSTATUS+@ EQUAL @"YES"@ #@
+    @#DEF_IF#@ @+_KEYSTATUS_SYS_USAGE+@
+      *77 @+_KEYSTATUS_SYS_ITEMNAME+@ IS SPECIAL-NAMES CRT STATUS PIC @+_KEYSTATUS_SYS_PIC+@ USAGE @+_KEYSTATUS_SYS_USAGE+@ VALUE 0.
+    @#ELSE#@
+      *77 @+_KEYSTATUS_SYS_ITEMNAME+@ IS SPECIAL-NAMES CRT STATUS PIC @+_KEYSTATUS_SYS_PIC+@ VALUE 0.
+    @#END_IF#@
+   @<_SET_PRG_KEYSTATUS>@
+      @#DEF_LOOP#@ @+_OBJ_SYS_KEYSTATUSCOUNT+@
+      @<_FETCH_NEXT_OBJ_KEYSTATUS>@
+      *   88 @+_KEYSTATUS_SYS_NAME+@ VALUE @+_KEYSTATUS_SYS_VALUE+@.
+          @#DEF_IF#@ @#EXP: @+_KEYSTATUS_SYS_VALUE+@ EQUAL @"27"@ #@
+              @#DEF_SET#@ @!G_KEYSTATUS27!@ @+_KEYSTATUS_SYS_NAME+@
+          @#ELSE_IF#@ @#EXP: @+_KEYSTATUS_SYS_VALUE+@ EQUAL @"96"@ #@
+              @#DEF_SET#@ @!G_KEYSTATUS96!@ @+_KEYSTATUS_SYS_NAME+@
+          @#END_IF#@
+      @#END_LOOP#@
+  @#ELSE#@
+    @#DEF_IF#@ @+_KEYSTATUS_SYS_USAGE+@
+       77 @+_KEYSTATUS_SYS_ITEMNAME+@ IS SPECIAL-NAMES CRT STATUS PIC @+_KEYSTATUS_SYS_PIC+@ USAGE @+_KEYSTATUS_SYS_USAGE+@ VALUE 0.
+    @#ELSE#@
+       77 @+_KEYSTATUS_SYS_ITEMNAME+@ IS SPECIAL-NAMES CRT STATUS PIC @+_KEYSTATUS_SYS_PIC+@ VALUE 0.
+    @#END_IF#@
+   @<_SET_PRG_KEYSTATUS>@
+      @#DEF_LOOP#@ @+_OBJ_SYS_KEYSTATUSCOUNT+@
+      @<_FETCH_NEXT_OBJ_KEYSTATUS>@
+          88 @+_KEYSTATUS_SYS_NAME+@ VALUE @+_KEYSTATUS_SYS_VALUE+@.
+          @#DEF_IF#@ @#EXP: @+_KEYSTATUS_SYS_VALUE+@ EQUAL @"27"@ #@
+              @#DEF_SET#@ @!G_KEYSTATUS27!@ @+_KEYSTATUS_SYS_NAME+@
+          @#ELSE_IF#@ @#EXP: @+_KEYSTATUS_SYS_VALUE+@ EQUAL @"96"@ #@
+              @#DEF_SET#@ @!G_KEYSTATUS96!@ @+_KEYSTATUS_SYS_NAME+@
+          @#END_IF#@
+      @#END_LOOP#@
+  @#END_IF#@
+;@#END_IF#@
+      * Properties & User defined Working Stoarge
+   @<_SET_PRG_WORKINGLINE>@
+   @#DEF_IF#@ @+_OBJ_SYS_LINECOUNT+@
+      @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+      @<_FETCH_NEXT_OBJ_LINEINDEX>@
+      @+_OBJ_SYS_LINEINDEX+@
+      @#END_LOOP#@
+   @#END_IF#@
+
+      ***********************************************************
+      *   Code Gen's Buffer                                     *
+      ***********************************************************
+; 
+@$LINKAGE-WRK$@
+   @<_SET_PRG_LINKAGELINE>@
+   @#DEF_IF#@ @+_OBJ_SYS_LINECOUNT+@
+      @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+      @<_FETCH_NEXT_OBJ_LINEINDEX>@
+      @+_OBJ_SYS_LINEINDEX+@
+      @#END_LOOP#@
+      @#DEF_SET#@ @!G_EXISTLINKAGESECTION!@ @"YES"@
+   @#END_IF#@
+;

@@ -1,0 +1,896 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Form's I/U/D Generation Rule.  2001/11/02
+;
+; ===================================================================
+;
+@#DEF_SET#@ @!L_BLOCKMODE!@      @""@
+@#DEF_IF#@ @#EXP: @!G_OPERATIONMODE!@ EQUAL @"BLOCKMODE"@ #@
+   @#DEF_SET#@ @!L_BLOCKMODE!@   @"YES"@
+@#END_IF#@
+;
+; ===================================================================
+;   To check if this Control(DB.Navigator) in Data.Frame ?
+; ===================================================================
+@#DEF_SET#@ @!L_ENTRYOBJ!@ @"FORM"@
+@#DEF_IF#@ @!G_FRAMENAME!@
+    @#DEF_SET#@ @!L_ENTRYOBJ!@ @+_OBJ_SYS_TYPE+@
+@#END_IF#@
+;
+@<_SET_EXIST_DATASET>@
+@<_SET_DATASET_MASTERFDSL>@
+;
+; =========== LOCAL - For Relation's Trigger Paragraph ==============
+;
+   @<_SET_FDSL_RELATION>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+      @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@ #@
+@$FDSL-REFERENCE$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+      @#ELSE#@
+@$FDSL-REFERENCE-AFTER$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+      @#END_IF#@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_INSERT+@ EQUAL @"RESTRICTED"@) #@
+@$FDSL-REFERENCE-INS$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS
+      @#END_IF#@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_UPDATE+@ EQUAL @"RESTRICTED"@) #@
+@$FDSL-REFERENCE-UPD$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD
+      @#END_IF#@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+@$FDSL-REFERENCE-DEL$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-DEL
+      @#END_IF#@
+   @#END_LOOP#@
+;
+@$FDSL-REFERENCE$@
+   @#GET_MEM#@   @"FDSL-REFERENCE-AFTER"@
+   @#CLEAR_MEM#@ @"FDSL-REFERENCE-AFTER"@
+;
+; ================= PRD -- FORM'S IUD Paragraphs ====================
+;
+@#DEF_SET#@ @!G_DUPLIPREV!@ @""@
+@#DEF_SET#@ @!G_DUPLINEXT!@ @""@
+@%Form_IUDMKey.Skl%@
+;
+@$FORM-IUD$@
+;
+;  <<<<<  FIRST / PREVIOUS / NEXT ...  >>>>>
+;
+       @+_OBJ_ATR_NAME+@-First@!G_MODE!@.
+   @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) #@
+   ; ===================================================================
+   ; If the FD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-FIRST@!G_MODE!@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-INITSTART
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_SCREENNAME!@-Extended-File-Status@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeFirst>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeFirst"@
+      * <TOTEM:END>
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_SCREENNAME!@-Extended-File-Status@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterFirst>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterFirst"@
+      * <TOTEM:END>
+           PERFORM @+_OBJ_ATR_NAME+@-DUPLICATE-MOVEKEY@!G_MODE!@.
+           PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+   @#ELSE_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"SEQUENTIAL"@ AND 
+                      @+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@   #@
+   ; ===================================================================
+   ; If the FD is Sequential or it's AccessMode is Sequential.
+   ; And it's I/O Mode is "INPUT".
+   ; ===================================================================
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeFirst>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeFirst"@
+      * <TOTEM:END>
+           CLOSE @+_FDSL_SYS_FDNAME+@
+           PERFORM OPEN-@+_FDSL_SYS_FDNAME+@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-FIRST@!G_MODE!@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterFirst>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterFirst"@
+      * <TOTEM:END>
+           PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+   @#ELSE#@
+   ; ===================================================================
+   ; Else do nothing.
+   ; ===================================================================
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeFirst>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeFirst"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterFirst>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterFirst"@
+      * <TOTEM:END>
+   @#END_IF#@
+           .
+
+       @+_OBJ_ATR_NAME+@-Previous@!G_MODE!@.
+   @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) #@
+   ; ===================================================================
+   ; If the FD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+         @#DEF_IF#@ @!G_CHECKKEYFIELD!@
+           MOVE 0 TO TOTEM-IDX1
+	 @#END_IF#@
+	 @#GET_MEM#@   @"ALL-EVALUATE"@
+	 @#GET_MEM#@   @"CHECKKEYFIELD"@
+	 @#GET_MEM#@   @"ALL-END-EVALUATE"@
+         @#DEF_IF#@ @!G_CHECKKEYFIELD!@
+           IF TOTEM-IDX1 = 1
+	 @#END_IF#@
+              PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+         @#DEF_IF#@ @!G_DUPLIPREV!@
+              PERFORM @+_OBJ_ATR_NAME+@-DUPLICATE-PREV@!G_MODE!@
+         @#ELSE#@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START-LESS
+         @#END_IF#@
+         @#DEF_IF#@ @!G_CHECKKEYFIELD!@
+           END-IF
+         @#END_IF#@
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_SCREENNAME!@-Extended-File-Status@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforePrevious>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforePrevious"@
+      * <TOTEM:END>
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Prev
+         @#DEF_IF#@ @!G_CHECKKEYFIELD!@  
+           PERFORM @!G_SCREENNAME!@-Buf-To-ValueBuf
+         @#END_IF#@
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_SCREENNAME!@-Extended-File-Status@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterPrevious>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterPrevious"@
+      * <TOTEM:END>
+           PERFORM @+_OBJ_ATR_NAME+@-DUPLICATE-MOVEKEY@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-PREVIOUS@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+   @#ELSE#@
+   ; ===================================================================
+   ; Else do nothing.
+   ; ===================================================================
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforePrevious>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforePrevious"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterPrevious>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterPrevious"@
+      * <TOTEM:END>
+   @#END_IF#@
+           .
+
+       @+_OBJ_ATR_NAME+@-Next@!G_MODE!@.
+   @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) #@
+   ; ===================================================================
+   ; If the FD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+         @#DEF_IF#@ @!G_CHECKKEYFIELD!@
+           MOVE 0 TO TOTEM-IDX1
+	 @#END_IF#@
+	 @#GET_MEM#@   @"ALL-EVALUATE"@
+	 @#GET_MEM#@   @"CHECKKEYFIELD"@
+	 @#GET_MEM#@   @"ALL-END-EVALUATE"@
+         @#DEF_IF#@ @!G_CHECKKEYFIELD!@
+           IF TOTEM-IDX1 = 1
+	 @#END_IF#@
+              PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+         @#DEF_IF#@ @!G_DUPLINEXT!@
+              PERFORM @+_OBJ_ATR_NAME+@-DUPLICATE-NEXT@!G_MODE!@
+         @#ELSE#@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START-GREATER
+         @#END_IF#@
+         @#DEF_IF#@ @!G_CHECKKEYFIELD!@
+           END-IF
+	 @#END_IF#@
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_SCREENNAME!@-Extended-File-Status@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeNext>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeNext"@
+      * <TOTEM:END>
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+         @#DEF_IF#@ @!G_CHECKKEYFIELD!@  
+           PERFORM @!G_SCREENNAME!@-Buf-To-ValueBuf
+         @#END_IF#@
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_SCREENNAME!@-Extended-File-Status@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterNext>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterNext"@
+      * <TOTEM:END>
+           PERFORM @+_OBJ_ATR_NAME+@-DUPLICATE-MOVEKEY@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-NEXT@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+   @#ELSE_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"SEQUENTIAL"@ AND 
+                      @+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@   #@
+   ; ===================================================================
+   ; If the FD is Sequential or it's AccessMode is Sequential.
+   ; And it's I/O Mode is "INPUT".
+   ; ===================================================================
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeNext>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeNext"@
+      * <TOTEM:END>
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-NEXT@!G_MODE!@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterNext>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterNext"@
+      * <TOTEM:END>
+           PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+   @#ELSE#@
+   ; ===================================================================
+   ; Else do nothing.
+   ; ===================================================================
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeNext>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeNext"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterNext>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterNext"@
+      * <TOTEM:END>
+   @#END_IF#@
+           .
+      
+       @+_OBJ_ATR_NAME+@-Last@!G_MODE!@.
+   @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) #@
+   ; ===================================================================
+   ; If the FD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-LAST@!G_MODE!@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-INITEND
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START-NOTGREATER
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_SCREENNAME!@-Extended-File-Status@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeLast>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeLast"@
+      * <TOTEM:END>
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Prev
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_SCREENNAME!@-Extended-File-Status@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterLast>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterLast"@
+      * <TOTEM:END>
+           PERFORM @+_OBJ_ATR_NAME+@-DUPLICATE-MOVEKEY@!G_MODE!@.
+           PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+   @#ELSE#@
+   ; ===================================================================
+   ; Else do nothing.
+   ; ===================================================================
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeLast>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeLast"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterLast>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterLast"@
+      * <TOTEM:END>
+   @#END_IF#@
+           .
+
+; ===================================================================
+; -Curr only fit the button status. If it's Combo or Edit,
+; it would process by Navigator itself.
+; ===================================================================
+       @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@.
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeCurrent>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeCurrent"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) OR
+                                    (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"RANDOM"@) #@
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read
+           PERFORM @+_OBJ_ATR_NAME+@-DUPLICATE-MOVEKEY@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-CURR@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+   @#END_IF#@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterCurrent>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterCurrent"@
+      * <TOTEM:END>
+           .
+
+@#DEF_IF#@ @!G_OCCURSRELATION!@
+       @+_OBJ_ATR_NAME+@-SMY-BACKUP@!G_MODE!@.
+           @#GET_MEM#@   @"SMY-BACKUP"@
+           @#CLEAR_MEM#@ @"SMY-BACKUP"@
+           .
+
+       @+_OBJ_ATR_NAME+@-SMY-RESTORE@!G_MODE!@.
+           @#GET_MEM#@   @"SMY-RESTORE"@
+           @#CLEAR_MEM#@ @"SMY-RESTORE"@
+           .
+
+@#END_IF#@
+       @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@.
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@ @"SUMMARY-INIT"@
+              PERFORM @+_OBJ_ATR_NAME+@-ALLGRID-RESET@!G_MODE!@
+		   @#DEF_IF#@ @!G_OCCURSRELATION!@
+              MOVE 1 TO TOTEM-OCCURS-IDX
+           @#END_IF#@
+              @#GET_MEM#@   @"FDSL-REFERENCE"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE"@
+		   @#DEF_IF#@ @!G_OCCURSRELATION!@
+              PERFORM @+_OBJ_ATR_NAME+@-SMY-BACKUP@!G_MODE!@
+              @#GET_MEM#@   @"OCCURS-WRITE-DATA"@
+              @#CLEAR_MEM#@ @"OCCURS-WRITE-DATA"@
+              PERFORM @+_OBJ_ATR_NAME+@-SMY-RESTORE@!G_MODE!@
+		   @#ELSE#@
+              @#GET_MEM#@   @"OCCURS-WRITE-DATA"@
+              @#CLEAR_MEM#@ @"OCCURS-WRITE-DATA"@
+		   @#END_IF#@
+              PERFORM @+_OBJ_ATR_NAME+@-Fld-To-Buf@!G_MODE!@
+              PERFORM @+_OBJ_ATR_NAME+@-NAVI-FOR-MASTERGRID@!G_MODE!@
+              PERFORM @!G_SCREENNAME!@-DISPLAY@!G_MODE!@
+           ELSE
+              IF @!G_SCREENNAME!@-FLAG-REFRESH@!G_MODE!@
+                 CONTINUE
+              ELSE
+                 PERFORM @!G_SCREENNAME!@-Extended-File-Status@!G_MODE!@
+              END-IF
+           END-IF
+           .
+
+       @+_OBJ_ATR_NAME+@-Add@!G_MODE!@.
+   @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) #@
+   ; ===================================================================
+   ; If the FD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+      @#DEF_IF#@ @+_OBJ_ATR_CONFIRMINSERT+@
+           MOVE "201" TO TOTEM-MSG-ID
+           PERFORM MESSAGE-BOX-DISPLAY
+           IF TOTEM-MSG-RETURN-VALUE NOT = 1
+              INITIALIZE TOTEM-MSG-TEXT
+              EXIT PARAGRAPH 
+           END-IF
+      @#END_IF#@
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+           PERFORM @!G_SCREENNAME!@-VALIDATION-ROUTINE@!G_MODE!@
+           IF NOT TOTEM-CHECK-OK
+               EXIT PARAGRAPH
+           END-IF
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-ADD@!G_MODE!@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-INITREC
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+           MOVE SPACES TO TOTEM-TRANSACTION-FLAG
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeAdd>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeAdd"@
+      * <TOTEM:END>
+      * write
+      @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           START TRANSACTION
+           IF TRANSACTION-STATUS NOT = 0
+              PERFORM @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Write
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-INS"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-INS"@
+              PERFORM @+_OBJ_ATR_NAME+@-RESUMMARY-INS@!G_MODE!@
+              PERFORM @+_OBJ_ATR_NAME+@-DUMMY-UPDATE-INIT@!G_MODE!@
+              IF TOTEM-TRANSACTION-FLAG = SPACES
+                 MOVE "301" TO TOTEM-MSG-ID
+                 COMMIT TRANSACTION
+              ELSE
+                 PERFORM MESSAGE-FOR-FILEERROR
+                 ROLLBACK TRANSACTION
+              END-IF
+              PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+           ELSE
+              PERFORM MESSAGE-FOR-FILEERROR
+              ROLLBACK TRANSACTION
+           END-IF
+      @#ELSE#@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Write
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-INS"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-INS"@
+              PERFORM @+_OBJ_ATR_NAME+@-RESUMMARY-INS@!G_MODE!@
+              PERFORM @+_OBJ_ATR_NAME+@-DUMMY-UPDATE-INIT@!G_MODE!@
+              MOVE "301" TO TOTEM-MSG-ID
+              PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+           END-IF
+      @#END_IF#@
+           PERFORM @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterAdd>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterAdd"@
+      * <TOTEM:END>
+   @#ELSE_IF#@ @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"OUTPUT"@) OR
+                      (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"I-O"@)    OR
+                      (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"EXTEND"@) #@
+   ; ===================================================================
+   ; If the FD IOMode is "O / I-O / EXTEND". (Seq or Random)
+   ; ===================================================================
+      @#DEF_IF#@ @+_OBJ_ATR_CONFIRMINSERT+@
+           MOVE "201" TO TOTEM-MSG-ID
+           PERFORM @!G_SCREENNAME!@-SHOW-MSG-ROUTINE@!G_MODE!@
+           IF TOTEM-MSG-RETURN-VALUE NOT = 1
+              EXIT PARAGRAPH 
+           END-IF
+      @#END_IF#@
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+           PERFORM @!G_SCREENNAME!@-VALIDATION-ROUTINE@!G_MODE!@
+           IF NOT TOTEM-CHECK-OK
+               EXIT PARAGRAPH
+           END-IF
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-ADD@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+           MOVE SPACES TO TOTEM-TRANSACTION-FLAG
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeAdd>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeAdd"@
+      * <TOTEM:END>
+      * write
+      @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           START TRANSACTION
+           IF TRANSACTION-STATUS NOT = 0
+              PERFORM @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Write
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-INS"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-INS"@
+              PERFORM @+_OBJ_ATR_NAME+@-RESUMMARY-INS@!G_MODE!@
+              IF TOTEM-TRANSACTION-FLAG = SPACES
+                 MOVE "301" TO TOTEM-MSG-ID
+                 COMMIT TRANSACTION
+              ELSE
+                 PERFORM MESSAGE-FOR-FILEERROR
+                 ROLLBACK TRANSACTION
+              END-IF
+              PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+           ELSE
+              PERFORM MESSAGE-FOR-FILEERROR
+              ROLLBACK TRANSACTION
+           END-IF
+      @#ELSE#@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Write
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-INS"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-INS"@
+              PERFORM @+_OBJ_ATR_NAME+@-RESUMMARY-INS@!G_MODE!@
+              MOVE "301" TO TOTEM-MSG-ID
+              PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+           END-IF
+      @#END_IF#@
+           PERFORM @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterAdd>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterAdd"@
+      * <TOTEM:END>
+   @#ELSE#@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeAdd>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeAdd"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterAdd>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterAdd"@
+      * <TOTEM:END>
+   @#END_IF#@
+           .
+     
+       @+_OBJ_ATR_NAME+@-Update@!G_MODE!@.
+   @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) #@
+   ; ===================================================================
+   ; If the FD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+      @#DEF_IF#@ @+_OBJ_ATR_CONFIRMUPDATE+@
+           MOVE "202" TO TOTEM-MSG-ID
+           PERFORM MESSAGE-BOX-DISPLAY
+           IF TOTEM-MSG-RETURN-VALUE NOT = 1
+              INITIALIZE TOTEM-MSG-TEXT
+              EXIT PARAGRAPH 
+           END-IF
+      @#END_IF#@
+           ; LK6B0392 
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START              
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_SCREENNAME!@-Extended-File-Status@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read
+           ;
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+           PERFORM @!G_SCREENNAME!@-VALIDATION-ROUTINE@!G_MODE!@
+           IF NOT TOTEM-CHECK-OK
+               EXIT PARAGRAPH
+           END-IF
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-UPDATE@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+           MOVE SPACES TO TOTEM-TRANSACTION-FLAG
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeUpdate>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeUpdate"@
+      * <TOTEM:END>
+      * write
+      @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           START TRANSACTION
+           IF TRANSACTION-STATUS NOT = 0
+              PERFORM @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Rewrite
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-UPD"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-UPD"@
+              PERFORM @+_OBJ_ATR_NAME+@-RESUMMARY-DEL@!G_MODE!@
+              PERFORM @+_OBJ_ATR_NAME+@-DUMMY-UPDATE-INIT@!G_MODE!@
+              IF TOTEM-TRANSACTION-FLAG = SPACES
+                 MOVE "302" TO TOTEM-MSG-ID
+                 COMMIT TRANSACTION
+              ELSE
+                 PERFORM MESSAGE-FOR-FILEERROR
+                 ROLLBACK TRANSACTION
+              END-IF
+              PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+           ELSE
+              PERFORM MESSAGE-FOR-FILEERROR
+              ROLLBACK TRANSACTION
+           END-IF
+      @#ELSE#@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Rewrite
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-UPD"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-UPD"@
+              PERFORM @+_OBJ_ATR_NAME+@-RESUMMARY-DEL@!G_MODE!@
+              PERFORM @+_OBJ_ATR_NAME+@-DUMMY-UPDATE-INIT@!G_MODE!@
+              MOVE "302" TO TOTEM-MSG-ID
+              PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+           END-IF
+      @#END_IF#@
+           PERFORM @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterUpdate>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterUpdate"@
+      * <TOTEM:END>
+   @#ELSE_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"RANDOM"@) #@
+   ; ===================================================================
+   ; If the FD is Index/Relative, and AccessMode is "Random".
+   ; ===================================================================
+      @#DEF_IF#@ @+_OBJ_ATR_CONFIRMUPDATE+@
+           MOVE "202" TO TOTEM-MSG-ID
+           PERFORM @!G_SCREENNAME!@-SHOW-MSG-ROUTINE@!G_MODE!@
+           IF TOTEM-MSG-RETURN-VALUE NOT = 1
+              EXIT PARAGRAPH 
+           END-IF
+      @#END_IF#@
+           ; LK6B0392 
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START              
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_SCREENNAME!@-Extended-File-Status@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read
+           ;      
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+           PERFORM @!G_SCREENNAME!@-VALIDATION-ROUTINE@!G_MODE!@
+           IF NOT TOTEM-CHECK-OK
+               EXIT PARAGRAPH
+           END-IF
+           MOVE SPACES TO TOTEM-TRANSACTION-FLAG
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeUpdate>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeUpdate"@
+      * <TOTEM:END>
+      @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           START TRANSACTION
+           IF TRANSACTION-STATUS NOT = 0
+              PERFORM @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Rewrite
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-UPD"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-UPD"@
+              PERFORM @+_OBJ_ATR_NAME+@-RESUMMARY-DEL@!G_MODE!@
+              IF TOTEM-TRANSACTION-FLAG = SPACES
+                 MOVE "302" TO TOTEM-MSG-ID
+                 COMMIT TRANSACTION
+              ELSE
+                 PERFORM MESSAGE-FOR-FILEERROR
+                 ROLLBACK TRANSACTION
+              END-IF
+              PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+           ELSE
+              PERFORM MESSAGE-FOR-FILEERROR
+              ROLLBACK TRANSACTION
+           END-IF
+      @#ELSE#@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Rewrite
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-UPD"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-UPD"@
+              PERFORM @+_OBJ_ATR_NAME+@-RESUMMARY-DEL@!G_MODE!@
+              MOVE "302" TO TOTEM-MSG-ID
+              PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+           END-IF
+      @#END_IF#@
+           PERFORM @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterUpdate>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterUpdate"@
+      * <TOTEM:END>
+   @#ELSE#@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeUpdate>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeUpdate"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterUpdate>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterUpdate"@
+      * <TOTEM:END>
+   @#END_IF#@
+           .
+
+       @+_OBJ_ATR_NAME+@-Delete@!G_MODE!@.
+   @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) #@
+   ; ===================================================================
+   ; If the FD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+      @#DEF_IF#@ @+_OBJ_ATR_CONFIRMDELETE+@
+           MOVE "203" TO TOTEM-MSG-ID
+           PERFORM MESSAGE-BOX-DISPLAY
+           IF TOTEM-MSG-RETURN-VALUE NOT = 1
+              INITIALIZE TOTEM-MSG-TEXT
+              EXIT PARAGRAPH 
+           END-IF
+      @#END_IF#@
+           MOVE SPACES TO TOTEM-TRANSACTION-FLAG
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeDelete>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeDelete"@
+      * <TOTEM:END>
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-DELETE@!G_MODE!@
+      * delete
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+      @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           START TRANSACTION
+           IF TRANSACTION-STATUS NOT = 0
+              PERFORM @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Delete
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-DEL"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-DEL"@
+              ; It's in @+_OBJ_ATR_NAME+@-CLEAR paragraph                            
+              IF TOTEM-TRANSACTION-FLAG = SPACES
+                 COMMIT TRANSACTION
+                 PERFORM @+_OBJ_ATR_NAME+@-CLEAR@!G_MODE!@
+                 PERFORM @+_OBJ_ATR_NAME+@-DUMMY-DELETE-INIT@!G_MODE!@
+                 MOVE "303" TO TOTEM-MSG-ID
+                 MOVE "00" to @+_FDSL_SYS_FILESTATUS+@
+              ELSE
+                 PERFORM MESSAGE-FOR-FILEERROR
+                 ROLLBACK TRANSACTION
+              END-IF
+           ELSE
+              PERFORM MESSAGE-FOR-FILEERROR
+              ROLLBACK TRANSACTION
+           END-IF
+      @#ELSE#@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Delete
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-DEL"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-DEL"@
+              ; It's in @+_OBJ_ATR_NAME+@-CLEAR paragraph
+              PERFORM @+_OBJ_ATR_NAME+@-CLEAR@!G_MODE!@
+              PERFORM @+_OBJ_ATR_NAME+@-DUMMY-DELETE-INIT@!G_MODE!@
+              MOVE "303" TO TOTEM-MSG-ID
+              MOVE "00" to @+_FDSL_SYS_FILESTATUS+@
+           END-IF
+      @#END_IF#@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterDelete>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterDelete"@
+      * <TOTEM:END>
+           PERFORM @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@
+   @#ELSE_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"RANDOM"@) #@
+   ; ===================================================================
+   ; If the FD is Index/Relative, and AccessMode is "Random".
+   ; ===================================================================
+      @#DEF_IF#@ @+_OBJ_ATR_CONFIRMDELETE+@
+           MOVE "203" TO TOTEM-MSG-ID
+           PERFORM @!G_SCREENNAME!@-SHOW-MSG-ROUTINE@!G_MODE!@
+           IF TOTEM-MSG-RETURN-VALUE NOT = 1
+              EXIT PARAGRAPH 
+           END-IF
+      @#END_IF#@
+           MOVE SPACES TO TOTEM-TRANSACTION-FLAG
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeDelete>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeDelete"@
+      * <TOTEM:END>
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-DELETE@!G_MODE!@
+      * delete
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+      @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           START TRANSACTION
+           IF TRANSACTION-STATUS NOT = 0
+              PERFORM @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Delete
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-DEL"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-DEL"@
+              ; It's in @+_OBJ_ATR_NAME+@-CLEAR paragraph
+              IF TOTEM-TRANSACTION-FLAG = SPACES
+                 COMMIT TRANSACTION
+                 PERFORM @+_OBJ_ATR_NAME+@-CLEAR@!G_MODE!@
+                 PERFORM @+_OBJ_ATR_NAME+@-DUMMY-DELETE-INIT@!G_MODE!@
+                 MOVE "303" TO TOTEM-MSG-ID
+                 MOVE "00" to @+_FDSL_SYS_FILESTATUS+@
+              ELSE
+                 PERFORM MESSAGE-FOR-FILEERROR
+                 ROLLBACK TRANSACTION
+              END-IF
+           ELSE
+              PERFORM MESSAGE-FOR-FILEERROR
+              ROLLBACK TRANSACTION
+           END-IF
+      @#ELSE#@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Delete
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-DEL"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-DEL"@
+              ; It's in @+_OBJ_ATR_NAME+@-CLEAR paragraph
+              PERFORM @+_OBJ_ATR_NAME+@-CLEAR@!G_MODE!@
+              PERFORM @+_OBJ_ATR_NAME+@-DUMMY-DELETE-INIT@!G_MODE!@
+              MOVE "303" TO TOTEM-MSG-ID
+              MOVE "00" to @+_FDSL_SYS_FILESTATUS+@
+           END-IF
+      @#END_IF#@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterDelete>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterDelete"@
+      * <TOTEM:END>
+           PERFORM @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@
+   @#ELSE#@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, BeforeDelete>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"BeforeDelete"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, FORM:@+_OBJ_ATR_NAME+@, AfterDelete>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @!L_ENTRYOBJ!@ @"AfterDelete"@
+      * <TOTEM:END>
+   @#END_IF#@
+           .
+
+       @+_OBJ_ATR_NAME+@-NAVI-FOR-MASTERGRID@!G_MODE!@.
+           @#GET_MEM#@   @"FRAME-NAVIGATOR-FOR-MASTERGRID"@
+           @#GET_MEM#@   @"NAVIGATOR-FOR-MASTERGRID"@
+           @#CLEAR_MEM#@ @"FRAME-NAVIGATOR-FOR-MASTERGRID"@
+           @#CLEAR_MEM#@ @"NAVIGATOR-FOR-MASTERGRID"@
+           .
+
+       @+_OBJ_ATR_NAME+@-ERR-CHECKING@!G_MODE!@.
+   @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           EVALUATE TOTEM-TRANSACTION-FLAG ALSO TRANSACTION-STATUS
+      * File I-O success / Transaction OK.
+           WHEN SPACES ALSO 0
+              PERFORM @+_OBJ_ATR_NAME+@-SHOW-MSG-ROUTINE@!G_MODE!@
+      * File I-O success / Transaction failed.
+           WHEN SPACES ALSO NOT 0
+      * File I-O failed / Transaction OK.
+           WHEN NOT SPACES ALSO 0
+      * File I-O failed / Transaction failed.
+           WHEN NOT SPACES ALSO NOT 0
+              PERFORM SHOW-TRANSACTION-ROUTINE
+              PERFORM @+_OBJ_ATR_NAME+@-DISPLAY-MESSAGE@!G_MODE!@
+           END-EVALUATE
+   @#ELSE#@
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_SCREENNAME!@-SHOW-MSG-ROUTINE@!G_MODE!@
+           ELSE
+              PERFORM @!G_SCREENNAME!@-Extended-File-Status@!G_MODE!@
+           END-IF
+   @#END_IF#@
+           .
+
+;
+@$FORM-ALL-NAVI-CHANGE$@
+           PERFORM @+_OBJ_ATR_NAME+@-NAVI-FOR-MASTERGRID@!G_MODE!@
+;
+@$FORM-DUMY$@
+       @+_OBJ_ATR_NAME+@-RESUMMARY-INS@!G_MODE!@.
+           @#GET_MEM#@   @"RESUMMARY-INS"@
+           @#CLEAR_MEM#@ @"RESUMMARY-INS"@
+           .
+
+       @+_OBJ_ATR_NAME+@-RESUMMARY-DEL@!G_MODE!@.
+           @#GET_MEM#@   @"RESUMMARY-DEL"@
+           @#CLEAR_MEM#@ @"RESUMMARY-DEL"@
+           .
+
+   @#DEF_IF#@ @!G_EXISTMASTERGRID!@
+           @#GET_MEM#@   @"MASTERGRID-CALLBY-CHANGEVERIFY"@
+           @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-CHANGEVERIFY"@
+   @#END_IF#@
+;
+
+       @+_OBJ_ATR_NAME+@-DUMMY-FIRST@!G_MODE!@.
+      @#DEF_IF#@ @!G_EXISTMASTERGRID!@
+           @#GET_MEM#@   @"MASTERGRID-CALLBY-FIRST"@
+           @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-FIRST"@
+      @#END_IF#@
+           .
+
+       @+_OBJ_ATR_NAME+@-DUMMY-PREVIOUS@!G_MODE!@.
+           @#GET_MEM#@   @"MASTERGRID-CALLBY-PREVIOUS"@
+           @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-PREVIOUS"@
+           .
+
+       @+_OBJ_ATR_NAME+@-DUMMY-NEXT@!G_MODE!@.
+           @#GET_MEM#@   @"MASTERGRID-CALLBY-NEXT"@
+           @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-NEXT"@
+           .
+
+       @+_OBJ_ATR_NAME+@-DUMMY-LAST@!G_MODE!@.
+           @#GET_MEM#@   @"MASTERGRID-CALLBY-LAST"@
+           @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-LAST"@
+           .
+
+       @+_OBJ_ATR_NAME+@-DUMMY-CURR@!G_MODE!@.
+           @#GET_MEM#@   @"MASTERGRID-CALLBY-CURR"@
+           @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-CURR"@
+           .
+
+       @+_OBJ_ATR_NAME+@-DUMMY-ADD@!G_MODE!@.
+           @#GET_MEM#@   @"MASTERGRID-CALLBY-ADD"@
+           @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-ADD"@
+           .
+
+       @+_OBJ_ATR_NAME+@-DUMMY-UPDATE@!G_MODE!@.
+           @#GET_MEM#@   @"MASTERGRID-CALLBY-UPDATE"@
+           @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-UPDATE"@
+           .
+
+       @+_OBJ_ATR_NAME+@-DUMMY-UPDATE-INIT@!G_MODE!@.
+           @#GET_MEM#@   @"MASTERGRID-CALLBY-UPDATE-INIT"@
+           @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-UPDATE-INIT"@
+           .
+
+       @+_OBJ_ATR_NAME+@-DUMMY-DELETE@!G_MODE!@.
+           @#GET_MEM#@   @"MASTERGRID-CALLBY-DELETE"@
+           @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-DELETE"@
+           .
+
+       @+_OBJ_ATR_NAME+@-DUMMY-DELETE-INIT@!G_MODE!@.
+           @#GET_MEM#@   @"MASTERGRID-CALLBY-DELETE-INIT"@
+           @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-DELETE-INIT"@
+           .
+
+;
+@#CLEAR_MEM#@ @"SUMMARY-INIT"@
+@#CLEAR_MEM#@ @"CHECKKEYFIELD"@
+;

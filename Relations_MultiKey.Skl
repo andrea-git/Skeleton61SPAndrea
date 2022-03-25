@@ -1,0 +1,158 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Relations Multiple Key Generation Rule.  2001/04/19
+;
+; Remarks:
+;
+;  There're four situations :
+;
+;    1. one MasterKey to one Slave Single Key (1-1)
+;            MOVE M TO S
+;
+;    2. several MasterKeys to one Slave Single Key (M-1)
+;            MOVE M1 TO S(1:N)
+;            MOVE M2 TO S(N:M)
+;            MOVE M3 TO S(M:P)
+;
+;    3. one MasterKey to one Slave Split Key (1-M)
+;            MOVE M(1:N) TO S1
+;            MOVE M(N:M) TO S2
+;            MOVE M(M:P) TO S3
+;
+;    4. several Masterkeys to one Slave Split Key (M-M)
+;            MOVE M1 TO TMP-BUF(1:N)
+;            MOVE M2 TO TMP-BUF(N:M)
+;            MOVE M3 TO TMP-BUF(M:P)
+;            MOVE TMP-BUF(1:X) TO S1
+;            MOVE TMP-BUF(X:Y) TO S2
+;
+;  Local Variables Listing :
+;
+;
+; ===================================================================
+;
+; ===================================================================
+; Each Relation can contain expression.
+; ===================================================================
+@$RELATION-EXPRESSION$@
+       @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-EXPRESSION.
+   @<_SET_RELATION_EXPRESSIONLINE>@
+   @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+      @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+   @#END_LOOP#@
+           .
+
+;
+; ===================================================================
+; Multiple Key processing.
+; ===================================================================
+@#DEF_IF#@ @"1"@
+@$RELATION$@
+       @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY.
+           @#GET_ENTRYPOINT#@ @"CODEGEN"@ @"CODEGEN"@ @"CODE_RELATION_MAP"@
+           .
+
+@$WORKING$@
+           @#GET_ENTRYPOINT#@ @"CODEGEN"@ @"CODEGEN"@ @"CODE_RELATION_MAPWRK"@
+
+@#END_IF#@
+@#DEF_IF#@ @"0"@
+@#DEF_SET#@ @!L_SLAVEISSPLIT!@ @""@
+@<_PUSH_MEM>@
+   @<_SET_RELATION_KEYSLAVE>@
+   @#DEF_SET#@ @!L_SLAVEISSPLIT!@ @+_FDSL_SYS_ISSPLITKEY+@
+@<_POP_MEM>@
+;
+; =================== PRD -- RELATION FOR -REF- =====================
+;
+@$RELATION$@
+;
+; ===================================================================
+; Situation 1, 3 : One MasterKey to one Single/Split Key (1-M, 1-M)
+; ===================================================================
+;
+@#DEF_IF#@ @#EXP: @+_RELATION_SYS_KEYNO+@ EQUAL @"1"@ #@
+   ;
+   ; Situation 1
+   ;
+   @#DEF_IF#@ @#EXP: NOT @!L_SLAVEISSPLIT!@ #@
+       @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY.
+           MOVE @+_RELATION_KEY_MASTER+@ TO @+_RELATION_KEY_SLAVE+@
+           .
+
+   ;
+   ; Situation 3
+   ;
+   @#ELSE#@
+       @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY.
+           INITIALIZE TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-BUF
+           MOVE @+_RELATION_KEY_MASTER+@ TO TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-BUF
+      @#DEF_SET#@ @!L_MASTERKEY!@ @+_RELATION_KEY_MASTER+@
+      @#DEF_SET#@ @!L_STARTPOS!@ @"1"@
+      @<_PUSH_MEM>@
+      @<_SET_RELATION_KEYSLAVE>@
+         @#DEF_LOOP#@ @+_KEY_SYS_KEYNO+@
+         @<_FETCH_NEXT_KEY_ITEM>@
+           MOVE TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-BUF(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO @+_KEY_SYS_NAME+@
+           @#DEF_ADD#@ @!L_STARTPOS!@ @+_KEY_SYS_PICLENGTH+@
+         @#END_LOOP#@
+      @<_POP_MEM>@
+           .
+
+   @#END_IF#@
+;
+; ===================================================================
+; Situation 2, 4 : Several MasterKeys to one Single/Split Key (M-1, M-M)
+; ===================================================================
+;
+@#ELSE#@
+   ;
+   ; Situation 2
+   ;
+   @#DEF_IF#@ @#EXP: NOT @!L_SLAVEISSPLIT!@ #@
+       @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY.
+      @#DEF_SET#@ @!L_STARTPOS!@ @"1"@
+      @<_SET_RELATION_KEY>@
+      @#DEF_LOOP#@ @+_RELATION_SYS_KEYNO+@
+          @<_FETCH_NEXT_RELATION_KEY>@
+           MOVE @+_RELATION_KEY_MASTER+@ TO @+_RELATION_KEY_SLAVE+@(@!L_STARTPOS!@:@+_RELATION_KEY_MASTERLENGTH+@)
+           MOVE @+_RELATION_KEY_MASTER+@ TO @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-BUF(@!L_STARTPOS!@:@+_RELATION_KEY_MASTERLENGTH+@)
+           @#DEF_ADD#@ @!L_STARTPOS!@ @+_RELATION_KEY_MASTERLENGTH+@
+      @#END_LOOP#@
+           .
+
+@$WORKING$@
+       77 @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-BUF  PIC X(@!L_STARTPOS!@).
+   ;
+   ; Situation 4
+   ;
+   @#ELSE#@
+       @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY.
+           INITIALIZE TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-BUF
+      @#DEF_SET#@ @!L_STARTPOS!@ @"1"@
+      @<_SET_RELATION_KEY>@
+      @#DEF_LOOP#@ @+_RELATION_SYS_KEYNO+@
+          @<_FETCH_NEXT_RELATION_KEY>@
+           MOVE @+_RELATION_KEY_MASTER+@ TO TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-BUF(@!L_STARTPOS!@:@+_RELATION_KEY_MASTERLENGTH+@)
+           MOVE @+_RELATION_KEY_MASTER+@ TO @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-BUF(@!L_STARTPOS!@:@+_RELATION_KEY_MASTERLENGTH+@)
+           @#DEF_ADD#@ @!L_STARTPOS!@ @+_RELATION_KEY_MASTERLENGTH+@
+      @#END_LOOP#@
+      ;
+      @#DEF_SET#@ @!L_SLAVESTARTPOS!@ @"1"@
+      @<_PUSH_MEM>@
+      @<_SET_RELATION_KEYSLAVE>@
+         @#DEF_LOOP#@ @+_KEY_SYS_KEYNO+@
+         @<_FETCH_NEXT_KEY_ITEM>@
+           MOVE TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-BUF(@!L_SLAVESTARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO @+_KEY_SYS_NAME+@
+           @#DEF_ADD#@ @!L_SLAVESTARTPOS!@ @+_KEY_SYS_PICLENGTH+@
+         @#END_LOOP#@
+      @<_POP_MEM>@
+           .
+
+@$WORKING$@
+       77 @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-BUF  PIC X(@!L_STARTPOS!@).
+   @#END_IF#@
+@#END_IF#@
+@#END_IF#@
+;

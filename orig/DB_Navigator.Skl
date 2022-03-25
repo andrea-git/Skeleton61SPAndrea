@@ -1,0 +1,567 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Navigator Generation Rule.  2001/11/02
+;
+; ===================================================================
+;
+@#DEF_SET#@ @!G_EXISTNAVIGATOR!@ @"YES"@
+@#DEF_SET#@ @!L_BLOCKMODE!@      @""@
+@#DEF_IF#@ @#EXP: @!G_OPERATIONMODE!@ EQUAL @"BLOCKMODE"@ #@
+   @#DEF_SET#@ @!L_BLOCKMODE!@   @"YES"@
+@#END_IF#@
+;
+; ===================================================================
+;   To check if this Control(DB.Navigator) in Data.Frame ?
+; ===================================================================
+@#DEF_SET#@ @!L_BUFFLD!@ @!G_SCREENNAME!@
+@#DEF_SET#@ @!L_FRMIDX!@ @"0"@
+@#DEF_IF#@ @!G_FRAMENAME!@
+    @#DEF_SET#@ @!L_BUFFLD!@ @!G_FRAMENAME!@
+    @#DEF_SET#@ @!L_FRMIDX!@ @!G_FRAMEINDEX!@
+@#END_IF#@
+;
+@<_SET_EXIST_DATASET>@
+@<_SET_DATASET_MASTERFDSL>@
+;
+@#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ OR
+                  @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"RANDOM"@ #@
+@$WORKING$@
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@ #@
+       77 @+_OBJ_ATR_NAME+@-REFRESH-TMPBUF@!G_MODE!@   PIC 9(16).
+       77 @+_OBJ_ATR_NAME+@-TMPBUF@!G_MODE!@   PIC X(16).
+   @#ELSE#@
+       77 @+_OBJ_ATR_NAME+@-REFRESH-TMPBUF@!G_MODE!@   PIC X(@+_FDSL_SYS_FDSIZE+@).
+       77 @+_OBJ_ATR_NAME+@-TMPBUF@!G_MODE!@   PIC X(@+_FDSL_SYS_FDSIZE+@).
+   @#END_IF#@
+@#END_IF#@
+;
+;
+; ===================== PRD -- Form-Init-Data =======================
+;
+@$PRE_INIT_DATA$@
+   @#DEF_SET#@ @!L_IOMODE!@ @""@
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+      @#DEF_SET#@ @!L_TYPE!@ @"I"@
+   @#ELSE_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@ #@
+      @#DEF_SET#@ @!L_TYPE!@ @"R"@
+   @#ELSE#@
+      @#DEF_SET#@ @!L_TYPE!@ @"S"@
+   @#END_IF#@
+   @#DEF_IF#@  @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@
+      @#DEF_SET#@ @!L_ACCESS!@ @"D"@
+      @#DEF_IF#@  @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@) #@
+         @#DEF_SET#@ @!L_IOMODE!@ @"-I"@
+	  @#ELSE_IF#@ @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"OUTPUT"@) OR (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"EXTEND"@) #@
+         @#DEF_SET#@ @!L_IOMODE!@ @"-O"@
+      @#END_IF#@
+   @#ELSE_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"RANDOM"@ #@
+      @#DEF_SET#@ @!L_ACCESS!@ @"R"@
+      @#DEF_IF#@  @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@) #@
+         @#DEF_SET#@ @!L_IOMODE!@ @"-I"@
+	  @#ELSE_IF#@ @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"OUTPUT"@) OR (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"EXTEND"@) #@
+         @#DEF_SET#@ @!L_IOMODE!@ @"-O"@
+      @#END_IF#@
+   @#ELSE#@
+      @#DEF_SET#@ @!L_ACCESS!@ @"S"@
+      @#DEF_IF#@  @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@) #@
+         @#DEF_SET#@ @!L_IOMODE!@ @"-I"@
+      @#ELSE#@
+         @#DEF_SET#@ @!L_IOMODE!@ @"-O"@
+      @#END_IF#@
+   @#END_IF#@
+           MOVE NAVI-ENABLE-@!L_TYPE!@@!L_ACCESS!@@!L_IOMODE!@ TO @+_OBJ_ATR_NAME+@-FUNCTION-FLAG@!G_MODE!@
+   @#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLECURRENT+@ EQUAL @"COMBOSTYLE"@ #@
+      * NAVIGATOR
+           PERFORM @+_OBJ_ATR_NAME+@-Combo-Content@!G_MODE!@
+   @#END_IF#@
+;
+; ============== PRD -- DB -- Navigator's Paragraphs ================
+;
+@$INITDATA-PROCEDURE$@
+;
+;  <<<<<  NAVIGATORNAME-Combo-Content.  >>>>>
+;
+      *
+      * DB-NAVIGATOR in Procedure
+      *
+@#DEF_IF#@  @#EXP: @+_OBJ_ATR_VISIBLECURRENT+@ EQUAL @"COMBOSTYLE"@ #@
+       @+_OBJ_ATR_NAME+@-Combo-Content@!G_MODE!@.
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Navigator:@+_OBJ_ATR_NAME+@, BeforeLoadComboRecord>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Navigator"@ @"BeforeLoadComboRecord"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@ 
+   ; ===================================================================
+   ; If the SlaveFD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+        @#END_IF#@
+          @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+          @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, MASS-UPDATE = 1, RESET-LIST = 1
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+        @#END_IF#@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-INITSTART
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-IF
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @+_OBJ_ATR_NAME+@-COMBO-ITEMADD@!G_MODE!@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-PERFORM
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+        @#END_IF#@
+          @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+          @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, MASS-UPDATE = 0
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+        @#END_IF#@
+      @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@ #@
+           MOVE 0 TO @+_FDSL_SYS_FDKEY+@
+      @#END_IF#@
+      * Reset File Ptr to First.
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-INITSTART
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START
+           ;IF @+_FDSL_SYS_FILESTATUS88+@
+           ;   PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           ;END-IF
+   @#ELSE_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"SEQUENTIAL"@ AND 
+                      @+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@   #@
+   ; ===================================================================
+   ; If the SlaveFD is Sequential or it's AccessMode is Sequential.
+   ; And it's I/O Mode is "INPUT".
+   ; ===================================================================
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+        @#END_IF#@
+          @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+          @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, MASS-UPDATE = 1, RESET-LIST = 1
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+        @#END_IF#@           
+           CLOSE @+_FDSL_SYS_FDNAME+@
+           PERFORM OPEN-@+_FDSL_SYS_FDNAME+@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+          @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+          @#END_IF#@
+          @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+          @#END_IF#@
+            @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+            @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                   ITEM-TO-ADD = @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+          @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              END-PERFORM
+          @#END_IF#@
+          @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              END-PERFORM
+          @#END_IF#@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-PERFORM
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+        @#END_IF#@
+          @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+          @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, MASS-UPDATE = 0
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+        @#END_IF#@
+      * Reset File Ptr to First.
+           CLOSE @+_FDSL_SYS_FDNAME+@
+           PERFORM OPEN-@+_FDSL_SYS_FDNAME+@
+   @#END_IF#@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Navigator:@+_OBJ_ATR_NAME+@, AfterLoadComboRecord>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Navigator"@ @"AfterLoadComboRecord"@
+      * <TOTEM:END>
+           .
+
+@#END_IF#@
+;
+;  <<<<<  FIRST / PREVIOUS / NEXT ...  >>>>>
+;
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEFIRST+@
+       @+_OBJ_ATR_NAME+@-First@!G_MODE!@.
+           MOVE @!L_FRMIDX!@ TO TOTEM-Frame-Index
+           PERFORM @!L_BUFFLD!@-First@!G_MODE!@
+           .
+
+@#END_IF#@      
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEPREVIOUS+@
+       @+_OBJ_ATR_NAME+@-Previous@!G_MODE!@.
+           MOVE @!L_FRMIDX!@ TO TOTEM-Frame-Index
+           PERFORM @!L_BUFFLD!@-Previous@!G_MODE!@
+           .
+
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLENEXT+@
+       @+_OBJ_ATR_NAME+@-Next@!G_MODE!@.
+           MOVE @!L_FRMIDX!@ TO TOTEM-Frame-Index
+           PERFORM @!L_BUFFLD!@-Next@!G_MODE!@
+           .
+      
+@#END_IF#@ 
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLELAST+@
+       @+_OBJ_ATR_NAME+@-Last@!G_MODE!@.
+           MOVE @!L_FRMIDX!@ TO TOTEM-Frame-Index
+           PERFORM @!L_BUFFLD!@-Last@!G_MODE!@
+           .
+
+@#END_IF#@
+;
+;
+@$INITDATA-PROCEDURE$@
+;
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLECURRENT+@
+       @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@.
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Navigator:@+_OBJ_ATR_NAME+@, BeforeCurrent>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Navigator"@ @"BeforeCurrent"@
+      * <TOTEM:END>
+           MOVE @!L_FRMIDX!@ TO TOTEM-Frame-Index
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ OR
+                     @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"RANDOM"@ #@
+   ; ===================================================================
+   ; If the SlaveFD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+      @#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLECURRENT+@ EQUAL @"BUTTONSTYLE"@ #@
+           PERFORM @!L_BUFFLD!@-Buf-To-Fld@!G_MODE!@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read
+        @#DEF_IF#@ @#EXP: @+_FDSL_SYS_FDKEYTYPE+@ EQUAL @"DUPLICATE"@ #@
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!L_BUFFLD!@-DUPLICATE-MOVEKEY@!G_MODE!@
+           END-IF
+        @#END_IF#@
+           PERFORM @!L_BUFFLD!@-DUMMY-CURR@!G_MODE!@
+           PERFORM @!L_BUFFLD!@-IUD-Display@!G_MODE!@
+      @#ELSE#@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read
+        @#DEF_IF#@ @#EXP: @+_FDSL_SYS_FDKEYTYPE+@ EQUAL @"DUPLICATE"@ #@
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!L_BUFFLD!@-DUPLICATE-MOVEKEY@!G_MODE!@
+           END-IF
+        @#END_IF#@
+           PERFORM @!L_BUFFLD!@-DUMMY-CURR@!G_MODE!@
+           PERFORM @!L_BUFFLD!@-IUD-Display@!G_MODE!@
+      @#END_IF#@
+   @#ELSE_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"SEQUENTIAL"@ #@
+   ; ===================================================================
+   ; If the SlaveFD is Sequential or it's AccessMode is Sequential.
+   ; And it's I/O Mode is "INPUT".
+   ; ===================================================================
+           CLOSE @+_FDSL_SYS_FDNAME+@
+           PERFORM OPEN-@+_FDSL_SYS_FDNAME+@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@ OR
+                 @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@ = 
+                                 @+_OBJ_ATR_NAME+@-CURR-TMP@!G_MODE!@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-PERFORM
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-INITREC
+           END-IF
+           PERFORM @!L_BUFFLD!@-Fld-To-Buf@!G_MODE!@
+           PERFORM @!L_BUFFLD!@-IUD-DISPLAY@!G_MODE!@
+   @#END_IF#@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Navigator:@+_OBJ_ATR_NAME+@, AfterCurrent>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Navigator"@ @"AfterCurrent"@
+      * <TOTEM:END>
+           .
+
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEREFRESH+@
+   @#DEF_SET#@ @!L_NEEDDISPLAY!@ @"YES"@
+       @+_OBJ_ATR_NAME+@-Refresh@!G_MODE!@.
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Navigator:@+_OBJ_ATR_NAME+@, BeforeRefresh>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Navigator"@ @"BeforeRefresh"@
+      * <TOTEM:END>
+           SET @!G_SCREENNAME!@-FLAG-REFRESH@!G_MODE!@ TO TRUE
+   @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ OR
+                     @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"RANDOM"@ #@
+           PERFORM @+_OBJ_ATR_NAME+@-CURR-TOKEYIS@!G_MODE!@
+           MOVE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@ TO
+                     @+_OBJ_ATR_NAME+@-REFRESH-TMPBUF@!G_MODE!@
+   @#END_IF#@
+           PERFORM @!L_BUFFLD!@-CLEAR@!G_MODE!@
+           PERFORM @!L_BUFFLD!@-INIT-DATA@!G_MODE!@
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ OR
+                     @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"RANDOM"@ #@
+           MOVE @+_OBJ_ATR_NAME+@-REFRESH-TMPBUF@!G_MODE!@ TO
+                     @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+   @#DEF_IF#@ @+_OBJ_ATR_VISIBLECURRENT+@
+           PERFORM @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@
+   @#END_IF#@
+           PERFORM @!G_SCREENNAME!@-DISPLAY@!G_MODE!@
+   @#ELSE#@
+           PERFORM @!G_SCREENNAME!@-DISPLAY@!G_MODE!@
+   @#END_IF#@
+           SET @!G_SCREENNAME!@-FLAG-REFRESH@!G_MODE!@ TO FALSE
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Navigator:@+_OBJ_ATR_NAME+@, AfterRefresh>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Navigator"@ @"AfterRefresh"@
+      * <TOTEM:END>
+           .
+
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEADD+@
+       @+_OBJ_ATR_NAME+@-Add@!G_MODE!@.
+           MOVE @!L_FRMIDX!@ TO TOTEM-Frame-Index
+           PERFORM @!L_BUFFLD!@-Add@!G_MODE!@
+           .
+     
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEUPDATE+@
+       @+_OBJ_ATR_NAME+@-Update@!G_MODE!@.
+           MOVE @!L_FRMIDX!@ TO TOTEM-Frame-Index
+           PERFORM @!L_BUFFLD!@-Update@!G_MODE!@
+           .
+
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEDELETE+@
+       @+_OBJ_ATR_NAME+@-Delete@!G_MODE!@.
+           MOVE @!L_FRMIDX!@ TO TOTEM-Frame-Index
+           PERFORM @!L_BUFFLD!@-Delete@!G_MODE!@
+           .
+
+@#END_IF#@
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLECURRENT+@ AND (NOT @+_OBJ_ATR_VISIBLECURRENT+@ EQUAL @"BUTTONSTYLE"@) #@
+@$NAVIGATOR-FOR-MASTERGRID$@
+   @#DEF_IF#@  @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@
+           PERFORM @!L_BUFFLD!@-Buf-To-Fld@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-KEYIS-TOCURR@!G_MODE!@
+   @#ELSE_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"SEQUENTIAL"@ #@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+        @#END_IF#@
+          @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+          @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@,
+                 VALUE = @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+        @#END_IF#@
+   @#END_IF#@
+@#END_IF#@
+;
+; ===================================================================
+; For Multiple KEYIS
+; ===================================================================
+;
+@#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"SEQUENTIAL"@) #@
+@<_PUSH_MEM>@
+@<_SET_FDSL_MULTIPLEKEY>@
+ @#DEF_LOOP#@ @+_FDSL_SYS_MULTIPLEKEYNO+@
+   @<_FETCH_NEXT_FDSL_MULTIPLEKEY>@
+   @#DEF_ADD#@ @!L_KEYINDEX!@ @"1"@
+   ;
+   @<_PUSH_MEM>@
+     @<_SET_MULTIPLEKEY_KEYIS>@
+   ;
+   @#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLECURRENT+@ AND
+                  (NOT (@+_OBJ_ATR_VISIBLECURRENT+@ EQUAL @"BUTTONSTYLE"@)) #@
+  @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+  @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+@$CURR-TOKEYIS$@
+     @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+           WHEN @!L_KEYINDEX!@
+           @#DEF_IF#@ @#EXP: NOT @+_FDSL_SYS_ISSPLITKEY+@ #@
+              INQUIRE @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, VALUE @+_MULTIPLEKEY_SYS_NAME+@
+           @#ELSE#@
+              INQUIRE @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, VALUE @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-SPLIT-BUF@!L_KEYINDEX!@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-TMPBUF-TO-FLD
+           @#END_IF#@
+     ;
+     ; Only for Relative FD
+     ;
+     @#ELSE#@
+           INQUIRE @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, VALUE @+_FDSL_SYS_FDKEY+@
+     @#END_IF#@
+     ;
+     @#DEF_IF#@  @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@
+@$KEYIS-TOCURR$@
+      @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+           WHEN @!L_KEYINDEX!@
+           @#DEF_IF#@ @#EXP: NOT @+_FDSL_SYS_ISSPLITKEY+@ #@
+	         @#DEF_IF#@ @+_MULTIPLEKEY_SYS_DECIMAL+@
+              MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, VALUE = @+_MULTIPLEKEY_SYS_NAME+@
+             @#ELSE#@ 
+              MOVE @+_MULTIPLEKEY_SYS_NAME+@ TO @+_OBJ_ATR_NAME+@-TMPBUF@!G_MODE!@
+              MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, VALUE = @+_OBJ_ATR_NAME+@-TMPBUF@!G_MODE!@
+             @#END_IF#@
+           @#ELSE#@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-FLD-TO-TMPBUF
+              MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@,
+                 VALUE = @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-SPLIT-BUF@!L_KEYINDEX!@
+           @#END_IF#@
+      @#ELSE#@
+	       @#DEF_IF#@ @+_FDSL_SYS_FDKEYDECIMAL+@
+           MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, VALUE = @+_FDSL_SYS_FDKEY+@
+		   @#ELSE#@
+           MOVE @+_FDSL_SYS_FDKEY+@ TO @+_OBJ_ATR_NAME+@-TMPBUF@!G_MODE!@
+           MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, VALUE = @+_OBJ_ATR_NAME+@-TMPBUF@!G_MODE!@
+           @#END_IF#@
+      @#END_IF#@
+     ;end_if EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ 
+     @#END_IF#@
+   ;end_if EXP: @+_OBJ_ATR_VISIBLECURRENT+@ AND (NOT (@+_OBJ_ATR_VISIBLECURRENT+@ EQUAL @"BUTTONSTYLE"@))
+   @#END_IF#@
+   ;
+   @#DEF_IF#@  @#EXP: @+_OBJ_ATR_VISIBLECURRENT+@ EQUAL @"COMBOSTYLE"@ #@
+     @#DEF_IF#@  @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@
+@$KEYIS-ITEMTOADD$@
+      @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+           WHEN @!L_KEYINDEX!@
+           @#DEF_IF#@ @#EXP: NOT @+_FDSL_SYS_ISSPLITKEY+@ #@
+	          @#DEF_IF#@ @+_MULTIPLEKEY_SYS_DECIMAL+@
+              MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                     ITEM-TO-ADD = @+_MULTIPLEKEY_SYS_NAME+@
+              @#ELSE#@ 
+              MOVE @+_MULTIPLEKEY_SYS_NAME+@ TO @+_OBJ_ATR_NAME+@-TMPBUF@!G_MODE!@
+              MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                     ITEM-TO-ADD = @+_OBJ_ATR_NAME+@-TMPBUF@!G_MODE!@
+              @#END_IF#@
+           @#ELSE#@
+              MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                     ITEM-TO-ADD = @+_FDSL_SYS_FDNAME+@-@+_MULTIPLEKEY_SYS_KEYNAME+@-SPLITBUF
+           @#END_IF#@
+      @#ELSE#@
+	       @#DEF_IF#@ @+_FDSL_SYS_FDKEYDECIMAL+@
+           MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                  ITEM-TO-ADD = @+_FDSL_SYS_FDKEY+@
+		   @#ELSE#@
+           MOVE @+_FDSL_SYS_FDKEY+@ TO @+_OBJ_ATR_NAME+@-TMPBUF@!G_MODE!@
+           MODIFY @+_OBJ_ATR_NAME+@-Curr@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                  ITEM-TO-ADD = @+_OBJ_ATR_NAME+@-TMPBUF@!G_MODE!@
+           @#END_IF#@
+      @#END_IF#@
+     @#END_IF#@
+   @#END_IF#@
+   ;
+   @<_POP_MEM>@
+   ;
+ @#END_LOOP#@
+@<_POP_MEM>@
+@#END_IF#@
+;
+@$INITDATA-PROCEDURE$@
+;
+       @+_OBJ_ATR_NAME+@-CURR-TOKEYIS@!G_MODE!@.
+@#DEF_SET#@ @!L_DOIT!@ @""@
+@#DEF_SETMEM#@ @!L_DOIT!@ @"CURR-TOKEYIS"@
+@#DEF_IF#@ @!L_DOIT!@
+   @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+           EVALUATE @+_DATASET_SYS_NAME+@-KEYIS
+           @#GET_MEM#@   @"CURR-TOKEYIS"@
+           @#CLEAR_MEM#@ @"CURR-TOKEYIS"@
+           END-EVALUATE
+   @#ELSE#@
+           @#GET_MEM#@   @"CURR-TOKEYIS"@
+           @#CLEAR_MEM#@ @"CURR-TOKEYIS"@
+   @#END_IF#@
+@#END_IF#@
+           .
+
+;
+@#DEF_SET#@ @!L_DOIT!@ @""@
+@#DEF_SETMEM#@ @!L_DOIT!@ @"KEYIS-TOCURR"@
+@#DEF_IF#@ @!L_DOIT!@
+       @+_OBJ_ATR_NAME+@-KEYIS-TOCURR@!G_MODE!@.
+   @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+           EVALUATE @+_DATASET_SYS_NAME+@-KEYIS
+           @#GET_MEM#@   @"KEYIS-TOCURR"@
+           @#CLEAR_MEM#@ @"KEYIS-TOCURR"@
+           END-EVALUATE
+   @#ELSE#@
+           @#GET_MEM#@   @"KEYIS-TOCURR"@
+           @#CLEAR_MEM#@ @"KEYIS-TOCURR"@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+   @#END_IF#@
+           .
+
+@#END_IF#@
+;
+@#DEF_IF#@  @#EXP: @+_OBJ_ATR_VISIBLECURRENT+@ EQUAL @"COMBOSTYLE"@ #@
+       @+_OBJ_ATR_NAME+@-COMBO-ITEMADD@!G_MODE!@.
+   @#DEF_SET#@ @!L_DOIT!@ @""@
+   @#DEF_SETMEM#@ @!L_DOIT!@ @"KEYIS-ITEMTOADD"@
+   @#DEF_IF#@ @!L_DOIT!@
+   @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+   @#END_IF#@
+      @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+           EVALUATE @+_DATASET_SYS_NAME+@-KEYIS
+           @#GET_MEM#@   @"KEYIS-ITEMTOADD"@
+           @#CLEAR_MEM#@ @"KEYIS-ITEMTOADD"@
+           END-EVALUATE
+      @#ELSE#@
+           @#GET_MEM#@   @"KEYIS-ITEMTOADD"@
+           @#CLEAR_MEM#@ @"KEYIS-ITEMTOADD"@
+      @#END_IF#@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+   @#END_IF#@
+           .
+
+@#END_IF#@
+;

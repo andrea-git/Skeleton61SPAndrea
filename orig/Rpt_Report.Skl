@@ -1,0 +1,591 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report Generation Rule.  2001/04/19
+;
+; ===================================================================
+;
+; ========= WRK -- WORKING STORAGE (for HTML Header & Footer) =======
+;
+@$WORKING$@
+    @#DEF_IF#@ @!G_EXISTRPTBUF!@
+      * RPT Data control buffer
+       01 RPT-@!G_REPORTNAME!@-BUF.
+           @#GET_MEM#@   @"RPT_DB_WORKING_BUFBODY"@
+           @#CLEAR_MEM#@ @"RPT_DB_WORKING_BUFBODY"@
+
+      * RPT Data control Pre-time buffer
+       01 RPT-@!G_REPORTNAME!@-PRE-BUF.
+           @#GET_MEM#@   @"RPT_PRE_DATABUF"@
+           @#CLEAR_MEM#@ @"RPT_PRE_DATABUF"@
+
+    @#ELSE#@
+      * RPT Data control buffer
+       01 RPT-@!G_REPORTNAME!@-BUF.
+           03 FILLER  PIC X.
+
+      * RPT Data control Pre-time buffer
+       01 RPT-@!G_REPORTNAME!@-PRE-BUF.
+           03 FILLER  PIC X.
+
+    @#END_IF#@
+;
+      * GROUP : GroupBy buffer
+       01 @!G_REPORTNAME!@-GROUPBY-BUF.
+    @#DEF_IF#@ @!G_EXISTGROUP!@
+           @#GET_MEM#@   @"RPT_GROUPBY_BUF"@
+           @#CLEAR_MEM#@ @"RPT_GROUPBY_BUF"@
+    @#ELSE#@
+           03 FILLER  PIC X. 
+    @#END_IF#@
+
+      * CONTROL : PRINT WHEN NEW PAGE
+       01 @!G_REPORTNAME!@-ISNEWPAGE-BUF.
+    @#DEF_IF#@ @!G_EXISTISNEWPAGE!@
+           @#GET_MEM#@   @"RPT_ISNEWPAGE_BUF"@
+           @#CLEAR_MEM#@ @"RPT_ISNEWPAGE_BUF"@
+    @#ELSE#@
+           03 FILLER  PIC X. 
+    @#END_IF#@
+
+    @#DEF_IF#@ @!G_EXISTSUM!@
+      * @!G_REPORTNAME!@ SUMMARY CONTROL BUF
+       01 @!G_REPORTNAME!@-SUMBUF.
+           @#GET_MEM#@   @"RPT_SUM_BUF"@
+           @#CLEAR_MEM#@ @"RPT_SUM_BUF"@
+
+    @#END_IF#@
+;
+
+      * RPT for Section Page Control
+       01 @!G_REPORTNAME!@-HEIGHT.
+           05 PAGE-HEIGHT   PIC 9(04) VALUE @+_RPT_SYS_PAPERHEIGHTPIXELS+@.
+           05 PAGE-WIDTH    PIC 9(04) VALUE @+_RPT_SYS_PAPERWIDTHPIXELS+@.
+           @#GET_MEM#@   @"RPT_HEIGHT_BUF"@
+           @#CLEAR_MEM#@ @"RPT_HEIGHT_BUF"@
+
+       77 @!G_REPORTNAME!@-CLEFTOFFSET PIC 9(6)  VALUE 0.
+;
+; ========== RPT -- HTML HEADER/FOOTERT PRINT ROUTINE ===============
+;
+@$TABLE-PRINT$@
+       @!G_REPORTNAME!@-HTML-HEADER.
+           MOVE '<HTML>' TO PRINT-BUF.
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           MOVE '<HEAD><TITLE> @+_RPT_ATR_TITLE+@ </TITLE></HEAD>' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           PERFORM @!G_REPORTNAME!@-HTML-CSS
+           @#GET_MEM#@   @"STYLE_CSS_SUBREPORT"@
+           @#CLEAR_MEM#@ @"STYLE_CSS_SUBREPORT"@
+           MOVE '</HEAD>' TO PRINT-BUF.
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           MOVE '<BODY STYLE="BACKGROUND-COLOR:@!G_DETAILBKRGB!@;">' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           .
+
+       @!G_REPORTNAME!@-HTML-FOOTER.
+           MOVE '</BODY>' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           MOVE '</HTML>' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           .
+
+       @!G_REPORTNAME!@-HTML-CSS.
+           MOVE '<STYLE TYPE="TEXT/CSS">' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           @#GET_MEM#@   @"STYLE_CSS_ALL"@
+           @#CLEAR_MEM#@ @"STYLE_CSS_ALL"@
+           MOVE '</STYLE>' TO PRINT-BUF.
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           .
+
+@#DEF_IF#@ @+_RPT_ATR_DATASET+@
+;
+; ===================================================================
+; Remarks:
+;   Attention : You should call all 1-1 relation paragraphs before
+;               1-M relation paragraph.
+;   Because we will call -DO-PRINT-RTN in the most bottom 1-M 
+;   Relation Loop, before that, all 1-1 relation FD should had been
+;   read.
+; ===================================================================
+;
+   @<_SET_DATASET_MASTERFDSL>@
+   @#DEF_SET#@ @!L_MASTERFD!@ @+_FDSL_SYS_FDNAME+@
+   @<_SET_FDSL_RELATION>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+      @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-1"@ #@
+@$SINGLE-FDSL-REFERENCE$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+      @#END_IF#@
+   @#END_LOOP#@
+@$MULTI-FDSL-REFERENCE$@
+   @<_SET_FDSL_RELATION>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+      @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@ #@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+      @#END_IF#@
+   @#END_LOOP#@
+@#END_IF#@
+; ===================================================================
+; Remarks:
+;  Generate the -ChangeTo-Key paragraph.
+; ===================================================================
+;
+@%RPT_MKey.Skl%@
+;
+;
+; ===================================================================
+; Remarks:
+;   We should put RPT-@+_RPT_ATR_NAME+@-DO-PRINT-RTN to the deepest
+;   1-M Relation paragraphs.
+;   So if there's 1-M, we will set value to @!G_PRINTINDEEP!@ in
+;   Rpt_Relation.Skl, and we don't have to perform print paragraph
+;   in the -PRINT-LOOP.
+; ===================================================================
+;
+   @#DEF_SET#@ @!L_DOBACKUPKEY!@ @"0"@
+   @#DEF_IF#@ @#EXP: @+_RPT_ATR_DATASET+@ AND (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) #@ 
+      @#DEF_SET#@ @!L_DOBACKUPKEY!@ @"YES"@
+   @#END_IF#@
+;
+@#DEF_SET#@ @!G_PRINTINDEEP!@ @""@
+;
+@#DEF_IF#@ @+_RPT_ATR_DATASET+@
+   @#DEF_SET#@ @!L_RPTDATASET!@ @+_DATASET_SYS_NAME+@
+   @<_PUSH_MEM>@
+      @<_SET_DATASET_FDSLCHILD>@
+      @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+         @<_FETCH_NEXT_DATASET_FDSL>@
+         @<_SET_FDSL_RELATION>@
+         @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+            @<_FETCH_NEXT_FDSL_RELATION>@
+            @#DEF_IF#@ @#EXP: (@+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@) AND
+                              (@!L_RPTDATASET!@ EQUAL @+_DATASET_SYS_NAME+@) #@
+               @#DEF_SET#@ @!G_SCREENNAME!@  @!G_REPORTNAME!@
+               @#DEF_SET#@ @!G_FORMBASESET!@ @!L_RPTDATASET!@
+               @%Rpt_Relation.Skl%@
+            @#END_IF#@
+         @#END_LOOP#@
+         @%Rpt_FDSmy.Skl%@
+      @#END_LOOP#@
+   @<_POP_MEM>@
+@#END_IF#@
+;
+; ================ PRD -- DB -- BACKUP / RESTORE KEY ================
+; ===================================================================
+;
+   @%Rpt_KeyBackRst.Skl%@
+;
+; =============== PRD -- DB -- INIT_DATA'S PARAGRAPH ================
+;
+   @#DEF_IF#@ @+_FDSL_SYS_STARTVALUE+@
+      @#DEF_SET#@ @!L_STARTVALUE!@ @+_FDSL_SYS_STARTVALUE+@
+   @#ELSE#@
+      @#DEF_SET#@ @!L_STARTVALUE!@ @"Low-Value"@
+   @#END_IF#@
+;
+   @#DEF_IF#@ @+_FDSL_SYS_ENDVALUE+@
+      @#DEF_SET#@ @!L_ENDVALUE!@ @+_FDSL_SYS_ENDVALUE+@
+   @#ELSE#@
+      @#DEF_SET#@ @!L_ENDVALUE!@ @"High-Value"@
+   @#END_IF#@
+;
+;
+@#DEF_SET#@ @!L_BEFWM!@     @""@
+@#DEF_SET#@ @!L_AFTWM!@     @""@
+@#DEF_SET#@ @!L_WATERMARK!@     @""@
+@#DEF_IF#@ @#EXP: (@+_RPT_ATR_WATERMARK+@ OR @+_RPT_ATR_WATERMARKVARIABLE+@) AND (NOT (@+_RPT_ATR_WATERMARKSTYLE+@ EQUAL @"NONE"@)) #@
+    @#DEF_SET#@ @!L_BEFWM!@ @"BACKGROUND:URL("@    
+    @#DEF_IF#@ @+_RPT_ATR_WATERMARKVARIABLE+@
+      @#DEF_SET#@ @!L_WATERMARK!@ @"@+_RPT_ATR_WATERMARKVARIABLE+@"@
+    @#ELSE#@
+      @#DEF_SET#@ @!L_WATERMARK!@ @"'@+_RPT_SYS_WATERMARKFULLPATH+@'"@
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: @+_RPT_ATR_WATERMARKSTYLE+@ EQUAL @"CENTER"@ #@
+       @#DEF_SET#@ @!L_AFTWM!@ @") no-repeat scroll center;"@
+    @#ELSE#@
+       @#DEF_SET#@ @!L_AFTWM!@ @") repeat scroll center;"@
+    @#END_IF#@
+@#END_IF#@
+;
+; ================== RPT -- REPORT PRINT ROUTINE ====================
+;
+@$REPORT-BODY$@
+       @+_RPT_ATR_NAME+@-PRINT-TOFILE.
+           PERFORM @+_RPT_ATR_NAME+@-BACKUP-KEY
+           PERFORM RPT-@+_RPT_ATR_NAME+@-BEFORE-PRINT.
+    @#DEF_IF#@ @+_RPT_ATR_OUTPUTFILEVARIABLE+@
+           MOVE @+_RPT_ATR_OUTPUTFILEVARIABLE+@ TO PTR-DEV-NAME.
+    @#ELSE#@
+           MOVE "@+_RPT_ATR_OUTPUTFILENAME+@" TO PTR-DEV-NAME.
+    @#END_IF#@
+           MOVE TOTEM-Form-Index to TMP-FORM-INDEX
+           MOVE @!G_SCREENINDEX!@ TO TOTEM-Form-Index
+           MOVE @!G_SCREENINDEX!@ TO CALLBY-INDEX
+           MOVE 1 TO CURRENT-COL
+           MOVE 0 TO @!G_REPORTNAME!@-CLEFTOFFSET
+           MOVE 0 TO CNT-PIXELS
+    ;
+    ; If it's a N-Top Report.
+    ;
+    @#DEF_IF#@ @#EXP: @+_RPT_ATR_REPORTSTYLE+@ EQUAL @"N-TOP"@ #@
+      * Initialize N-Top Variable
+           MOVE @+_RPT_ATR_NUMCOLUMNSNTOP+@ TO NTOPCOLUMNNUM
+    @#ELSE#@
+           MOVE 1 TO NTOPCOLUMNNUM
+    @#END_IF#@
+           PERFORM PRINTF-OPEN-ROUTINE.
+           PERFORM @!G_REPORTNAME!@-HTML-HEADER.
+           PERFORM @!G_REPORTNAME!@-HTML-PAGE-HEADER.
+           PERFORM RPT-@+_RPT_ATR_NAME+@-PRINT-LOOP.
+           PERFORM @!G_REPORTNAME!@-HTML-FOOTER.
+           PERFORM RPT-@+_RPT_ATR_NAME+@-AFTER-PRINT.
+           PERFORM PRINTF-CLOSE-ROUTINE
+           MOVE TMP-FORM-INDEX TO TOTEM-Form-Index
+           PERFORM @+_RPT_ATR_NAME+@-RESTORE-KEY
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-BEFORE-PRINT.
+      * <TOTEM:EPT. REPORT:@+_RPT_ATR_NAME+@, REPORT:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"REPORT"@ @"BeforePrint"@
+      * <TOTEM:END>
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-AFTER-PRINT.
+      * <TOTEM:EPT. REPORT:@+_RPT_ATR_NAME+@, REPORT:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"REPORT"@ @"AfterPrint"@
+      * <TOTEM:END>
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-PRINT-LOOP.
+           MOVE 1 TO TMP-PRINTORNOT
+           MOVE 0 TO CNT-INPAGEPIXELS
+           MOVE 1 TO TOTEM-PAGENUM
+           MOVE 1 TO TOTEM-PAGENUM-SYS
+           MOVE 0 TO SYS-ENDPRIMARYFD
+		   @#GET_MEM#@ @"REPORT-FOOTER-AFTERPAGE"@
+		   @#CLEAR_MEM#@ @"REPORT-FOOTER-AFTERPAGE"@
+           PERFORM RPT-@+_RPT_ATR_NAME+@-ALL-RESET
+           PERFORM RPT-@+_RPT_ATR_NAME+@-Fld-To-Buf
+      * CHECK REPORT HEADER
+           PERFORM RPT-@+_RPT_ATR_NAME+@-REPORT-HEADER
+      * START NORMAL (PAGE H/F, GROUP H/F, DETAIL)
+           PERFORM RPT-@+_RPT_ATR_NAME+@-MASTER-PRINT-LOOP
+           PERFORM @!G_REPORTNAME!@-MULTI-SUMMARY
+      * END NORMAL (PAGE H/F, GROUP H/F, DETAIL)
+           PERFORM RPT-@+_RPT_ATR_NAME+@-PAGE-HEADER
+      * CHECK LAST GROUP FOOTER
+           PERFORM RPT-@+_RPT_ATR_NAME+@-GROUP-MUSTDSP
+           PERFORM RPT-@+_RPT_ATR_NAME+@-GROUP-FOOTER
+      * CHECK REPORT FOOTER
+           IF ( REPORT-FOOTER-PRINT-AFTER-PAGE = 0 )
+              PERFORM RPT-@+_RPT_ATR_NAME+@-REPORT-FOOTER
+           END-IF
+      * NORMAL ENDING
+           PERFORM @+_RPT_ATR_NAME+@-FILL-DETAIL-FOR-ZEBRA
+           IF ( REPORT-FOOTER-PRINT-AFTER-PAGE = 0 )
+              MOVE 1 TO SYS-ENDPRIMARYFD           
+              @#GET_MEM#@   @"PAGEFOOTER-ENDING"@
+              @#CLEAR_MEM#@ @"PAGEFOOTER-ENDING"@
+              MOVE PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT TO CNT-INPAGEPIXELS
+              PERFORM RPT-@+_RPT_ATR_NAME+@-PAGE-FOOTER
+           END-IF
+      * CHECK REPORT FOOTER
+           IF ( REPORT-FOOTER-PRINT-AFTER-PAGE = 1 )
+              PERFORM RPT-@+_RPT_ATR_NAME+@-REPORT-FOOTER
+           END-IF
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-MASTER-PRINT-LOOP.
+           MOVE @!G_SCREENINDEX!@ TO TOTEM-Form-Index
+   @#DEF_IF#@ @+_RPT_ATR_DATASET+@
+      @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@ 
+      ; ===================================================================
+      ; If the SlaveFD is Index/Relative, and AccessMode is "Dynamic".
+      ; ===================================================================
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-INITSTART
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @+_RPT_ATR_DATASET+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-IF
+           @#GET_MEM#@   @"GRIDFD_@+_FDSL_SYS_FDNAME+@"@
+           @#CLEAR_MEM#@ @"GRIDFD_@+_FDSL_SYS_FDNAME+@"@
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+              MOVE 0 TO TMP-PRINTORNOT
+              @#GET_MEM#@   @"SINGLE-FDSL-REFERENCE"@
+              @#CLEAR_MEM#@ @"SINGLE-FDSL-REFERENCE"@
+              PERFORM @!G_REPORTNAME!@-@+_FDSL_SYS_FDNAME+@-MULTI-SUMMARY@!G_MODE!@
+              @#GET_MEM#@   @"MULTI-FDSL-REFERENCE"@
+              @#CLEAR_MEM#@ @"MULTI-FDSL-REFERENCE"@
+              IF TMP-PRINTORNOT = 0
+                 PERFORM RPT-@!G_REPORTNAME!@-Fld-To-Buf
+                 PERFORM RPT-@+_RPT_ATR_NAME+@-DO-PRINT-RTN
+              END-IF
+              MOVE RPT-@!G_REPORTNAME!@-BUF TO RPT-@!G_REPORTNAME!@-PRE-BUF
+              PERFORM RPT-@!G_REPORTNAME!@-Fld-To-Buf
+              PERFORM @+_RPT_ATR_DATASET+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-PERFORM
+           IF TMP-PRINTORNOT = 0
+              PERFORM RPT-@!G_REPORTNAME!@-Fld-To-Buf
+              PERFORM RPT-@+_RPT_ATR_NAME+@-DO-PRINT-RTN
+           END-IF
+      @#ELSE_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"SEQUENTIAL"@ #@
+      ; ===================================================================
+      ; If the SlaveFD is Sequential or it's AccessMode is Sequential.
+      ; And it's I/O Mode is "INPUT".
+      ; ===================================================================
+           CLOSE @+_FDSL_SYS_FDNAME+@
+           PERFORM OPEN-@+_FDSL_SYS_FDNAME+@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           @#GET_MEM#@   @"GRIDFD_@+_FDSL_SYS_FDNAME+@"@
+           @#CLEAR_MEM#@ @"GRIDFD_@+_FDSL_SYS_FDNAME+@"@
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+              MOVE 0 TO TMP-PRINTORNOT
+              @#GET_MEM#@   @"SINGLE-FDSL-REFERENCE"@
+              @#CLEAR_MEM#@ @"SINGLE-FDSL-REFERENCE"@
+              PERFORM @!G_REPORTNAME!@-@+_FDSL_SYS_FDNAME+@-MULTI-SUMMARY
+              @#GET_MEM#@   @"MULTI-FDSL-REFERENCE"@
+              @#CLEAR_MEM#@ @"MULTI-FDSL-REFERENCE"@
+              IF TMP-PRINTORNOT = 0
+                 PERFORM RPT-@!G_REPORTNAME!@-Fld-To-Buf
+                 PERFORM RPT-@+_RPT_ATR_NAME+@-DO-PRINT-RTN
+              END-IF
+              MOVE RPT-@!G_REPORTNAME!@-BUF TO RPT-@!G_REPORTNAME!@-PRE-BUF
+              PERFORM RPT-@!G_REPORTNAME!@-Fld-To-Buf
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-PERFORM
+           IF TMP-PRINTORNOT = 0
+              PERFORM RPT-@!G_REPORTNAME!@-Fld-To-Buf
+              PERFORM RPT-@+_RPT_ATR_NAME+@-DO-PRINT-RTN
+           END-IF
+      @#ELSE#@
+      ; ===================================================================
+      ; It maybe Random, ....
+      ; ===================================================================
+           PERFORM RPT-@!G_REPORTNAME!@-Fld-To-Buf
+           PERFORM RPT-@+_RPT_ATR_NAME+@-DO-PRINT-RTN
+      @#END_IF#@
+   @#ELSE#@
+   ; ===================================================================
+   ; There's no DataSet in Report, so we just print the Detail once.
+   ; ===================================================================
+           PERFORM RPT-@+_RPT_ATR_NAME+@-DO-PRINT-RTN
+   @#END_IF#@
+           .
+
+       @+_RPT_ATR_NAME+@-HTML-PAGE-HEADER.
+           MOVE ' <!-- Page DIV -->' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+;           MOVE ' <DIV @!L_PREDIV!@>' TO PRINT-BUF
+           STRING ' <DIV STYLE="POSITION:ABSOLUTE; TOP:', 
+                  CNT-PIXELS, 
+                  '; LEFT:',
+                  @!G_REPORTNAME!@-CLEFTOFFSET,
+                  '; HEIGHT:', PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT, 
+                  '; WIDTH:', PAGE-WIDTH OF @!G_REPORTNAME!@-HEIGHT,
+                  '; @!L_BEFWM!@',
+                  @!L_WATERMARK!@,
+                  '@!L_AFTWM!@">'
+               DELIMITED BY SIZE INTO PRINT-BUF.
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           .
+
+       @+_RPT_ATR_NAME+@-HTML-PAGE-FOOTER.
+           MOVE ' <!-- End(Page) --></DIV>' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-REPORT-HEADER.
+           @#GET_MEM#@   @"REPORT-HEADER-BODY"@
+           @#CLEAR_MEM#@ @"REPORT-HEADER-BODY"@
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-REPORT-FOOTER.
+           @#GET_MEM#@   @"REPORT-FOOTER-BODY"@
+           @#CLEAR_MEM#@ @"REPORT-FOOTER-BODY"@
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-PAGE-HEADER.
+           @#GET_MEM#@   @"PAGE-HEADER-BODY"@
+           @#CLEAR_MEM#@ @"PAGE-HEADER-BODY"@
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-PAGE-FOOTER.
+   @#DEF_IF#@ @!G_EXISTPAGEFOOTER!@
+           @#GET_MEM#@   @"PAGE-FOOTER-BODY"@
+           @#CLEAR_MEM#@ @"PAGE-FOOTER-BODY"@
+   @#ELSE#@
+           COMPUTE TMP-PIXELS = CNT-INPAGEPIXELS + CURRENT-HEIGHT
+           IF TMP-PIXELS >= PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT
+              PERFORM @!G_REPORTNAME!@-Page-BREAK-RTN
+           END-IF
+   @#END_IF#@
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-PAGE-FOOTER-OVERPAGE.
+   @#DEF_IF#@ @!G_EXISTPAGEFOOTER!@
+           @#GET_MEM#@   @"PAGE-FOOTER-OVERPAGE"@
+           @#CLEAR_MEM#@ @"PAGE-FOOTER-OVERPAGE"@
+   @#ELSE#@
+           MOVE 0 TO RPT-RETURN-VALUE
+           COMPUTE TMP-PIXELS = CNT-INPAGEPIXELS + CURRENT-HEIGHT
+           IF TMP-PIXELS >= PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT
+               MOVE 1 TO RPT-RETURN-VALUE
+           END-IF
+   @#END_IF#@
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-DETAIL.
+           @#GET_MEM#@   @"DETAIL-BODY-PARAGRAPH"@
+           @#CLEAR_MEM#@ @"DETAIL-BODY-PARAGRAPH"@
+           PERFORM @!G_REPORTNAME!@-ZEBRA-COLOR-CHANGE
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-GROUP-HEADER.
+      * Cause there're possibly several Group.
+           @#GET_MEM#@   @"GROUP-HEADER-PARAGRAPH"@
+           @#CLEAR_MEM#@ @"GROUP-HEADER-PARAGRAPH"@
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-GROUP-FOOTER.
+           @#GET_MEM#@   @"GROUP-FOOTER-PARAGRAPH"@
+           @#CLEAR_MEM#@ @"GROUP-FOOTER-PARAGRAPH"@
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-GROUP-MUSTDSP.
+           @#GET_MEM#@   @"RPT_GROUPBY_LAST_BUF"@
+           @#CLEAR_MEM#@ @"RPT_GROUPBY_LAST_BUF"@
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-GROUP-NOMUSTDSP.
+           @#GET_MEM#@   @"RPT_GROUPBY_NOLAST_BUF"@
+           @#CLEAR_MEM#@ @"RPT_GROUPBY_NOLAST_BUF"@
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-ALL-RESET.
+      * GROUP RESET
+           @#GET_MEM#@   @"GROUP-RESET-PARAGRAPH"@
+           @#CLEAR_MEM#@ @"GROUP-RESET-PARAGRAPH"@
+      * SUMMARY RESET
+           @#GET_MEM#@   @"SUMMARY-RESET-PARAGRAPH"@
+           @#CLEAR_MEM#@ @"SUMMARY-RESET-PARAGRAPH"@
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-DO-PRINT-RTN.
+           MOVE 1 TO TMP-PRINTORNOT
+           IF CALLBY-INDEX NOT = @!G_SCREENINDEX!@
+               MOVE SUBRPT-MASTER TO SUBREPORT-DISPATCH
+               PERFORM SUBREPORT-DO-PRINT-RTN
+               EXIT PARAGRAPH
+           END-IF
+      * CHECK GROUP FOOTER
+           PERFORM RPT-@+_RPT_ATR_NAME+@-GROUP-FOOTER
+      * INIT DETAIL'S HEIGHT
+           @#GET_MEM#@   @"DETAIL-INIT-HEIGHT"@
+           @#CLEAR_MEM#@ @"DETAIL-INIT-HEIGHT"@
+           PERFORM RPT-@!G_REPORTNAME!@-PAGE-FOOTER
+           PERFORM RPT-@!G_REPORTNAME!@-PAGE-HEADER
+      * CHECK GROUP HEADER
+           PERFORM RPT-@+_RPT_ATR_NAME+@-GROUP-HEADER
+      * DETAIL
+           PERFORM RPT-@+_RPT_ATR_NAME+@-DETAIL
+           .
+           
+       @!G_REPORTNAME!@-Page-BREAK-RTN.
+      * <TOTEM:EPT. REPORT:@+_RPT_ATR_NAME+@, REPORT:@+_RPT_ATR_NAME+@, BeforeBreak>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"REPORT"@ @"BeforeBreak"@
+      * <TOTEM:END>
+           IF CURRENT-COL < NTOPCOLUMNNUM
+              COMPUTE CNT-PIXELS = (TOTEM-PAGENUM-SYS - 1) * PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT
+              COMPUTE @!G_REPORTNAME!@-CLEFTOFFSET = @!G_REPORTNAME!@-CLEFTOFFSET + DETAIL-WIDTH
+              MOVE 0 TO CNT-INPAGEPIXELS
+              ADD 1 TO CURRENT-COL
+           ELSE
+              COMPUTE CNT-PIXELS = TOTEM-PAGENUM-SYS * PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT
+              MOVE 0 TO @!G_REPORTNAME!@-CLEFTOFFSET
+              MOVE 0 TO CNT-INPAGEPIXELS
+              ADD 1 TO TOTEM-PAGENUM-SYS
+              ADD 1 TO TOTEM-PAGENUM
+              MOVE 1 TO CURRENT-COL
+              ; If want to print totem-pagenum. so we need to update buffer immediatly
+              PERFORM RPT-@+_RPT_ATR_NAME+@-Fld-To-Buf
+              INITIALIZE @!G_REPORTNAME!@-ISNEWPAGE-BUF
+           END-IF
+      * <TOTEM:EPT. REPORT:@+_RPT_ATR_NAME+@, REPORT:@+_RPT_ATR_NAME+@, AfterBreak>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"REPORT"@ @"AfterBreak"@
+      * <TOTEM:END>
+           PERFORM @+_RPT_ATR_NAME+@-HTML-PAGE-FOOTER
+           IF SYS-ENDPRIMARYFD = 0
+              PERFORM @+_RPT_ATR_NAME+@-HTML-PAGE-HEADER
+           END-IF
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-Fld-To-Buf.
+      * <TOTEM:EPT. REPORT:@+_RPT_ATR_NAME+@, REPORT:@+_RPT_ATR_NAME+@, BeforeFldToBuf>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"REPORT"@ @"BeforeFldToBuf"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"ALL_FDSL_FLDTOBUF"@
+           @#CLEAR_MEM#@ @"ALL_FDSL_FLDTOBUF"@
+      * <TOTEM:EPT. REPORT:@+_RPT_ATR_NAME+@, REPORT:@+_RPT_ATR_NAME+@, AfterFldToBuf>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"REPORT"@ @"AfterFldToBuf"@
+      * <TOTEM:END>
+           .
+
+       @+_RPT_ATR_NAME+@-BACKUP-KEY.
+           @#GET_MEM#@   @"BACKUP-KEY"@
+           @#CLEAR_MEM#@ @"BACKUP-KEY"@
+           .
+
+       @+_RPT_ATR_NAME+@-RESTORE-KEY.
+           @#GET_MEM#@   @"RESTORE-KEY"@
+           @#CLEAR_MEM#@ @"RESTORE-KEY"@
+           .
+
+       @+_RPT_ATR_NAME+@-FILL-DETAIL-FOR-ZEBRA.
+	       @#DEF_SET#@ @!L_DOIT!@ @""@
+           @#DEF_SETMEM#@ @!L_DOIT!@ @"FILL-DETAIL-FOR-ZEBRA"@
+           @#DEF_IF#@ @!L_DOIT!@
+           MOVE 0 TO RPT-RETURN-VALUE
+           PERFORM UNTIL RPT-RETURN-VALUE > 0
+			   @#GET_MEM#@   @"FILL-DETAIL-FOR-ZEBRA"@
+			   @#CLEAR_MEM#@ @"FILL-DETAIL-FOR-ZEBRA"@
+              PERFORM @!G_REPORTNAME!@-ZEBRA-COLOR-CHANGE
+           END-PERFORM
+		   @#END_IF#@
+           .
+
+       @+_RPT_ATR_NAME+@-ZEBRA-COLOR-CHANGE.
+           @#GET_MEM#@   @"ZEBRA-COLOR-CHANGE"@
+           @#CLEAR_MEM#@ @"ZEBRA-COLOR-CHANGE"@
+           .
+
+       @#GET_MEM#@   @"DETAIL-BODY"@
+       @#CLEAR_MEM#@ @"DETAIL-BODY"@
+       @#GET_MEM#@   @"GROUP-HEADER-BODY"@
+       @#CLEAR_MEM#@ @"GROUP-HEADER-BODY"@
+       @#GET_MEM#@   @"GROUP-FOOTER-BODY"@
+       @#CLEAR_MEM#@ @"GROUP-FOOTER-BODY"@
+       @#GET_MEM#@   @"RPT-OBJ-PRINT-BODY"@
+       @#CLEAR_MEM#@ @"RPT-OBJ-PRINT-BODY"@
+
+@$RPT-OTHER-PARAGRAPH$@
+       @!G_REPORTNAME!@-MULTI-SUMMARY.
+           @#GET_MEM#@   @"MULTI-ALL-SUM-PARAGRAPH"@
+           @#CLEAR_MEM#@ @"MULTI-ALL-SUM-PARAGRAPH"@
+           .
+
+;
+;

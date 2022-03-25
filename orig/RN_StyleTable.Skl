@@ -1,0 +1,797 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Rpt.Grid Control Generation Rule.  2001/04/19
+;
+; Remarks:
+;
+; HTML :
+;
+; ===================================================================
+;
+; ======================= WRK -- RPT -- Grids ======================
+;
+@$WORKING$@
+      * GRID's Control Buffer
+       77 @+_RPT_ATR_NAME+@-ROWHEIGHT   PIC 9(4) VALUE 0.
+       77 @+_RPT_ATR_NAME+@-COLWIDTH    PIC 9(4) VALUE 0.
+       77 @+_RPT_ATR_NAME+@-TMP-HEIGHT  PIC 9(4) VALUE 0.
+       77 @+_RPT_ATR_NAME+@-FGCOLOR     PIC X(7).
+       77 @+_RPT_ATR_NAME+@-BGCOLOR     PIC X(7).
+       77 @+_RPT_ATR_NAME+@-ALIGN       PIC X(20).
+       77 @+_RPT_ATR_NAME+@-VALIGN      PIC X(20).
+       77 @+_RPT_ATR_NAME+@-FONTSIZE    PIC 9(3).
+       77 @+_RPT_ATR_NAME+@-FONT        PIC X(30).
+       77 @+_RPT_ATR_NAME+@-FONTPRE     PIC X(40).
+       77 @+_RPT_ATR_NAME+@-FONTAFT     PIC X(40).
+       77 @+_RPT_ATR_NAME+@-IDX         PIC 9(3).
+       77 @+_RPT_ATR_NAME+@-DUMY-LINE   PIC X(132).
+
+;
+; ==================== RPT -- CSS STYLE'S SETTING ===================
+;
+@#DEF_SET#@ @!L_TDATTR!@     @""@
+@#DEF_SET#@ @!L_DIV!@        @""@
+@#DEF_SET#@ @!L_ENDDIV!@     @""@
+;
+; ====================== RPT -- REGULAR SETTING =====================
+;
+  @#DEF_IF#@ @#EXP: NOT ((@+_CELL_SYS_COLSPAN+@ EQUAL @"0"@) OR (@+_CELL_SYS_COLSPAN+@ EQUAL @"1"@)) #@
+     @#DEF_APPEND#@ @!L_TDATTR!@ @" COLSPAN=\"@+_CELL_SYS_COLSPAN+@\" "@
+  @#END_IF#@
+  @#DEF_IF#@ @#EXP: NOT ((@+_CELL_SYS_ROWSPAN+@ EQUAL @"0"@) OR (@+_CELL_SYS_ROWSPAN+@ EQUAL @"1"@)) #@
+     @#DEF_APPEND#@ @!L_TDATTR!@ @" ROWSPAN=\"@+_CELL_SYS_ROWSPAN+@\" "@
+  @#END_IF#@
+  @#DEF_APPEND#@ @!L_TDATTR!@ @" WIDTH=\"@+_CELL_SYS_WIDTH+@\" "@
+  @#DEF_APPEND#@ @!L_TDATTR!@ @" HEIGHT=\"@+_CELL_SYS_HEIGHT+@\" "@
+  @#DEF_APPEND#@ @!L_TDATTR!@ @" VALIGN=TOP "@
+  @#DEF_SET#@    @!L_DIV!@ @"<DIV STYLE=\" "@
+  @#DEF_APPEND#@ @!L_DIV!@ @"FONT-FAMILY:@+_RPT_SYS_FONTNAME+@; "@ 
+  @#DEF_APPEND#@ @!L_DIV!@ @"FONT-SIZE:@+_RPT_SYS_FONTSIZE+@pt;\"> "@
+  @#DEF_SET#@    @!L_ENDDIV!@ @"</DIV>"@
+;
+@#DEF_SET#@    @!L_PREDIV!@ @""@
+@#DEF_APPEND#@ @!L_PREDIV!@ @"WIDTH:@+_RPT_SYS_WIDTHPIXELS+@; "@
+    @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISCOLORDEFAULT+@ #@
+        @#DEF_APPEND#@ @!L_PREDIV!@ @"COLOR:@+_RPT_SYS_FOREGROUNDRGBCOLOR+@; "@
+        @#DEF_APPEND#@ @!L_PREDIV!@ @"BACKGROUND-COLOR:@+_RPT_SYS_BACKGROUNDRGBCOLOR+@; "@
+    @#ELSE#@
+        @#DEF_APPEND#@ @!L_PREDIV!@ @"BACKGROUND-COLOR:TRANSPARENT; "@
+    @#END_IF#@
+;
+@#DEF_SET#@    @!L_TABATR!@ @"cellspacing=0 cellpadding=0 "@
+   @#DEF_IF#@ @#EXP: @+_RPT_ATR_BORDERSTYLE+@ EQUAL @"NOBOX"@ #@
+        @#DEF_APPEND#@ @!L_TABATR!@ @"BORDER=0 "@
+   @#ELSE#@
+        @#DEF_APPEND#@ @!L_TABATR!@ @"BORDER=@+_RPT_ATR_BORDERWIDTH+@ BORDERCOLOR=\"@+_RPT_SYS_BORDERRGBCOLOR+@\" BORDERCOLORLIGHT=\"@+_RPT_SYS_BORDERRGBCOLOR+@\" "@
+   @#END_IF#@
+   @#DEF_APPEND#@ @!L_TABATR!@ @"STYLE="FONT-SIZE:@+_RPT_SYS_FONTSIZE+@pt; "@
+   @#DEF_APPEND#@ @!L_TABATR!@ @"FONT-FAMILY:@+_RPT_SYS_FONTNAME+@; "@ 
+@#DEF_APPEND#@ @!L_TABATR!@ @"\""@
+@$TABLE-COLOR$@
+    @#DEF_IF#@ @+_RPT_ATR_COLORVARIABLE+@
+       @#DEF_SET#@ @!G_EXISTCOLVAR!@ @"YES"@
+              MOVE @+_RPT_ATR_COLORVARIABLE+@ TO TMP-COLOR-BUF
+              PERFORM Trans-ACUCOLOR-HTMLCOLOR
+              MOVE TMP-HTML-FG-BUF TO @+_RPT_ATR_NAME+@-FGCOLOR
+              MOVE TMP-HTML-BG-BUF TO @+_RPT_ATR_NAME+@-BGCOLOR
+    @#ELSE_IF#@ @#EXP: NOT @+_RPT_SYS_ISCOLORDEFAULT+@ #@
+              MOVE '@+_RPT_SYS_FOREGROUNDRGBCOLOR+@' TO @+_RPT_ATR_NAME+@-FGCOLOR
+              MOVE '@+_RPT_SYS_BACKGROUNDRGBCOLOR+@' TO @+_RPT_ATR_NAME+@-BGCOLOR
+    @#ELSE#@
+              MOVE 'TRANSPARENT' TO @+_RPT_ATR_NAME+@-BGCOLOR
+    @#END_IF#@
+;
+;
+@#DEF_SET#@ @!L_SHOWGRIDLINE!@ @+_RPT_ATR_SHOWGRIDLINE+@
+;
+; ===================================================================
+;  Column Setting.
+; ===================================================================
+  @<_PUSH_MEM>@
+  @<_SET_OBJ_COLUMNCTRL>@
+     @#DEF_SET#@ @!L_COLUMNINDEX!@ @"0"@
+     @#DEF_SET#@ @!L_COLNUM!@      @+_GRID_SYS_CTRLNO+@
+     @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+     @<_FETCH_NEXT_GRID_OBJ>@
+        @#DEF_ADD#@ @!L_COLUMNINDEX!@ @"1"@
+        @#DEF_SET#@    @!L_CSSCOL!@ @" STYLE=\""@
+        @#DEF_IF#@ @#EXP: NOT @!L_SHOWGRIDLINE!@ #@
+            @#DEF_APPEND#@ @!L_CSSCOL!@ @"BORDER:0px; "@
+        @#ELSE#@
+            @#DEF_APPEND#@ @!L_CSSCOL!@ @"BORDER-bottom:0px; BORDER-left:0px; "@
+        @#END_IF#@
+        @#DEF_APPEND#@ @!L_CSSCOL!@ @"\" "@
+@$COLUMN-CSS@!L_COLUMNINDEX!@$@
+@!L_CSSCOL!@',
+@$COLUMN-COLOR$@
+        @#DEF_IF#@ @+_GRID_SYS_COLORVARIABLE+@
+           @#DEF_SET#@ @!G_EXISTCOLVAR!@ @"YES"@
+           IF TOTEM-IDX2 = @!L_COLUMNINDEX!@
+              MOVE @+_GRID_SYS_COLORVARIABLE+@ TO TMP-COLOR-BUF
+              PERFORM Trans-ACUCOLOR-HTMLCOLOR
+              MOVE TMP-HTML-FG-BUF TO @+_RPT_ATR_NAME+@-FGCOLOR
+              MOVE TMP-HTML-BG-BUF TO @+_RPT_ATR_NAME+@-BGCOLOR
+           END-IF
+        @#ELSE_IF#@ @+_GRID_SYS_COLOR+@
+           IF TOTEM-IDX2 = @!L_COLUMNINDEX!@
+              MOVE '@+_GRID_SYS_FGRGBCOLOR+@' TO @+_RPT_ATR_NAME+@-FGCOLOR
+              MOVE '@+_GRID_SYS_BGRGBCOLOR+@' TO @+_RPT_ATR_NAME+@-BGCOLOR
+           END-IF
+        @#END_IF#@
+@$COLUMN-FONT$@
+        @#DEF_SET#@ @!L_BEFOREATTR!@ @""@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @""@
+        @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISFONTDEFAULT+@ #@
+			@#DEF_IF#@ @+_RPT_SYS_FONTBOLD+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRONG>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</STRONG>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+			@#DEF_IF#@ @+_RPT_SYS_FONTITALIC+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<EM>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</EM>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+			@#DEF_IF#@ @+_RPT_SYS_FONTUNDERLINE+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<U>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</U>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+			@#DEF_IF#@ @+_RPT_SYS_FONTSTRIKEOUT+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRIKE>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</STRIKE>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+           IF TOTEM-IDX2 = @!L_COLUMNINDEX!@
+              MOVE @+_RPT_SYS_FONTSIZE+@   TO @+_RPT_ATR_NAME+@-FONTSIZE
+              MOVE '@+_RPT_SYS_FONTNAME+@' TO @+_RPT_ATR_NAME+@-FONT
+           @#DEF_IF#@ @!L_BEFOREATTR!@
+              MOVE "@!L_BEFOREATTR!@" TO @+_RPT_ATR_NAME+@-FONTPRE
+		   @#ELSE#@
+              MOVE SPACES TO @+_RPT_ATR_NAME+@-FONTPRE
+		   @#END_IF#@
+           @#DEF_IF#@ @!L_BEFOREATTR!@
+              MOVE "@!L_AFTERATTR!@" TO @+_RPT_ATR_NAME+@-FONTAFT
+		   @#ELSE#@
+              MOVE SPACES TO @+_RPT_ATR_NAME+@-FONTAFT
+		   @#END_IF#@
+           END-IF
+        @#END_IF#@
+@$COLUMN-ALIGN$@
+        @#DEF_IF#@ @#EXP: NOT (@+_GRID_SYS_ALIGNMENT+@ EQUAL @"Unaligned"@) #@
+           IF TOTEM-IDX2 = @!L_COLUMNINDEX!@
+              MOVE 'ALIGN="@+_GRID_SYS_ALIGNMENT+@"' TO @+_RPT_ATR_NAME+@-ALIGN
+           END-IF
+        @#END_IF#@
+@$TABLE-COLWIDTH$@
+                 WHEN @!L_COLUMNINDEX!@
+                    MOVE @+_GRID_SYS_WIDTH+@ TO @+_RPT_ATR_NAME+@-COLWIDTH
+     @#END_LOOP#@
+  @<_POP_MEM>@
+;
+; ===================================================================
+;  Row Setting.
+; ===================================================================
+  @<_PUSH_MEM>@
+  @<_SET_OBJ_ROWCTRL>@
+     @#DEF_SET#@ @!L_ROWNUM!@ @+_GRID_SYS_CTRLNO+@
+     @#DEF_SET#@ @!L_ROWIDX!@ @"0"@
+     @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+        @<_FETCH_NEXT_GRID_OBJ>@
+		@#DEF_ADD#@ @!L_ROWIDX!@ @"1"@
+@$TABLE-ROWHEIGHT$@
+              WHEN @!L_ROWIDX!@
+                 MOVE @+_RPT_SYS_ROWHEIGHT+@ TO @+_RPT_ATR_NAME+@-ROWHEIGHT
+@$ROW-COLOR$@
+        @#DEF_IF#@ @+_GRID_SYS_COLORVARIABLE+@
+           @#DEF_SET#@ @!G_EXISTCOLVAR!@ @"YES"@
+           IF TOTEM-IDX1 = @!L_ROWIDX!@
+              MOVE @+_GRID_SYS_COLORVARIABLE+@ TO TMP-COLOR-BUF
+              PERFORM Trans-ACUCOLOR-HTMLCOLOR
+              MOVE TMP-HTML-FG-BUF TO @+_RPT_ATR_NAME+@-FGCOLOR
+              MOVE TMP-HTML-BG-BUF TO @+_RPT_ATR_NAME+@-BGCOLOR
+           END-IF
+        @#ELSE_IF#@ @+_GRID_SYS_COLOR+@
+           IF TOTEM-IDX1 = @!L_ROWIDX!@
+              MOVE '@+_GRID_SYS_FGRGBCOLOR+@' TO @+_RPT_ATR_NAME+@-FGCOLOR
+              MOVE '@+_GRID_SYS_BGRGBCOLOR+@' TO @+_RPT_ATR_NAME+@-BGCOLOR
+           END-IF
+        @#END_IF#@
+@$ROW-FONT$@
+        @#DEF_SET#@ @!L_BEFOREATTR!@ @""@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @""@
+        @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISFONTDEFAULT+@ #@
+			@#DEF_IF#@ @+_RPT_SYS_FONTBOLD+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRONG>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</STRONG>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+			@#DEF_IF#@ @+_RPT_SYS_FONTITALIC+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<EM>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</EM>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+			@#DEF_IF#@ @+_RPT_SYS_FONTUNDERLINE+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<U>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</U>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+			@#DEF_IF#@ @+_RPT_SYS_FONTSTRIKEOUT+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRIKE>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</STRIKE>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+           IF TOTEM-IDX1 = @!L_ROWIDX!@
+              MOVE @+_RPT_SYS_FONTSIZE+@   TO @+_RPT_ATR_NAME+@-FONTSIZE
+              MOVE '@+_RPT_SYS_FONTNAME+@' TO @+_RPT_ATR_NAME+@-FONT
+           @#DEF_IF#@ @!L_BEFOREATTR!@
+              MOVE "@!L_BEFOREATTR!@" TO @+_RPT_ATR_NAME+@-FONTPRE
+		   @#ELSE#@
+              MOVE SPACES TO @+_RPT_ATR_NAME+@-FONTPRE
+		   @#END_IF#@
+           @#DEF_IF#@ @!L_BEFOREATTR!@
+              MOVE "@!L_AFTERATTR!@" TO @+_RPT_ATR_NAME+@-FONTAFT
+		   @#ELSE#@
+              MOVE SPACES TO @+_RPT_ATR_NAME+@-FONTAFT
+		   @#END_IF#@
+           END-IF
+        @#END_IF#@
+@$ROW-ALIGN$@
+        @#DEF_IF#@ @#EXP: NOT (@+_GRID_SYS_ALIGNMENT+@ EQUAL @"Unaligned"@) #@
+           IF TOTEM-IDX1 = @!L_ROWIDX!@
+              MOVE 'VALIGN="@+_GRID_SYS_ALIGNMENT+@"' TO @+_RPT_ATR_NAME+@-ALIGN
+           END-IF
+        @#END_IF#@
+     @#END_LOOP#@
+  @<_POP_MEM>@
+;
+; ===================================================================
+;  Cell Setting.
+; ===================================================================
+;
+  @#DEF_SET#@ @!L_EXISTVAR!@ @""@
+  @<_PUSH_MEM>@
+  @<_SET_OBJ_CELLCTRL>@
+     @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+        @<_FETCH_NEXT_GRID_OBJ>@
+;
+		@#DEF_IF#@ @#EXP: (@+_GRID_SYS_ROW+@ EQUAL @"1"@) OR @+_GRID_SYS_LASTCOLUMN+@ #@
+          @#DEF_SET#@ @!L_BORDERSET!@ @" STYLE=\""@
+  		  @#DEF_IF#@ @#EXP: @+_GRID_SYS_ROW+@ EQUAL @"1"@ #@
+            @#DEF_APPEND#@ @!L_BORDERSET!@ @"BORDER-top:0px; "@
+		  @#END_IF#@   
+		  @#DEF_IF#@ @+_GRID_SYS_LASTCOLUMN+@
+            @#DEF_APPEND#@ @!L_BORDERSET!@ @"BORDER-right:0px; "@
+		  @#END_IF#@   
+          @#DEF_APPEND#@ @!L_BORDERSET!@ @"\""@
+        @#ELSE#@
+          @#DEF_SET#@ @!L_BORDERSET!@ @""@
+		@#END_IF#@   
+        @#DEF_SET#@ @!L_TABLEBUF!@ @"@+_RPT_ATR_NAME+@-@+_GRID_SYS_ROW+@@+_GRID_SYS_COLUMN+@-BUF"@
+        @#DEF_IF#@ @#EXP: @+_GRID_SYS_TABLECELLTYPE+@ EQUAL @"VARIABLE"@ OR 
+                          @+_GRID_SYS_TABLECELLTYPE+@ EQUAL @"Data Image"@ #@
+           @#DEF_SET#@ @!L_EXISTVAR!@ @"YES"@
+   @#DEF_IF#@ @+_GRID_SYS_EDITEDPICTURE+@
+@$TABLE_RPT_PRE_DATABUF$@
+               05 @!L_TABLEBUF!@ PIC @+_GRID_SYS_EDITEDPICTURE+@.
+@$TABLE_RPT_DB_WORKING_BUFBODY$@
+               05 @!L_TABLEBUF!@ PIC @+_GRID_SYS_EDITEDPICTURE+@.
+   @#ELSE#@
+@$TABLE_RPT_PRE_DATABUF$@
+               05 @!L_TABLEBUF!@.
+@$TABLE_RPT_DB_WORKING_BUFBODY$@
+               05 @!L_TABLEBUF!@.
+   @#END_IF#@
+@$RPT_FDSL_FLDTOBUF-TABLEBODY$@
+           MOVE @+_GRID_SYS_DATA+@
+                   TO @!L_TABLEBUF!@ OF RPT-@!G_REPORTNAME!@-BUF
+        @#END_IF#@
+;
+; make L_TDATR like following
+;'@!L_TDATR!@@!L_BORDERSET!@',;
+        @#DEF_SET#@ @!L_TDATR!@ @"'"@
+        @#DEF_APPEND#@ @!L_TDATR!@ @!L_BORDERSET!@
+        @#DEF_SETMEM#@ @!L_COLCSS!@ @"COLUMN-CSS@+_GRID_SYS_COLUMN+@"@
+@$TABLE-CELLBODY$@
+           WHEN @+_GRID_SYS_ROW+@ ALSO @+_GRID_SYS_COLUMN+@
+        @#DEF_IF#@ @+_GRID_SYS_COLSPAN+@
+              @#DEF_APPEND#@ @!L_TDATR!@ @" COLSPAN=\"@+_GRID_SYS_COLSPAN+@\""@
+        @#END_IF#@
+        @#DEF_IF#@ @+_GRID_SYS_ROWSPAN+@
+              @#DEF_APPEND#@ @!L_TDATR!@ @" ROWSPAN=\"@+_GRID_SYS_ROWSPAN+@\""@
+              COMPUTE @+_RPT_ATR_NAME+@-TMP-HEIGHT = @+_RPT_ATR_NAME+@-ROWHEIGHT * @+_GRID_SYS_ROWSPAN+@
+        @#ELSE#@
+              MOVE @+_RPT_ATR_NAME+@-ROWHEIGHT TO @+_RPT_ATR_NAME+@-TMP-HEIGHT
+        @#END_IF#@
+        @#DEF_APPEND#@ @!L_TDATR!@ @!L_COLCSS!@
+		@#DEF_IF#@ @+_GRID_SYS_HYPERLINKVARIABLE+@
+              IF @+_GRID_SYS_HYPERLINKVARIABLE+@ = ZEROS OR SPACES
+                  STRING '            <TD nowrap height=', 
+                         @+_RPT_ATR_NAME+@-TMP-HEIGHT, 
+;                         ' width=@+_GRID_SYS_COLSPANWIDTH+@',
+;                         @+_RPT_ATR_NAME+@-COLWIDTH, 
+                         @!L_TDATR!@
+                         DUMY-LINE(1:TOTEM-IDX3),
+                         ' STYLE="', @+_RPT_ATR_NAME+@-DUMY-LINE(1:@+_RPT_ATR_NAME+@-IDX),
+                         '"><DIV STYLE="width:@+_GRID_SYS_COLSPANWIDTH+@; OVERFLOW:HIDDEN;">',
+                         @+_RPT_ATR_NAME+@-FONTPRE
+                     DELIMITED BY SIZE INTO PRINT-BUF
+              ELSE
+                  IF (@+_GRID_SYS_HYPERLINKVARIABLE+@(2:1) = ":") | Full path name
+                      STRING '            <TD nowrap height=', 
+                             @+_RPT_ATR_NAME+@-TMP-HEIGHT, 
+;                             ' width=@+_GRID_SYS_COLSPANWIDTH+@',
+;                             @+_RPT_ATR_NAME+@-COLWIDTH, 
+                             @!L_TDATR!@
+                             DUMY-LINE(1:TOTEM-IDX3),
+                             ' STYLE="', @+_RPT_ATR_NAME+@-DUMY-LINE(1:@+_RPT_ATR_NAME+@-IDX),
+                             '"><DIV STYLE="width:@+_GRID_SYS_COLSPANWIDTH+@; OVERFLOW:HIDDEN;"><A HREF="file:\',
+                             @+_GRID_SYS_HYPERLINKVARIABLE+@, '">', @+_RPT_ATR_NAME+@-FONTPRE
+                         DELIMITED BY SIZE INTO PRINT-BUF 
+                  ELSE
+                      STRING '            <TD nowrap height=', 
+                             @+_RPT_ATR_NAME+@-TMP-HEIGHT, 
+;                             ' width=@+_GRID_SYS_COLSPANWIDTH+@',
+;                             @+_RPT_ATR_NAME+@-COLWIDTH, 
+                             @!L_TDATR!@
+                             DUMY-LINE(1:TOTEM-IDX3),
+                             ' STYLE="', @+_RPT_ATR_NAME+@-DUMY-LINE(1:@+_RPT_ATR_NAME+@-IDX),
+                             '"><DIV STYLE="width:@+_GRID_SYS_COLSPANWIDTH+@; OVERFLOW:HIDDEN;"><A HREF="',
+                             @+_GRID_SYS_HYPERLINKVARIABLE+@, '">', @+_RPT_ATR_NAME+@-FONTPRE
+                         DELIMITED BY SIZE INTO PRINT-BUF
+                  END-IF
+              END-IF
+		@#ELSE_IF#@ @+_GRID_SYS_HYPERLINK+@
+               MOVE "@+_GRID_SYS_HYPERLINK+@" TO PRINT-BUF
+               IF (PRINT-BUF(2:1) = ":") | Full path name
+                   STRING '            <TD nowrap height=', 
+                          @+_RPT_ATR_NAME+@-TMP-HEIGHT, 
+;                          ' width=@+_GRID_SYS_COLSPANWIDTH+@',
+;                         @+_RPT_ATR_NAME+@-COLWIDTH, 
+                          @!L_TDATR!@
+                          DUMY-LINE(1:TOTEM-IDX3),
+                          ' STYLE="', @+_RPT_ATR_NAME+@-DUMY-LINE(1:@+_RPT_ATR_NAME+@-IDX),
+                          '"><DIV STYLE="width:@+_GRID_SYS_COLSPANWIDTH+@; OVERFLOW:HIDDEN;"><A HREF="file:\@+_GRID_SYS_HYPERLINK+@">',
+                          @+_RPT_ATR_NAME+@-FONTPRE
+                      DELIMITED BY SIZE INTO PRINT-BUF
+               ELSE
+                   STRING '            <TD nowrap height=', 
+                          @+_RPT_ATR_NAME+@-TMP-HEIGHT, 
+;                          ' width=@+_GRID_SYS_COLSPANWIDTH+@',
+;                         @+_RPT_ATR_NAME+@-COLWIDTH, 
+                          @!L_TDATR!@
+                          DUMY-LINE(1:TOTEM-IDX3),
+                          ' STYLE="', @+_RPT_ATR_NAME+@-DUMY-LINE(1:@+_RPT_ATR_NAME+@-IDX),
+                          '"><DIV STYLE="width:@+_GRID_SYS_COLSPANWIDTH+@; OVERFLOW:HIDDEN;"><A HREF="@+_GRID_SYS_HYPERLINK+@">',
+                          @+_RPT_ATR_NAME+@-FONTPRE
+                      DELIMITED BY SIZE INTO PRINT-BUF
+               END-IF
+		@#ELSE#@
+              STRING '            <TD nowrap height=', 
+                     @+_RPT_ATR_NAME+@-TMP-HEIGHT, 
+;                     ' width=@+_GRID_SYS_COLSPANWIDTH+@',
+;                     @+_RPT_ATR_NAME+@-COLWIDTH, 
+                     @!L_TDATR!@
+                     DUMY-LINE(1:TOTEM-IDX3),
+                     ' STYLE="', @+_RPT_ATR_NAME+@-DUMY-LINE(1:@+_RPT_ATR_NAME+@-IDX),
+                     '"><DIV STYLE="width:@+_GRID_SYS_COLSPANWIDTH+@; OVERFLOW:HIDDEN;">',
+                     @+_RPT_ATR_NAME+@-FONTPRE
+                 DELIMITED BY SIZE INTO PRINT-BUF
+		@#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               IF NOT @+_RPT_ATR_NAME+@-FGCOLOR = SPACES
+                   STRING '            <FONT COLOR=',
+                      @+_RPT_ATR_NAME+@-FGCOLOR, '>'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+                   WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                   INITIALIZE PRINT-BUF
+               END-IF
+        @#DEF_IF#@ @#EXP: @+_GRID_SYS_TABLECELLTYPE+@ EQUAL @"TEXT"@ #@
+           @#DEF_IF#@ @+_GRID_SYS_DATA+@
+              STRING @+_GRID_SYS_DATA+@
+                 DELIMITED BY SIZE INTO PRINT-BUF
+           @#ELSE#@
+              STRING '&nbsp;'
+                 DELIMITED BY SIZE INTO PRINT-BUF
+           @#END_IF#@
+        @#ELSE_IF#@ @#EXP: @+_GRID_SYS_TABLECELLTYPE+@ EQUAL @"VARIABLE"@ #@
+;              IF @+_GRID_SYS_DATA+@ = SPACES
+              IF @+_GRID_SYS_DATA+@(1:) = SPACES
+                 STRING '&nbsp;'
+                    DELIMITED BY SIZE INTO PRINT-BUF
+              ELSE
+                 STRING @!L_TABLEBUF!@ OF RPT-@!G_REPORTNAME!@-BUF
+                    DELIMITED BY SIZE INTO PRINT-BUF
+              END-IF
+        @#ELSE_IF#@ @#EXP: @+_GRID_SYS_TABLECELLTYPE+@ EQUAL @"Image"@ #@
+              STRING '<IMG SRC="@+_GRID_SYS_DATA+@" height=',
+;                     @+_RPT_ATR_NAME+@-COLWIDTH, ' height=', 
+                     @+_RPT_ATR_NAME+@-TMP-HEIGHT, ' width=@+_GRID_SYS_COLSPANWIDTH+@ >'
+                 DELIMITED BY SIZE INTO PRINT-BUF
+        @#ELSE_IF#@ @#EXP: @+_GRID_SYS_TABLECELLTYPE+@ EQUAL @"Data Image"@ #@
+              STRING '<IMG SRC="', 
+                     @+_RPT_ATR_NAME+@-@+_GRID_SYS_ROW+@@+_GRID_SYS_COLUMN+@-BUF OF RPT-@!G_REPORTNAME!@-BUF,
+;                    '" height=', @+_RPT_ATR_NAME+@-TMP-HEIGHT, 
+                     '" width=@+_GRID_SYS_COLSPANWIDTH+@',
+                     ' width=', @+_RPT_ATR_NAME+@-COLWIDTH, '>'
+                 DELIMITED BY SIZE INTO PRINT-BUF
+        @#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               IF NOT @+_RPT_ATR_NAME+@-FGCOLOR = SPACES
+                   STRING '            </FONT>'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+                   WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                   INITIALIZE PRINT-BUF
+               END-IF
+		@#DEF_IF#@ @+_GRID_SYS_HYPERLINKVARIABLE+@
+               IF @+_GRID_SYS_HYPERLINKVARIABLE+@ = ZEROS OR SPACES
+                   STRING '            ', @+_RPT_ATR_NAME+@-FONTAFT, '</A></TD>' DELIMITED BY SIZE INTO PRINT-BUF
+               ELSE
+                   STRING '            ', @+_RPT_ATR_NAME+@-FONTAFT, '</TD>' DELIMITED BY SIZE INTO PRINT-BUF
+               END-IF
+		@#ELSE_IF#@ @+_GRID_SYS_HYPERLINK+@ #@
+               STRING '            ', @+_RPT_ATR_NAME+@-FONTAFT, '</A></TD>' DELIMITED BY SIZE INTO PRINT-BUF
+		@#ELSE#@
+               STRING '            ', @+_RPT_ATR_NAME+@-FONTAFT, '</TD>' DELIMITED BY SIZE INTO PRINT-BUF
+		@#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+@$CELL-COLOR$@
+        @#DEF_IF#@ @+_GRID_SYS_COLORVARIABLE+@
+           @#DEF_SET#@ @!G_EXISTCOLVAR!@ @"YES"@
+           IF TOTEM-IDX1 = @+_GRID_SYS_ROW+@ AND TOTEM-IDX2 = @+_GRID_SYS_COLUMN+@
+              MOVE @+_GRID_SYS_COLORVARIABLE+@ TO TMP-COLOR-BUF
+              PERFORM Trans-ACUCOLOR-HTMLCOLOR
+              MOVE TMP-HTML-FG-BUF TO @+_RPT_ATR_NAME+@-FGCOLOR
+              MOVE TMP-HTML-BG-BUF TO @+_RPT_ATR_NAME+@-BGCOLOR
+           END-IF
+        @#ELSE_IF#@ @+_GRID_SYS_COLOR+@
+           IF TOTEM-IDX1 = @+_GRID_SYS_ROW+@ AND TOTEM-IDX2 = @+_GRID_SYS_COLUMN+@
+              MOVE '@+_GRID_SYS_FGRGBCOLOR+@' TO @+_RPT_ATR_NAME+@-FGCOLOR
+              MOVE '@+_GRID_SYS_BGRGBCOLOR+@' TO @+_RPT_ATR_NAME+@-BGCOLOR
+           END-IF
+        @#END_IF#@
+@$CELL-FONT$@
+        @#DEF_SET#@ @!L_BEFOREATTR!@ @""@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @""@
+        @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISFONTDEFAULT+@ #@
+			@#DEF_IF#@ @+_RPT_SYS_FONTBOLD+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRONG>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</STRONG>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+			@#DEF_IF#@ @+_RPT_SYS_FONTITALIC+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<EM>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</EM>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+			@#DEF_IF#@ @+_RPT_SYS_FONTUNDERLINE+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<U>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</U>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+			@#DEF_IF#@ @+_RPT_SYS_FONTSTRIKEOUT+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRIKE>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</STRIKE>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+           IF TOTEM-IDX1 = @+_GRID_SYS_ROW+@ AND TOTEM-IDX2 = @+_GRID_SYS_COLUMN+@
+              MOVE @+_RPT_SYS_FONTSIZE+@   TO @+_RPT_ATR_NAME+@-FONTSIZE
+              MOVE '@+_RPT_SYS_FONTNAME+@' TO @+_RPT_ATR_NAME+@-FONT
+           @#DEF_IF#@ @!L_BEFOREATTR!@
+              MOVE "@!L_BEFOREATTR!@" TO @+_RPT_ATR_NAME+@-FONTPRE
+		   @#ELSE#@
+              MOVE SPACES TO @+_RPT_ATR_NAME+@-FONTPRE
+		   @#END_IF#@
+           @#DEF_IF#@ @!L_BEFOREATTR!@
+              MOVE "@!L_AFTERATTR!@" TO @+_RPT_ATR_NAME+@-FONTAFT
+		   @#ELSE#@
+              MOVE SPACES TO @+_RPT_ATR_NAME+@-FONTAFT
+		   @#END_IF#@
+           END-IF
+        @#END_IF#@
+@$CELL-ALIGN$@
+        @#DEF_IF#@ @#EXP: NOT (@+_GRID_SYS_ALIGNMENT+@ EQUAL @"Unaligned"@) #@
+           IF TOTEM-IDX1 = @+_GRID_SYS_ROW+@ AND TOTEM-IDX2 = @+_GRID_SYS_COLUMN+@
+		   @#DEF_CASE#@ @+_GRID_SYS_ALIGNMENT+@
+		   @#CASE#@ @"Top-Left"@
+              MOVE 'VALIGN="Top"' TO @+_RPT_ATR_NAME+@-VALIGN
+              MOVE 'ALIGN="Left"' TO @+_RPT_ATR_NAME+@-ALIGN
+		   @#CASE#@ @"Top-Right"@
+              MOVE 'VALIGN="Top"' TO @+_RPT_ATR_NAME+@-VALIGN
+              MOVE 'ALIGN="Right"' TO @+_RPT_ATR_NAME+@-ALIGN
+		   @#CASE#@ @"Top-Center"@
+              MOVE 'VALIGN="Top"' TO @+_RPT_ATR_NAME+@-VALIGN
+              MOVE 'ALIGN="Center"' TO @+_RPT_ATR_NAME+@-ALIGN
+		   @#CASE#@ @"Center-Left"@
+              MOVE 'VALIGN="Middle"' TO @+_RPT_ATR_NAME+@-VALIGN
+              MOVE 'ALIGN="Left"' TO @+_RPT_ATR_NAME+@-ALIGN
+		   @#CASE#@ @"Center-Right"@
+              MOVE 'VALIGN="Middle"' TO @+_RPT_ATR_NAME+@-VALIGN
+              MOVE 'ALIGN="Right"' TO @+_RPT_ATR_NAME+@-ALIGN
+		   @#CASE#@ @"Center"@
+              MOVE 'VALIGN="Middle"' TO @+_RPT_ATR_NAME+@-VALIGN
+              MOVE 'ALIGN="Center"' TO @+_RPT_ATR_NAME+@-ALIGN
+		   @#CASE#@ @"Bottom-Left"@
+              MOVE 'VALIGN="Bottom"' TO @+_RPT_ATR_NAME+@-VALIGN
+              MOVE 'ALIGN="Left"' TO @+_RPT_ATR_NAME+@-ALIGN
+		   @#CASE#@ @"Bottom-Right"@
+              MOVE 'VALIGN="Bottom"' TO @+_RPT_ATR_NAME+@-VALIGN
+              MOVE 'ALIGN="Right"' TO @+_RPT_ATR_NAME+@-ALIGN
+		   @#CASE#@ @"Bottom-Right"@
+              MOVE 'VALIGN="Bottom"' TO @+_RPT_ATR_NAME+@-VALIGN
+              MOVE 'ALIGN="Center"' TO @+_RPT_ATR_NAME+@-ALIGN
+		   @#END_CASE#@
+           END-IF
+        @#END_IF#@
+     @#END_LOOP#@
+  @<_POP_MEM>@
+;
+; ===================================================================
+; ====================== PRD -- DB -- FLDTOBUF ======================
+; ===================================================================
+   @#DEF_IF#@ @!L_EXISTVAR!@
+      @#DEF_SET#@ @!G_EXISTRPTBUF!@ @"YES"@
+@$RPT_PRE_DATABUF$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-BUF.
+           @#GET_MEM#@   @"TABLE_RPT_PRE_DATABUF"@
+           @#CLEAR_MEM#@ @"TABLE_RPT_PRE_DATABUF"@
+@$RPT_DB_WORKING_BUFBODY$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-BUF.
+           @#GET_MEM#@   @"TABLE_RPT_DB_WORKING_BUFBODY"@
+           @#CLEAR_MEM#@ @"TABLE_RPT_DB_WORKING_BUFBODY"@
+;
+;
+@$RPT_FDSL_FLDTOBUF$@
+      * RPT.TABLE : @+_RPT_ATR_NAME+@
+           @#GET_MEM#@   @"RPT_FDSL_FLDTOBUF-TABLEBODY"@
+           @#CLEAR_MEM#@ @"RPT_FDSL_FLDTOBUF-TABLEBODY"@
+   @#END_IF#@
+;
+; ===================================================================
+;                           PRINT ROUTINE
+; ===================================================================
+;
+@$SECTION-PRINT-PROCEDURE$@
+      * RPT.Grid : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Grid:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Grid"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+               PERFORM @+_RPT_ATR_NAME+@-TABBODY
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Grid:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Grid"@ @"AfterPrint"@
+      * <TOTEM:END>
+;
+; ===================================================================
+;                   REAL GRID TABLE PRINT PARAGRAPH
+; ===================================================================
+;
+@$RPT-OBJ-PRINT-BODY$@
+       @+_RPT_ATR_NAME+@-TABHEADER.
+;
+; ======================== HTML TABLE HEADER ========================
+;
+           MOVE '      <!-- Grid (@+_RPT_ATR_NAME+@) -->' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           MOVE '           <TD @!L_TDATTR!@ >' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           MOVE '      <TABLE @!L_TABATR!@>' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           .
+
+       @+_RPT_ATR_NAME+@-TABFOOTER.
+;
+; ======================== DIV & HTML FOOTER ========================
+;
+           MOVE "         </TABLE></TD>" TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           .
+
+       @+_RPT_ATR_NAME+@-TABROW.
+           @#GET_MEM#@   @"GRID-BODY"@
+           @#CLEAR_MEM#@ @"GRID-BODY"@
+           .
+
+       @+_RPT_ATR_NAME+@-CELL-COLOR.
+           MOVE SPACES TO DUMY-LINE
+           MOVE SPACES TO @+_RPT_ATR_NAME+@-FGCOLOR, @+_RPT_ATR_NAME+@-BGCOLOR
+      * Check Table Color
+           @#GET_MEM#@   @"TABLE-COLOR"@
+           @#CLEAR_MEM#@ @"TABLE-COLOR"@
+      * Check Column Color
+           @#GET_MEM#@   @"COLUMN-COLOR"@
+           @#CLEAR_MEM#@ @"COLUMN-COLOR"@
+      * Check Row Color
+           @#GET_MEM#@   @"ROW-COLOR"@
+           @#CLEAR_MEM#@ @"ROW-COLOR"@
+      * Check Cell Color
+           @#GET_MEM#@   @"CELL-COLOR"@
+           @#CLEAR_MEM#@ @"CELL-COLOR"@
+           MOVE 1 TO TOTEM-IDX3
+           IF @+_RPT_ATR_NAME+@-FGCOLOR NOT = SPACES OR
+                            @+_RPT_ATR_NAME+@-BGCOLOR NOT = SPACES
+              MOVE SPACES TO DUMY-LINE
+              STRING 'COLOR:', @+_RPT_ATR_NAME+@-FGCOLOR,
+                  ';BACKGROUND-COLOR:', @+_RPT_ATR_NAME+@-BGCOLOR, ';'
+                  DELIMITED BY SIZE INTO DUMY-LINE
+              MOVE 0 TO TOTEM-IDX3
+              INSPECT DUMY-LINE TALLYING TOTEM-IDX3 FOR TRAILING SPACE
+              COMPUTE TOTEM-IDX3 = 132 - TOTEM-IDX3
+           END-IF
+           .
+
+       @+_RPT_ATR_NAME+@-CELL-FONT.
+           MOVE DUMY-LINE TO @+_RPT_ATR_NAME+@-DUMY-LINE
+           MOVE 0      TO @+_RPT_ATR_NAME+@-FONTSIZE
+           MOVE SPACES TO @+_RPT_ATR_NAME+@-FONT
+        @#DEF_SET#@ @!L_BEFOREATTR!@ @""@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @""@
+			@#DEF_IF#@ @+_RPT_SYS_FONTBOLD+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRONG>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</STRONG>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+			@#DEF_IF#@ @+_RPT_SYS_FONTITALIC+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<EM>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</EM>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+			@#DEF_IF#@ @+_RPT_SYS_FONTUNDERLINE+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<U>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</U>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+			@#DEF_IF#@ @+_RPT_SYS_FONTSTRIKEOUT+@
+				@#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRIKE>"@
+				@#DEF_SET#@ @!L_TMPBUF!@ @"</STRIKE>"@
+				@#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+				@#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+			@#END_IF#@
+           @#DEF_IF#@ @!L_BEFOREATTR!@
+           MOVE "@!L_BEFOREATTR!@" TO @+_RPT_ATR_NAME+@-FONTPRE
+		   @#ELSE#@
+           MOVE SPACES TO @+_RPT_ATR_NAME+@-FONTPRE
+		   @#END_IF#@
+           @#DEF_IF#@ @!L_BEFOREATTR!@
+           MOVE "@!L_AFTERATTR!@" TO @+_RPT_ATR_NAME+@-FONTAFT
+		   @#ELSE#@
+           MOVE SPACES TO @+_RPT_ATR_NAME+@-FONTAFT
+		   @#END_IF#@
+      * Check Column Font
+           @#GET_MEM#@   @"COLUMN-FONT"@
+           @#CLEAR_MEM#@ @"COLUMN-FONT"@
+      * Check Row Font
+           @#GET_MEM#@   @"ROW-FONT"@
+           @#CLEAR_MEM#@ @"ROW-FONT"@
+      * Check Cell Font
+           @#GET_MEM#@   @"CELL-FONT"@
+           @#CLEAR_MEM#@ @"CELL-FONT"@
+           MOVE TOTEM-IDX3 TO @+_RPT_ATR_NAME+@-IDX
+           IF @+_RPT_ATR_NAME+@-FONTSIZE NOT = 0
+              MOVE SPACES TO @+_RPT_ATR_NAME+@-DUMY-LINE
+              MOVE 0 TO @+_RPT_ATR_NAME+@-IDX
+              INSPECT @+_RPT_ATR_NAME+@-FONT TALLYING 
+                  @+_RPT_ATR_NAME+@-IDX FOR TRAILING SPACE
+              STRING DUMY-LINE(1:TOTEM-IDX3), 'FONT-SIZE:', @+_RPT_ATR_NAME+@-FONTSIZE,
+                  'pt;FONT-FAMILY:',
+                  @+_RPT_ATR_NAME+@-FONT(1:30 - @+_RPT_ATR_NAME+@-IDX), ';'
+                  DELIMITED BY SIZE INTO @+_RPT_ATR_NAME+@-DUMY-LINE
+              MOVE 0 TO @+_RPT_ATR_NAME+@-IDX
+              INSPECT @+_RPT_ATR_NAME+@-DUMY-LINE TALLYING 
+                  @+_RPT_ATR_NAME+@-IDX FOR TRAILING SPACE
+              COMPUTE @+_RPT_ATR_NAME+@-IDX = 132 - @+_RPT_ATR_NAME+@-IDX
+           END-IF
+           .
+
+       @+_RPT_ATR_NAME+@-CELL-ALIGN.
+           MOVE SPACES TO @+_RPT_ATR_NAME+@-ALIGN, @+_RPT_ATR_NAME+@-VALIGN, DUMY-LINE
+      * Check Column Align
+           @#GET_MEM#@   @"COLUMN-ALIGN"@
+           @#CLEAR_MEM#@ @"COLUMN-ALIGN"@
+      * Check Row Align
+           @#GET_MEM#@   @"ROW-ALIGN"@
+           @#CLEAR_MEM#@ @"ROW-ALIGN"@
+      * Check Row Align
+           @#GET_MEM#@   @"CELL-ALIGN"@
+           @#CLEAR_MEM#@ @"CELL-ALIGN"@
+           MOVE 1 TO TOTEM-IDX3
+           STRING ' ', @+_RPT_ATR_NAME+@-ALIGN, 
+                  ' ', @+_RPT_ATR_NAME+@-VALIGN
+               DELIMITED BY SIZE INTO DUMY-LINE
+           IF DUMY-LINE NOT = SPACES
+              MOVE 0 TO TOTEM-IDX3
+              INSPECT DUMY-LINE TALLYING TOTEM-IDX3 FOR TRAILING SPACE
+              COMPUTE TOTEM-IDX3 = 132 - TOTEM-IDX3
+           END-IF
+           .
+
+       @+_RPT_ATR_NAME+@-TABLECELL.
+           PERFORM @+_RPT_ATR_NAME+@-CELL-COLOR
+           PERFORM @+_RPT_ATR_NAME+@-CELL-FONT
+           PERFORM @+_RPT_ATR_NAME+@-CELL-ALIGN
+           EVALUATE TOTEM-IDX1 ALSO TOTEM-IDX2
+              @#GET_MEM#@   @"TABLE-CELLBODY"@
+              @#CLEAR_MEM#@ @"TABLE-CELLBODY"@
+           END-EVALUATE
+           IF PRINT-BUF NOT = SPACES
+              WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+              INITIALIZE PRINT-BUF
+           END-IF
+           .
+
+      * RPT.Grid : @+_RPT_ATR_NAME+@
+       @+_RPT_ATR_NAME+@-TABBODY.
+           PERFORM @+_RPT_ATR_NAME+@-TABHEADER
+           PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL TOTEM-IDX1 > @!L_ROWNUM!@
+      * ROW-HEIGHT
+              EVALUATE TOTEM-IDX1
+                 @#GET_MEM#@   @"TABLE-ROWHEIGHT"@
+                 @#CLEAR_MEM#@ @"TABLE-ROWHEIGHT"@
+              END-EVALUATE
+      * ROW <TR>
+              STRING '         <TR>'
+                 DELIMITED BY SIZE INTO PRINT-BUF
+              WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+              INITIALIZE PRINT-BUF
+              PERFORM VARYING TOTEM-IDX2 FROM 1 BY 1 UNTIL TOTEM-IDX2 > @!L_COLNUM!@
+                 EVALUATE TOTEM-IDX2
+                    @#GET_MEM#@   @"TABLE-COLWIDTH"@
+                    @#CLEAR_MEM#@ @"TABLE-COLWIDTH"@
+                 END-EVALUATE
+                 PERFORM @+_RPT_ATR_NAME+@-TABLECELL
+              END-PERFORM
+      * END OF ROW </TR>
+              MOVE '         </TR>' TO PRINT-BUF
+              WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+              INITIALIZE PRINT-BUF
+           END-PERFORM
+           PERFORM @+_RPT_ATR_NAME+@-TABFOOTER
+           .
+
+@<_PUSH_MEM>@
+@<_SET_OBJ_COLUMNCTRL>@
+ @#DEF_SET#@ @!L_COLUMNINDEX!@ @"0"@
+ @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+ @<_FETCH_NEXT_GRID_OBJ>@
+	@#CLEAR_MEM#@ @$COLUMN-CSS@!L_COLUMNINDEX!@$@
+ @#END_LOOP#@
+@<_POP_MEM>@
+
+;
+@$SECTION-PRINT-PROCEDURE$@
+;

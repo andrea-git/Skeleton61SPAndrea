@@ -1,0 +1,197 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report RadioBox Control Generation Rule.  2001/11/02
+;
+; Remarks:
+;   The same as RPT.Label.
+;
+; HTML :
+;        CSS
+;           .@+_RPT_ATR_NAME+@ 
+;            {
+;                POSITION:ABSOLUTE; TOP:999; LEFT:999; WIDTH:999; HEIGHT:999; 
+;                BORDER-STYLE:solid; BORDER-WIDTH:999; BORDER-COLOR: RGB(99, 99, 99);
+;                TEXT-ALIGN:CENTER;
+;            }
+;
+;        BODY
+;            <DIV CLASS="@+_RPT_ATR_NAME+@"
+;                <STRONG><EM> ..... </EM></STROGN>
+;            </DIV> 
+;
+; ===================================================================
+;
+; ====================== Initial Local Variable =====================
+;
+@#DEF_SET#@ @!L_CSS!@        @"   .@+_RPT_ATR_NAME+@ {"@
+@#DEF_SET#@ @!L_BEFOREATTR!@ @""@
+@#DEF_SET#@ @!L_AFTERATTR!@  @""@
+;
+; ===================================================================
+;                   RPT -- CSS STYLE'S SETTING
+; ===================================================================
+;
+    @#DEF_APPEND#@ @!L_CSS!@ @"POSITION:ABSOLUTE; TOP:@+_RPT_SYS_TOPPIXELS+@; LEFT:@+_RPT_SYS_LEFTPIXELS+@; "@
+    @#DEF_APPEND#@ @!L_CSS!@ @"WIDTH:@+_RPT_SYS_WIDTHPIXELS+@; HEIGHT:@+_RPT_SYS_HEIGHTPIXELS+@; "@
+    @#DEF_IF#@ @+_RPT_ATR_JUSTIFICATION+@
+        @#DEF_APPEND#@ @!L_CSS!@ @"TEXT-ALIGN:@+_RPT_ATR_JUSTIFICATION+@; "@
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISFONTDEFAULT+@ #@
+        @#DEF_APPEND#@ @!L_CSS!@ @"FONT-SIZE:@+_RPT_SYS_FONTSIZE+@pt; "@
+        @#DEF_APPEND#@ @!L_CSS!@ @"FONT-FAMILY:@+_RPT_SYS_FONTNAME+@; "@ 
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISCOLORDEFAULT+@ #@
+        @#DEF_APPEND#@ @!L_CSS!@ @"COLOR:@+_RPT_SYS_FOREGROUNDRGBCOLOR+@; "@
+        @#DEF_APPEND#@ @!L_CSS!@ @"BACKGROUND-COLOR:@+_RPT_SYS_BACKGROUNDRGBCOLOR+@; "@
+    @#ELSE#@
+        @#DEF_APPEND#@ @!L_CSS!@ @"BACKGROUND-COLOR:TRANSPARENT; "@
+    @#END_IF#@
+    @#DEF_APPEND#@ @!L_CSS!@ @"}"@
+;
+@$STYLE_CSS_ALL$@
+      * @+_RPT_ATR_NAME+@'S CSS SETTING
+           MOVE '@!L_CSS!@' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+;
+; ====================== RPT -- REGULAR SETTING =====================
+;
+; Font : <STRONG><EM> ... </EM></STRONG>
+;
+; ===================================================================
+    @#DEF_IF#@ @+_RPT_SYS_FONTBOLD+@
+        @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRONG>"@
+        @#DEF_SET#@ @!L_TMPBUF!@ @"</STRONG>"@
+        @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_SYS_FONTITALIC+@
+        @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<EM>"@
+        @#DEF_SET#@ @!L_TMPBUF!@ @"</EM>"@
+        @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_SYS_FONTUNDERLINE+@
+        @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<U>"@
+        @#DEF_SET#@ @!L_TMPBUF!@ @"</U>"@
+        @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_SYS_FONTSTRIKEOUT+@
+        @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRIKE>"@
+        @#DEF_SET#@ @!L_TMPBUF!@ @"</STRIKE>"@
+        @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+    @#END_IF#@
+;
+;
+@#DEF_IF#@ @+_RPT_ATR_FIELDVARIABLE+@
+           @#DEF_SET#@ @!G_EXISTRPTBUF!@ @"YES"@
+;
+; ================ WRK -- RPT -- Pre RadioBox Buf ================
+;
+@$RPT_PRE_DATABUF$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-PRE-BUF PIC 9 VALUE ZERO.
+;
+; ==================== WRK -- RPT -- RadioBox ====================
+;
+@$RPT_DB_WORKING_BUFBODY$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-BUF PIC 9 VALUE ZERO.
+;
+;
+   @#DEF_IF#@ @+_RPT_ATR_RADIOONVALUE+@
+      @#DEF_SET#@ @!L_ONVALUE!@ @+_RPT_ATR_RADIOONVALUE+@
+; 9(3) => alphanumeric
+;      @#DEF_IF#@ @#EXP: NOT (@+_RPT_SYS_PICTURETYPE+@ EQUAL @"NUMERIC"@) #@
+;         @#DEF_SET#@ @!L_ONVALUE!@ @"\"@+_RPT_ATR_RADIOONVALUE+@\""@
+;      @#END_IF#@
+   @#ELSE#@
+      @#DEF_SET#@ @!L_ONVALUE!@ @"ZERO"@
+;      @#DEF_IF#@ @#EXP: NOT (@+_RPT_SYS_PICTURETYPE+@ EQUAL @"NUMERIC"@) #@
+;         @#DEF_SET#@ @!L_ONVALUE!@ @"SPACE"@
+;      @#END_IF#@
+   @#END_IF#@
+;
+; ========================= PRT -- BUFTOFLD =========================
+;
+@$RPT_FDSL_FLDTOBUF$@
+      * RPT.RADIOBOX : @+_RPT_ATR_NAME+@
+   @<_SET_OBJ_FIELDEXPRESSION>@
+   @#DEF_IF#@ @+_OBJ_SYS_LINECOUNT+@
+      * FIELD EXPRESSION ( @+_RPT_ATR_NAME+@ )
+      @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+      @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+      @#END_LOOP#@
+      * END OF FIELD EXPRESSION
+   @#END_IF#@
+           IF @+_RPT_ATR_FIELDVARIABLE+@ = @!L_ONVALUE!@
+              MOVE 1 TO @+_RPT_ATR_NAME+@-BUF
+           ELSE
+              MOVE 0 TO @+_RPT_ATR_NAME+@-BUF
+           END-IF
+@#END_IF#@
+;
+;
+@$RPT-CTRL-PRINT$@
+      * RPT.RadioBox : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.RadioBox:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.RadioBox"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+               MOVE '      <!-- RadioBox (@+_RPT_ATR_NAME+@) -->' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+   @#DEF_IF#@ @+_RPT_ATR_COLORVARIABLE+@
+       @#DEF_SET#@ @!G_EXISTCOLVAR!@ @"YES"@
+               MOVE @+_RPT_ATR_COLORVARIABLE+@ TO TMP-COLOR-BUF
+               PERFORM Trans-ACUCOLOR-HTMLCOLOR
+               STRING '      <DIV CLASS="@+_RPT_ATR_NAME+@" STYLE="COLOR:'
+                        TMP-HTML-FG-BUF,'; BACKGROUND-COLOR:'
+                        TMP-HTML-BG-BUF,';">' 
+                        DELIMITED BY SIZE INTO PRINT-BUF
+   @#ELSE#@
+               MOVE '      <DIV CLASS="@+_RPT_ATR_NAME+@" >' TO PRINT-BUF
+   @#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               MOVE "         <P>@!L_BEFOREATTR!@" TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+   @#DEF_IF#@ @+_RPT_ATR_FIELDVARIABLE+@
+               IF @+_RPT_ATR_NAME+@-BUF@!G_MODE!@ = 1
+                  STRING '<INPUT TYPE="RADIO" CHECKED >',
+                         '@+_RPT_ATR_TITLE+@'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+               ELSE
+                  STRING '<INPUT TYPE="RADIO">',
+                         '@+_RPT_ATR_TITLE+@'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+               END-IF
+   @#ELSE#@
+               STRING '<INPUT TYPE="RADIO">',
+                      '@+_RPT_ATR_TITLE+@'
+                   DELIMITED BY SIZE INTO PRINT-BUF
+   @#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               MOVE "         @!L_AFTERATTR!@</P></DIV>" TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.RadioBox:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.RadioBox"@ @"AfterPrint"@
+      * <TOTEM:END>
+;

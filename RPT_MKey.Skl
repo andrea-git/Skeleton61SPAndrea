@@ -1,0 +1,62 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; FD/SL Multiple Keys Generation Rule.   2001/11/02
+; ===================================================================
+;
+
+@#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+@#DEF_SET#@ @!L_KEYINDEX!@ @"0"@
+@#DEF_SET#@ @!L_EXISTDUP!@ @""@
+@<_PUSH_MEM>@
+@<_SET_FDSL_MULTIPLEKEY>@
+ @#DEF_LOOP#@ @+_FDSL_SYS_MULTIPLEKEYNO+@
+   @<_FETCH_NEXT_FDSL_MULTIPLEKEY>@
+   @#DEF_ADD#@ @!L_KEYINDEX!@ @"1"@
+   ;
+;
+; Change Current Key Order
+@$Change-Key-Order-Asc$@
+           WHEN @!L_KEYINDEX!@
+              MOVE "A" TO @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER
+@$Change-Key-Order-Desc$@
+           WHEN @!L_KEYINDEX!@
+              MOVE "D" TO @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER
+@$REPORT-BODY$@
+       @+_RPT_ATR_NAME+@-@+_DATASET_SYS_NAME+@-CHANGETO-KEY@!L_KEYINDEX!@@!G_MODE!@.
+ @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+           MOVE @!L_KEYINDEX!@ TO @+_DATASET_SYS_NAME+@-KEYIS
+ @#END_IF#@
+           .
+
+;
+ @#END_LOOP#@
+@<_POP_MEM>@
+@$REPORT-BODY$@
+   @#DEF_IF#@ @+_DATASET_SYS_NAME+@
+       @+_RPT_ATR_NAME+@-@+_DATASET_SYS_NAME+@-Change-CurrentKey-Asc@!G_MODE!@.
+           EVALUATE @+_DATASET_SYS_NAME+@-KEYIS
+		      @#GET_MEM#@ @"Change-Key-Order-Asc"@
+		      @#CLEAR_MEM#@ @"Change-Key-Order-Asc"@
+           END-EVALUATE
+           .
+
+       @+_RPT_ATR_NAME+@-@+_DATASET_SYS_NAME+@-Change-CurrentKey-Desc@!G_MODE!@.
+           EVALUATE @+_DATASET_SYS_NAME+@-KEYIS
+		      @#GET_MEM#@ @"Change-Key-Order-Desc"@
+		      @#CLEAR_MEM#@ @"Change-Key-Order-Desc"@
+           END-EVALUATE
+           .
+
+   @#END_IF#@
+@#ELSE_IF#@ @+_DATASET_SYS_NAME+@
+@$REPORT-BODY$@
+       @+_RPT_ATR_NAME+@-@+_DATASET_SYS_NAME+@-Change-CurrentKey-Asc@!G_MODE!@.
+           MOVE "A" TO @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY-ORDER
+           .
+
+       @+_RPT_ATR_NAME+@-@+_DATASET_SYS_NAME+@-Change-CurrentKey-Desc@!G_MODE!@.
+           MOVE "D" TO @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY-ORDER
+           .
+
+@#END_IF#@
+;

@@ -1,0 +1,282 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Relations Split Key Generation Rule.  2001/04/19
+;
+; Remarks:
+;
+;  Local Variables Listing :
+;
+; ===================================================================
+;
+@#CLEAR_MEM#@ @"ALL-EVALUATE"@
+@#CLEAR_MEM#@ @"ALL-END-EVALUATE"@
+@#DEF_SET#@ @!L_DOSPLITKEY!@ @""@
+;
+@#DEF_SET#@ @!L_MULTIKEY!@ @""@
+@#DEF_IF#@ @#EXP: @+_FDSL_SYS_ISPRIMARY+@ AND 
+                  (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@) #@
+   @#DEF_SET#@ @!L_MULTIKEY!@ @"YES"@
+@#END_IF#@
+;
+@#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"DYNAMIC"@) #@
+ ; ===================================================================
+ ; SINGLE KEY (SLAVE FD / PRIMARY FD BUT NOT INDEXED)
+ ; ===================================================================
+ @#DEF_IF#@ @#EXP: NOT @!L_MULTIKEY!@ #@
+  @#DEF_IF#@ @#EXP: NOT @+_FDSL_SYS_ISSPLITKEY+@ #@
+   @#DEF_IF#@ @+_FDSL_SYS_STARTVALUE+@
+      @#DEF_SET#@ @!L_STARTVALUE!@ @+_FDSL_SYS_STARTVALUE+@
+   @#ELSE#@
+      @#DEF_SET#@ @!L_STARTVALUE!@ @"Low-Value"@
+      ;
+      ; If the FD is Relative File, the Key picture must be 9(9).
+      ; So when we initilize it, we should move zero to it instead
+      ; of low-value, so does high-value.
+      ;
+      @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+         @#DEF_SET#@ @!L_STARTVALUE!@ @"0"@
+      @#END_IF#@
+   @#END_IF#@
+;
+   @#DEF_IF#@ @+_FDSL_SYS_ENDVALUE+@
+      @#DEF_SET#@ @!L_ENDVALUE!@ @+_FDSL_SYS_ENDVALUE+@
+   @#ELSE#@
+      @#DEF_SET#@ @!L_ENDVALUE!@ @"High-Value"@
+      @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+         @#DEF_SET#@ @!L_ENDVALUE!@ @"ALL \"9\""@
+      @#END_IF#@
+   @#END_IF#@
+@$BEFORE-START$@
+           IF @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+              MOVE @!L_STARTVALUE!@ TO @+_FDSL_SYS_FDKEY+@
+           ELSE
+              MOVE @!L_ENDVALUE!@ TO @+_FDSL_SYS_FDKEY+@
+           END-IF
+@$BEFORE-END$@
+           IF @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+              MOVE @!L_ENDVALUE!@ TO @+_FDSL_SYS_FDKEY+@
+           ELSE
+              MOVE @!L_STARTVALUE!@ TO @+_FDSL_SYS_FDKEY+@
+           END-IF
+  @#ELSE#@
+   @#DEF_SET#@ @!L_DOSPLITKEY!@ @"YES"@
+   @#DEF_SET#@ @!L_STARTVALUE!@ @+_FDSL_SYS_STARTVALUE+@
+   @#DEF_SET#@ @!L_ENDVALUE!@   @+_FDSL_SYS_ENDVALUE+@
+   @#DEF_SET#@ @!L_STARTPOS!@   @"1"@
+   @<_PUSH_MEM>@
+   @<_SET_FDSL_ORDERKEY>@
+   @#DEF_LOOP#@ @+_KEY_SYS_KEYNO+@
+      @<_FETCH_NEXT_KEY_ITEM>@
+@$BEFORE-START$@
+           IF @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+      @#DEF_IF#@ @!L_STARTVALUE!@
+              MOVE @!L_STARTVALUE!@(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO @+_KEY_SYS_NAME+@
+      @#ELSE#@
+              MOVE Low-Value TO @+_KEY_SYS_NAME+@
+      @#END_IF#@
+           ELSE
+      @#DEF_IF#@ @!L_ENDVALUE!@
+              MOVE @!L_ENDVALUE!@(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO @+_KEY_SYS_NAME+@
+      @#ELSE#@
+              MOVE High-Value TO @+_KEY_SYS_NAME+@
+      @#END_IF#@
+           END-IF
+@$BEFORE-END$@
+           IF @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+      @#DEF_IF#@ @!L_ENDVALUE!@
+              MOVE @!L_ENDVALUE!@(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO @+_KEY_SYS_NAME+@
+      @#ELSE#@
+              MOVE High-Value to @+_KEY_SYS_NAME+@
+      @#END_IF#@
+           ELSE
+      @#DEF_IF#@ @!L_STARTVALUE!@
+              MOVE @!L_STARTVALUE!@(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO @+_KEY_SYS_NAME+@
+      @#ELSE#@
+              MOVE Low-Value to @+_KEY_SYS_NAME+@
+      @#END_IF#@
+           END-IF
+@$TMP-BUFTOFLD$@
+           MOVE @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-SPLIT-BUF1(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO
+                @+_KEY_SYS_NAME+@(1:@+_KEY_SYS_PICLENGTH+@)
+@$TMP-FLDTOBUF$@
+           MOVE @+_KEY_SYS_NAME+@(1:@+_KEY_SYS_PICLENGTH+@) TO
+                @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-SPLIT-BUF1(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@)
+      @#DEF_ADD#@ @!L_STARTPOS!@ @+_KEY_SYS_PICLENGTH+@
+   @#END_LOOP#@
+   @<_POP_MEM>@
+;
+@$WORKING-SPLIT$@
+      * FOR SPLIT KEY BUFFER
+       77 @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-SPLIT-BUF1   PIC X(@!L_STARTPOS!@).
+
+  @#END_IF#@
+ ; ===================================================================
+ ; MULTIPLE KEY (PRIMARY INDEXED FD WITH MULTIPLE KEYS)
+ ; ===================================================================
+ @#ELSE#@
+@$ALL-EVALUATE$@
+           EVALUATE @+_DATASET_SYS_NAME+@-KEYIS
+@$ALL-END-EVALUATE$@
+           END-EVALUATE
+  @#DEF_SET#@ @!L_KEYINDEX!@ @"0"@
+  @<_PUSH_MEM>@
+  @<_SET_FDSL_MULTIPLEKEY>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_MULTIPLEKEYNO+@
+     @<_FETCH_NEXT_FDSL_MULTIPLEKEY>@
+     @#DEF_ADD#@ @!L_KEYINDEX!@ @"1"@
+     @<_PUSH_MEM>@
+       @<_SET_MULTIPLEKEY_KEYIS>@
+       @#DEF_SET#@ @!L_ISSPLITKEY!@ @+_FDSL_SYS_ISSPLITKEY+@
+     @<_POP_MEM>@
+     ;
+     @#DEF_IF#@ @#EXP: NOT @!L_ISSPLITKEY!@ #@
+       @#DEF_IF#@ @+_MULTIPLEKEY_SYS_STARTVALUE+@
+         @#DEF_SET#@ @!L_STARTVALUE!@ @+_MULTIPLEKEY_SYS_STARTVALUE+@
+       @#ELSE#@
+         @#DEF_SET#@ @!L_STARTVALUE!@ @"Low-Value"@
+         ;
+         @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+           @#DEF_SET#@ @!L_STARTVALUE!@ @"0"@
+         @#END_IF#@
+       @#END_IF#@
+       ;
+       @#DEF_IF#@ @+_MULTIPLEKEY_SYS_ENDVALUE+@
+         @#DEF_SET#@ @!L_ENDVALUE!@ @+_MULTIPLEKEY_SYS_ENDVALUE+@
+       @#ELSE#@
+         @#DEF_SET#@ @!L_ENDVALUE!@ @"High-Value"@
+         @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+           @#DEF_SET#@ @!L_ENDVALUE!@ @"ALL \"9\""@
+         @#END_IF#@
+       @#END_IF#@
+@$BEFORE-START$@
+           WHEN @!L_KEYINDEX!@
+              IF @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                 MOVE @!L_STARTVALUE!@ TO @+_MULTIPLEKEY_SYS_NAME+@
+              ELSE
+                 MOVE @!L_ENDVALUE!@ TO @+_MULTIPLEKEY_SYS_NAME+@
+              END-IF
+@$BEFORE-END$@
+           WHEN @!L_KEYINDEX!@
+              IF @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                 MOVE @!L_ENDVALUE!@ TO @+_MULTIPLEKEY_SYS_NAME+@
+              ELSE
+                 MOVE @!L_STARTVALUE!@ TO @+_MULTIPLEKEY_SYS_NAME+@
+              END-IF
+     @#ELSE#@
+       @#DEF_SET#@ @!L_DOSPLITKEY!@ @"YES"@
+       @#DEF_SET#@ @!L_STARTVALUE!@ @+_MULTIPLEKEY_SYS_STARTVALUE+@
+       @#DEF_SET#@ @!L_ENDVALUE!@   @+_MULTIPLEKEY_SYS_ENDVALUE+@
+       @#DEF_SET#@ @!L_STARTPOS!@   @"1"@
+       @<_PUSH_MEM>@
+       @<_SET_MULTIPLEKEY_KEYIS>@
+       @#DEF_LOOP#@ @+_KEY_SYS_KEYNO+@
+         @<_FETCH_NEXT_KEY_ITEM>@
+@$ITEM-BEFORE-START$@
+              IF @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+           @#DEF_IF#@ @!L_STARTVALUE!@
+                 MOVE @!L_STARTVALUE!@(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO @+_KEY_SYS_NAME+@
+           @#ELSE#@
+                 MOVE Low-Value TO @+_KEY_SYS_NAME+@
+           @#END_IF#@
+              ELSE
+           @#DEF_IF#@ @!L_ENDVALUE!@
+                 MOVE @!L_ENDVALUE!@(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO @+_KEY_SYS_NAME+@
+           @#ELSE#@
+                 MOVE High-Value TO @+_KEY_SYS_NAME+@
+           @#END_IF#@
+              END-IF
+@$ITEM-BEFORE-END$@
+              IF @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+           @#DEF_IF#@ @!L_ENDVALUE!@
+                 MOVE @!L_ENDVALUE!@(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO @+_KEY_SYS_NAME+@
+           @#ELSE#@
+                 MOVE High-Value to @+_KEY_SYS_NAME+@
+           @#END_IF#@
+              ELSE		     
+           @#DEF_IF#@ @!L_STARTVALUE!@
+                 MOVE @!L_STARTVALUE!@(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO @+_KEY_SYS_NAME+@
+           @#ELSE#@
+                 MOVE Low-Value to @+_KEY_SYS_NAME+@
+           @#END_IF#@
+              END-IF
+@$ITEM-TMP-BUFTOFLD$@
+              MOVE @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-SPLIT-BUF@!L_KEYINDEX!@(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO
+                   @+_KEY_SYS_NAME+@(1:@+_KEY_SYS_PICLENGTH+@)
+@$ITEM-TMP-FLDTOBUF$@
+              MOVE @+_KEY_SYS_NAME+@(1:@+_KEY_SYS_PICLENGTH+@) TO
+                   @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-SPLIT-BUF@!L_KEYINDEX!@(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@)
+         @#DEF_ADD#@ @!L_STARTPOS!@ @+_KEY_SYS_PICLENGTH+@
+       @#END_LOOP#@
+       @<_POP_MEM>@
+;
+@$BEFORE-START$@
+           WHEN @!L_KEYINDEX!@
+              @#GET_MEM#@   @"ITEM-BEFORE-START"@
+              @#CLEAR_MEM#@ @"ITEM-BEFORE-START"@
+;
+@$BEFORE-END$@
+           WHEN @!L_KEYINDEX!@
+              @#GET_MEM#@   @"ITEM-BEFORE-END"@
+              @#CLEAR_MEM#@ @"ITEM-BEFORE-END"@
+;
+@$TMP-BUFTOFLD$@
+       @#DEF_SETMEM#@ @!L_DOIT!@ @"ITEM-TMP-BUFTOFLD"@
+       @#DEF_IF#@ @!L_DOIT!@
+           WHEN @!L_KEYINDEX!@
+              @#GET_MEM#@   @"ITEM-TMP-BUFTOFLD"@
+              @#CLEAR_MEM#@ @"ITEM-TMP-BUFTOFLD"@
+       @#END_IF#@
+;
+@$TMP-FLDTOBUF$@
+       @#DEF_SETMEM#@ @!L_DOIT!@ @"ITEM-TMP-FLDTOBUF"@
+       @#DEF_IF#@ @!L_DOIT!@
+           WHEN @!L_KEYINDEX!@
+              @#GET_MEM#@   @"ITEM-TMP-FLDTOBUF"@
+              @#CLEAR_MEM#@ @"ITEM-TMP-FLDTOBUF"@
+       @#END_IF#@
+;
+@$WORKING-SPLIT$@
+      * FOR SPLIT KEY BUFFER
+       77 @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-SPLIT-BUF@!L_KEYINDEX!@   PIC X(@!L_STARTPOS!@).
+
+     @#END_IF#@
+   @#END_LOOP#@
+  @<_POP_MEM>@
+ @#END_IF#@
+; ===================================================================
+;   End of @+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"DYNAMIC"@
+; ===================================================================
+@#END_IF#@
+;
+@$FDIO_PARAGRAPH$@
+       @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-INITSTART.
+           @#GET_MEM#@   @"ALL-EVALUATE"@
+           @#GET_MEM#@   @"BEFORE-START"@
+           @#CLEAR_MEM#@ @"BEFORE-START"@
+           @#GET_MEM#@   @"ALL-END-EVALUATE"@
+           .
+
+       @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-INITEND.
+           @#GET_MEM#@   @"ALL-EVALUATE"@
+           @#GET_MEM#@   @"BEFORE-END"@
+           @#CLEAR_MEM#@ @"BEFORE-END"@
+           @#GET_MEM#@   @"ALL-END-EVALUATE"@
+           .
+
+@#DEF_IF#@ @!L_DOSPLITKEY!@ @"YES"@
+       @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-TMPBUF-TO-FLD.
+           @#GET_MEM#@   @"ALL-EVALUATE"@
+           @#GET_MEM#@   @"TMP-BUFTOFLD"@
+           @#CLEAR_MEM#@ @"TMP-BUFTOFLD"@
+           @#GET_MEM#@   @"ALL-END-EVALUATE"@
+           .
+
+       @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-FLD-TO-TMPBUF.
+           @#GET_MEM#@   @"ALL-EVALUATE"@
+           @#GET_MEM#@   @"TMP-FLDTOBUF"@
+           @#CLEAR_MEM#@ @"TMP-FLDTOBUF"@
+           @#GET_MEM#@   @"ALL-END-EVALUATE"@
+           .
+
+@#END_IF#@
+;

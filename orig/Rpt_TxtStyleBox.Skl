@@ -1,0 +1,115 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Style (Box) Generation Rule.  2001/04/19
+;
+; Remarks:
+;  The RPT.Box should be on the bottom of the Section, so we should
+;  draw it first, then other Controls. Therefore we put it on the different
+;  label section (@$RPT-BOX-CTRL-PRINT$@).
+;
+; ASCII :
+;
+;    Dotted :       Solid :          Double :
+;       +----+         DA C4 BF         C9 CD BB
+;       |    |         B3    B3         BA    BA
+;       +----+         C0 C4 D9         C8 CD BC
+;
+; ===================================================================
+;
+; ===================== RPT -- BOX-PRINT-ROUTINE ====================
+;
+@#DEF_SET#@ @!L_LINE!@ @"1"@
+@#DEF_ADD#@ @!L_LINE!@ @+_RPT_ATR_LINE+@
+;
+@#DEF_SET#@ @!L_LINES!@ @"0"@
+@#DEF_ADD#@ @!L_LINES!@ @+_RPT_ATR_LINES+@
+;
+@#DEF_SET#@ @!L_COLUMN!@ @"1"@
+@#DEF_ADD#@ @!L_COLUMN!@ @+_RPT_ATR_COLUMN+@
+;
+@#DEF_SET#@ @!L_SIZE!@ @"-1"@
+@#DEF_ADD#@ @!L_SIZE!@ @+_RPT_ATR_SIZE+@
+;
+@#DEF_SET#@ @!L_BOTTOMY!@ @"0"@
+@#DEF_ADD#@ @!L_BOTTOMY!@ @+_RPT_ATR_LINE+@
+@#DEF_ADD#@ @!L_BOTTOMY!@ @+_RPT_ATR_LINES+@
+@#DEF_SET#@ @!L_RIGHTX!@ @"0"@
+@#DEF_ADD#@ @!L_RIGHTX!@ @+_RPT_ATR_COLUMN+@
+@#DEF_ADD#@ @!L_RIGHTX!@ @+_RPT_ATR_SIZE+@
+;
+@$RPT-BOX-CTRL-PRINT$@
+      * RPT.Box : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Box:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Box"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: @+_RPT_ATR_LINESTYLES+@ EQUAL @"DOTTED"@ #@
+               MOVE ALL "-" TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:@!L_SIZE!@)
+               MOVE ALL "-" TO @!G_SECTIONNAME!@-LINES(@!L_BOTTOMY!@)(@!L_COLUMN!@:@!L_SIZE!@)
+               MOVE @!L_LINE!@ TO TOTEM-IDX2
+               PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL TOTEM-IDX1 > @!L_LINES!@
+                   MOVE "|" TO @!G_SECTIONNAME!@-LINES(TOTEM-IDX2)(@!L_COLUMN!@:1)
+                   ADD 1 TO TOTEM-IDX2
+               END-PERFORM
+               MOVE @!L_LINE!@ TO TOTEM-IDX2
+               PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL TOTEM-IDX1 > @!L_LINES!@
+                   MOVE "|" TO @!G_SECTIONNAME!@-LINES(TOTEM-IDX2)(@!L_RIGHTX!@:1)
+                   ADD 1 TO TOTEM-IDX2
+               END-PERFORM
+               MOVE "+" TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:1)
+               MOVE "+" TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_RIGHTX!@:1)
+               MOVE "+" TO @!G_SECTIONNAME!@-LINES(@!L_BOTTOMY!@)(@!L_COLUMN!@:1)
+               MOVE "+" TO @!G_SECTIONNAME!@-LINES(@!L_BOTTOMY!@)(@!L_RIGHTX!@:1)
+;
+   @#ELSE_IF#@ @#EXP: @+_RPT_ATR_LINESTYLES+@ EQUAL @"SOLID"@ #@
+               MOVE ALL X"C4" TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:@!L_SIZE!@)
+               MOVE ALL X"C4" TO @!G_SECTIONNAME!@-LINES(@!L_BOTTOMY!@)(@!L_COLUMN!@:@!L_SIZE!@)
+               MOVE @!L_LINE!@ TO TOTEM-IDX2
+               PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL TOTEM-IDX1 > @!L_LINES!@
+                   MOVE X"B3" TO @!G_SECTIONNAME!@-LINES(TOTEM-IDX2)(@!L_COLUMN!@:1)
+                   ADD 1 TO TOTEM-IDX2
+               END-PERFORM
+               MOVE @!L_LINE!@ TO TOTEM-IDX2
+               PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL TOTEM-IDX1 > @!L_LINES!@
+                   MOVE X"B3" TO @!G_SECTIONNAME!@-LINES(TOTEM-IDX2)(@!L_RIGHTX!@:1)
+                   ADD 1 TO TOTEM-IDX2
+               END-PERFORM
+               MOVE X"DA" TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:1)
+               MOVE X"BF" TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_RIGHTX!@:1)
+               MOVE X"C0" TO @!G_SECTIONNAME!@-LINES(@!L_BOTTOMY!@)(@!L_COLUMN!@:1)
+               MOVE X"D9" TO @!G_SECTIONNAME!@-LINES(@!L_BOTTOMY!@)(@!L_RIGHTX!@:1)
+;
+   @#ELSE#@
+               MOVE ALL X"CD" TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:@!L_SIZE!@)
+               MOVE ALL X"CD" TO @!G_SECTIONNAME!@-LINES(@!L_BOTTOMY!@)(@!L_COLUMN!@:@!L_SIZE!@)
+               MOVE @!L_LINE!@ TO TOTEM-IDX2
+               PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL TOTEM-IDX1 > @!L_LINES!@
+                   MOVE X"BA" TO @!G_SECTIONNAME!@-LINES(TOTEM-IDX2)(@!L_COLUMN!@:1)
+                   ADD 1 TO TOTEM-IDX2
+               END-PERFORM
+               MOVE @!L_LINE!@ TO TOTEM-IDX2
+               PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL TOTEM-IDX1 > @!L_LINES!@
+                   MOVE X"BA" TO @!G_SECTIONNAME!@-LINES(TOTEM-IDX2)(@!L_RIGHTX!@:1)
+                   ADD 1 TO TOTEM-IDX2
+               END-PERFORM
+               MOVE X"C9" TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:1)
+               MOVE X"BB" TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_RIGHTX!@:1)
+               MOVE X"C8" TO @!G_SECTIONNAME!@-LINES(@!L_BOTTOMY!@)(@!L_COLUMN!@:1)
+               MOVE X"BC" TO @!G_SECTIONNAME!@-LINES(@!L_BOTTOMY!@)(@!L_RIGHTX!@:1)
+;
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Box:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Box"@ @"AfterPrint"@
+      * <TOTEM:END>
+;

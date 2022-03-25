@@ -1,0 +1,12 @@
+; ===================================================================
+; CaseMaker TOTEM 6.0
+; N-Top Report Generation Rule.  99/10/01
+;
+; Remarks:
+;
+;    1. Only Group H/F & Detail H/F will repeat by Column Number.
+;       Report H/F & Page H/F were output single time.
+;
+; ===================================================================
+;
+;

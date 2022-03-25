@@ -1,0 +1,155 @@
+@#DEF_SET#@ @!G_MYPROPERTY_ITEM_LENGHT!@ @"100"@
+@#DEF_SET#@ @!G_MYPROPERTY_SUBSTRING_IDX!@ @"0"@      
+@#DEF_SET#@ @!G_MYPROPERTY_SUBSTRING_INPUT!@ @+_OBJ_ATR_MYPROPERTY+@
+@#DEF_LOOP#@ @"1000"@
+   @%MyProperty-Substring.Skl%@
+   @#DEF_CASE#@ @!G_MYPROPERTY_ITEM_NAME!@
+   @#CASE#@ @""@ 
+            @#EXIT_LOOP#@
+;
+   @#CASE#@ @"ZOOM"@
+   @#DEF_SET#@ @!G_GENERA_BEFORE!@ @"YES"@
+   @#DEF_SET#@ @!G_GENERA_AFTER!@ @"YES"@
+            @$BEFORE_SCREEN_ZOOM$@
+   @#DEF_SET#@ @!G_GENERA_BEFORE_ZOOM!@ @"YES"@
+   @#DEF_IF#@ @!G_VALORE_AUTO_ID!@
+           |@!G_VALORE_AUTO_ID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+           when @!G_VALORE_AUTO_ID!@
+   @#ELSE#@
+           |@!G_DARWINID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+           when @!G_DARWINID!@
+   @#END_IF#@
+                move 1 to StatusHelp
+                perform STATUS-HELP
+;
+           @$AFTER_SCREEN_ZOOM$@   
+   @#DEF_SET#@ @!G_GENERA_AFTER_ZOOM!@ @"YES"@
+   @#DEF_IF#@ @!G_VALORE_AUTO_ID!@
+           |@!G_VALORE_AUTO_ID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+           when @!G_VALORE_AUTO_ID!@
+   @#ELSE#@
+           |@!G_DARWINID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+           when @!G_DARWINID!@
+   @#END_IF#@
+                move 0 to StatusHelp
+                perform STATUS-HELP
+;
+   @#CASE#@ @"VIRGOLA"@
+   @#DEF_SET#@ @!G_GENERA_BEFORE!@ @"YES"@
+   @#DEF_SET#@ @!G_GENERA_AFTER!@ @"YES"@
+            @$BEFORE_SCREEN_VIRGOLA$@
+   @#DEF_SET#@ @!G_GENERA_BEFORE_VIRGOLA!@ @"YES"@
+   @#DEF_IF#@ @!G_VALORE_AUTO_ID!@
+           |@!G_VALORE_AUTO_ID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+           when @!G_VALORE_AUTO_ID!@
+   @#ELSE#@
+           |@!G_DARWINID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+           when @!G_DARWINID!@
+   @#END_IF#@   
+                if  KeyboardReleased
+                   set KeyboardSaved to true
+      *            sostituisco il punto come virgola
+                   set environment "KEYSTROKE" to "DATA=44 46"
+                end-if
+;
+           @$AFTER_SCREEN_VIRGOLA$@   
+   @#DEF_SET#@ @!G_GENERA_AFTER_VIRGOLA!@ @"YES"@
+   @#DEF_IF#@ @!G_VALORE_AUTO_ID!@
+           |@!G_VALORE_AUTO_ID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+           when @!G_VALORE_AUTO_ID!@
+   @#ELSE#@
+           |@!G_DARWINID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+           when @!G_DARWINID!@
+   @#END_IF#@   
+                if  KeyboardSaved
+                   set KeyboardReleased to true
+      *            setto la tastiera originale (PUNTO come PUNTO, VIROGLA come VIRGOLA)
+                   set environment "KEYSTROKE" to "DATA=44   44"
+                   set environment "KEYSTROKE" to "DATA=46   46"
+                end-if
+;
+   @#CASE#@ @"CONTROLLO-K"@
+   @#DEF_SET#@ @!G_GENERA_AFTER!@ @"YES"@
+            @$AFTER_SCREEN_CONTROLLO$@
+   @#DEF_IF#@ @!G_VALORE_AUTO_ID!@
+           |@!G_VALORE_AUTO_ID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+           when @!G_VALORE_AUTO_ID!@
+   @#ELSE#@
+           |@!G_DARWINID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+           when @!G_DARWINID!@
+   @#END_IF#@
+                perform CONTROLLO
+                if tutto-ok
+                   add 1 to control-id
+                   move 4 to accept-control
+                end-if
+;
+   @#CASE#@ @"CONTROLLO"@        
+   @#DEF_SET#@ @!G_GENERA_AFTER!@ @"YES"@
+            @$AFTER_SCREEN_CONTROLLO$@
+   @#DEF_IF#@ @!G_VALORE_AUTO_ID!@
+           |@!G_VALORE_AUTO_ID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+           when @!G_VALORE_AUTO_ID!@
+   @#ELSE#@
+           |@!G_DARWINID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+           when @!G_DARWINID!@
+   @#END_IF#@
+                perform CONTROLLO
+;
+            @$CONTROLLO_WHEN$@
+   @#DEF_IF#@ @!G_VALORE_AUTO_ID!@
+           |@!G_VALORE_AUTO_ID!@ è l'ID del control @+_OBJ_ATR_NAME+@
+           when @!G_VALORE_AUTO_ID!@
+   @#ELSE#@
+           |@!G_DARWINID!@ è l'ID del control @+_OBJ_ATR_NAME+@
+           when @!G_DARWINID!@
+   @#END_IF#@                 
+                inquire @+_OBJ_ATR_NAME+@, value in @+_OBJ_ATR_NAME+@-buf
+   @#DEF_SET#@ @!G_GENERA_ELENCO_ID!@ @"YES"@                            
+   @#DEF_SET#@ @!G_GENERA_AFTER_CONTROLLO!@ @"YES"@
+;
+   @#CASE#@ @"CONTROLLO-OLD"@
+   @#DEF_IF#@ @#EXP: NOT @!G_DARWIN_VALUE!@ #@
+     @#DEF_SET#@ @!G_DARWIN_VALUE!@ @+_OBJ_ATR_FIELDVARIABLE+@
+   @#END_IF#@
+            @$CONTROLLO_OLD_VARS$@         
+            @#DEF_FIND#@ @!L_RESULT!@ @!G_DARWIN_VALUE!@ @" OF "@
+            @#DEF_IF#@ @#EXP: NOT @!L_RESULT!@ #@
+               @#DEF_FIND#@ @!L_RESULT!@ @!G_DARWIN_VALUE!@ @" of "@
+            @#END_IF#@
+            @#DEF_IF#@ @!L_RESULT!@          
+               @#DEF_SET#@ @!L_RESULT!@ @""@
+               @#DEF_SET#@ @!L_OFFSET!@ @"1"@
+               @#GET_VARLENGTH#@ @!L_NUM_CHAR!@ @!G_DARWIN_VALUE!@
+               @#DEF_LOOP#@ @!L_NUM_CHAR!@
+                  @#GET_INDEXCHAR#@ @!L_DEST!@ @!G_DARWIN_VALUE!@ @!L_OFFSET!@ @"4"@
+                  @#DEF_ADD#@ @!L_OFFSET!@ @"1"@
+                  @#DEF_FIND#@ @!L_RESULT!@ @!L_DEST!@ @" OF "@
+                  @#DEF_IF#@ @#EXP: NOT @!L_RESULT!@ #@
+                     @#DEF_FIND#@ @!L_RESULT!@ @!L_DEST!@ @" of "@
+                  @#END_IF#@
+                  @#DEF_IF#@ @!L_RESULT!@
+                     @#EXIT_LOOP#@
+                  @#END_IF#@
+               @#END_LOOP#@
+               @#DEF_SUB#@ @!L_OFFSET!@ @"1"@
+               @#DEF_SET#@ @!L_DARWIN_VALUE!@ @!G_DARWIN_VALUE!@
+               @#GET_INDEXCHAR#@ @!L_DARWIN_VALUE!@ @!G_DARWIN_VALUE!@ @"0"@ @!L_OFFSET!@
+            @#ELSE#@
+               @#DEF_SET#@ @!L_DARWIN_VALUE!@ @!G_DARWIN_VALUE!@
+            @#END_IF#@
+;
+           if @!G_DARWIN_VALUE!@ not = old-@!L_DARWIN_VALUE!@
+              and SiSalvato
+              set NoSalvato to true
+      @#DEF_IF#@ @!G_VALORE_AUTO_ID!@
+              |@!G_VALORE_AUTO_ID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+              move @!G_VALORE_AUTO_ID!@ to store-id 
+      @#ELSE#@
+              |@!G_DARWINID!@ è l'ID del campo @+_OBJ_ATR_NAME+@
+              move @!G_DARWINID!@ to store-id
+      @#END_IF#@
+           end-if
+   @#END_CASE#@
+   @#DEF_SET#@ @!G_DARWIN_VALUE!@ @""@
+@#END_LOOP#@

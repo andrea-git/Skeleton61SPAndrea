@@ -1,0 +1,48 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Error / Warning Message Listing.  2001/04/19
+;
+; ===================================================================
+;
+; Message
+;
+Msg1     = "Program @+_PRG_ATR_ID+@ is generating ..."
+Msg2     = "@+_PRG_ATR_ID+@.wrk generated !"
+Msg3     = "@+_PRG_ATR_ID+@.scr generated !"
+Msg4     = "@+_PRG_ATR_ID+@.prd generated !"
+Msg5     = "@+_PRG_ATR_ID+@.mnu generated !"
+Msg6     = "@+_PRG_ATR_ID+@.evt generated !"
+Msg7     = "@+_PRG_ATR_ID+@.rpt generated !"
+Msg8     = "@+_PRG_ATR_ID+@.lks generated !"
+Msg9     = "@+_PRG_ATR_ID+@.cbl generated !"
+Msg10    = "@+_PRG_ATR_ID+@ generation is complete."
+Msg11    = "Program @+_PRG_ATR_SERVERNAME+@ is generating ..."
+Msg12    = "@+_PRG_ATR_SERVERNAME+@.wrk generated !"
+Msg13    = "@+_PRG_ATR_SERVERNAME+@.scr generated !"
+Msg14    = "@+_PRG_ATR_SERVERNAME+@.prd generated !"
+Msg15    = "@+_PRG_ATR_SERVERNAME+@.mnu generated !"
+Msg16    = "@+_PRG_ATR_SERVERNAME+@.evt generated !"
+Msg17    = "@+_PRG_ATR_SERVERNAME+@.rpt generated !"
+Msg18    = "@+_PRG_ATR_SERVERNAME+@.lks generated !"
+Msg19    = "@+_PRG_ATR_SERVERNAME+@.cbl generated !"
+Msg20    = "@+_PRG_ATR_SERVERNAME+@ generation is complete."
+Msg21    = "@+_PRG_ATR_SERVERNAME+@.ida generated !"
+;
+; Warning
+;
+Warning1 = "Skl Warning : DataSet does not exist in @!G_SCREENNAME!@."
+Warning2 = "Skl Warning : Field Variable does not exist for @+_OBJ_ATR_NAME+@ in @!G_SCREENNAME!@."
+Warning3 = "Skl Warning : DataSet does not exist in @!G_REPORTNAME!@."
+Warning4 = "Skl Warning : Field Variable does not exist for @+_RPT_ATR_NAME+@ in @!G_REPORTNAME!@."
+Warning5 = "Skl Warning : FD does not exist in @+_DATASET_SYS_NAME+@."
+Warning6 = "Skl Warning : File attribute in @+_OBJ_ATR_NAME+@ may cause the Grid function to operate incorrectly."
+Warning7 = "Skl Warning : @+_OBJ_ATR_NAME+@ requires a panel to function correctly."
+;
+; Error
+;
+Error1   = "Skl Error : FILE STATUS variable does not exist in @+_FDSL_SYS_FDNAME+@.SL."
+Error2   = "Skl Error : Field Picture variable does not exist in @+_OBJ_ATR_NAME+@."
+Error3   = "Skl Error : DataSet does not exist in @+_OBJ_ATR_NAME+@."
+Error4   = "Skl Error : File property in @+_OBJ_ATR_NAME+@ must have data."
+Error5   = "Skl Error : File property in @+_RPT_ATR_NAME+@ must have data."
+Error6   = "Skl Error : @+_RPT_ATR_NAME+@ must have Sub Report Name."

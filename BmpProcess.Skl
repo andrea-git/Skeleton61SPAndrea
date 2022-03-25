@@ -1,0 +1,59 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Push Button Generation Rule.  2001/11/01
+;
+; ===================================================================
+@#DEF_IF#@ @!G_TMPBMPHANDLE!@
+   @#DEF_FIND#@   @!L_FIND!@ @!G_ALLBMPFILE!@ @"@!G_TMPBMPHANDLE!@|"@
+   @#DEF_IF#@ @#EXP: NOT @!L_FIND!@ #@
+      @#DEF_APPEND#@ @!G_ALLBMPFILE!@ @"@!G_TMPBMPHANDLE!@|"@
+      @#DEF_SETPARA#@ @"1"@ @!G_TMPBMPHANDLE!@
+      @#DEF_IF#@ @+_SYS_CHECK_EXTERNALVARIABLE+@
+         @#DEF_SET#@ @!G_EXISTEXTERNALVAR!@ @"1"@
+@$INIT_EXTERNALVAR$@
+              INITIALIZE @!G_TMPBMPHANDLE!@
+      @#END_IF#@
+@$BITMAP_PROCESS$@
+      * @+_OBJ_ATR_NAME+@
+      @#DEF_IF#@ @!G_COPYRESOURCE!@
+           COPY RESOURCE "@!G_TMPBMPRELATIVEFILE!@".
+        @#DEF_IF#@ @+_SYS_CHECK_EXTERNALVARIABLE+@
+           IF @!G_TMPBMPHANDLE!@ = 0
+              CALL "w$bitmap" USING WBITMAP-LOAD "@!G_TMPBITMAPFILE!@", 
+                     GIVING @!G_TMPBMPHANDLE!@
+           END-IF
+        @#ELSE#@
+           CALL "w$bitmap" USING WBITMAP-LOAD "@!G_TMPBITMAPFILE!@", 
+                   GIVING @!G_TMPBMPHANDLE!@.
+        @#END_IF#@
+      @#ELSE#@
+           ACCEPT TOTEM-BITMAPPATH FROM ENVIRONMENT "Bitmap-Path"
+           ON EXCEPTION
+              MOVE "@!G_TMPBITMAP!@" TO TOTEM-FULLBITMAPPATH
+           NOT ON EXCEPTION
+              INSPECT TOTEM-BITMAPPATH REPLACING TRAILING SPACE BY "\"
+              INSPECT TOTEM-BITMAPPATH REPLACING TRAILING "\" BY LOW-VALUE
+              STRING TOTEM-BITMAPPATH         DELIMITED BY LOW-VALUE
+                     "\"                  DELIMITED BY SIZE
+                     "@!G_TMPBITMAPFILE!@"    DELIMITED BY SIZE
+                INTO TOTEM-FULLBITMAPPATH
+           END-ACCEPT
+        @#DEF_IF#@ @+_SYS_CHECK_EXTERNALVARIABLE+@
+           IF @!G_TMPBMPHANDLE!@ = 0
+              CALL "w$bitmap" USING WBITMAP-LOAD TOTEM-FULLBITMAPPATH, 
+                    GIVING @!G_TMPBMPHANDLE!@.
+           END-IF
+        @#ELSE#@
+           CALL "w$bitmap" USING WBITMAP-LOAD TOTEM-FULLBITMAPPATH, 
+                   GIVING @!G_TMPBMPHANDLE!@.
+        @#END_IF#@
+      @#END_IF#@
+@$DESTROY_BITMAP_PROCESS$@
+      @#DEF_IF#@ @+_SYS_CHECK_EXTERNALVARIABLE+@
+      *     CALL "w$bitmap" USING WBITMAP-DESTROY, @!G_TMPBMPHANDLE!@
+      @#ELSE#@
+           CALL "w$bitmap" USING WBITMAP-DESTROY, @!G_TMPBMPHANDLE!@
+      @#END_IF#@
+   @#END_IF#@
+@#END_IF#@
+;

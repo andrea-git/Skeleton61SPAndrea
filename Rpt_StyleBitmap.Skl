@@ -1,0 +1,273 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Style (Bitmap) Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+;   1. HTML about BITMAP :
+;     :
+;     <DIV STYLE=".....">
+;        <P> <IMG SRC="FILE:/C:\ABC.GIF" WIDTH=XX HEIGHT=XX> </P>
+;     </DIV>
+;     :
+;
+;   2. IMG SRC="FILE:/...
+;      IMG SRC="FILE:....  would cause different result.
+;	   In Specified for IE, 
+;               you should take the second src syntax. (but NetScape can't work)
+;      In General HTML format,
+;               you should take the first one.
+;               . If you browse it with NetScape, it's OK !
+;               . If you browse it with IE, the local bitmap is OK !
+;                 but the bitmap in remote PC can't work !
+;
+; @+_RPT_SYS_BMPRELATIVETOP+@   / @+_RPT_SYS_BMPRELATIVELEFT+@ /
+; @+_RPT_SYS_BMPRELATIVEWIDTH+@ / @+_RPT_SYS_BMPRELATIVEHEIGHT+@
+;     It will calculate the relative size & position of the BITMAP.
+;     & Its value depend on BORDERWIDTH / BITMAPPOSITION / BITMAPSTYLE.
+;
+; ===================================================================
+;
+@#DEF_SET#@ @!L_CSS!@        @"   .@+_RPT_ATR_NAME+@ {"@
+@#DEF_SET#@ @!L_IMGSTYLE!@   @""@
+@#DEF_SET#@ @!L_INGATTR!@    @""@
+;
+; ===================================================================
+;                   RPT -- CSS STYLE'S SETTING
+; ===================================================================
+;
+    @#DEF_APPEND#@ @!L_CSS!@ @"POSITION:ABSOLUTE; TOP:@+_RPT_SYS_TOPPIXELS+@; LEFT:@+_RPT_SYS_LEFTPIXELS+@; "@
+    @#DEF_APPEND#@ @!L_CSS!@ @"WIDTH:@+_RPT_SYS_WIDTHPIXELS+@; HEIGHT:@+_RPT_SYS_HEIGHTPIXELS+@; "@
+    @#DEF_IF#@ @#EXP: NOT (@+_RPT_ATR_BORDERSTYLE+@ EQUAL @"NOBOX"@) #@
+        @#DEF_APPEND#@ @!L_CSS!@ @" BORDER-STYLE:SOLID; BORDER-WIDTH=@+_RPT_ATR_BORDERWIDTH+@px; border-color:@+_RPT_SYS_BORDERRGBCOLOR+@; "@
+    @#END_IF#@
+    @#DEF_APPEND#@ @!L_CSS!@ @"}"@
+;
+@$STYLE_CSS_ALL$@
+      * @+_RPT_ATR_NAME+@'S CSS SETTING
+           MOVE '@!L_CSS!@' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+;
+@#DEF_SET#@    @!L_IMGSTYLE!@ @"STYLE="POSITION:ABSOLUTE; TOP:@+_RPT_SYS_BMPRELATIVETOP+@; LEFT:@+_RPT_SYS_BMPRELATIVELEFT+@; "@
+@#DEF_APPEND#@ @!L_IMGSTYLE!@ @"WIDTH:@+_RPT_SYS_BMPRELATIVEWIDTH+@; HEIGHT:@+_RPT_SYS_BMPRELATIVEHEIGHT+@; "@
+@#DEF_APPEND#@ @!L_IMGSTYLE!@ @"\""@
+;
+;
+; ===================================================================
+;
+; If the Rpt.Image contain FieldVariable / FieldPicture, it means it's
+; a dynamic Bitmap, just like the other data control, you should 
+; allocate buffer & set into BUF & FLD.
+;
+; ===================================================================
+;
+;
+;======================= WRK -- RPT -- Bitmap =======================
+;
+@$WORKING$@
+	@#DEF_IF#@ @#EXP: @+_RPT_ATR_BITMAPPATH+@ EQUAL @"Dynamic Full Path"@ #@
+      * Bitmap's Control Buffer
+       77 @+_RPT_ATR_NAME+@-FULLNAME   PIC X(132) VALUE SPACES.
+    @#END_IF#@
+
+; ===================================================================
+@#DEF_IF#@ @+_RPT_ATR_FIELDVARIABLE+@
+      @#DEF_SET#@ @!G_EXISTRPTBUF!@ @"YES"@
+;
+; ================ WRK -- RPT -- Pre Entry-Field Buf ================
+;
+@$RPT_PRE_DATABUF$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-PRE-BUF PIC @+_RPT_ATR_FIELDPICTURE+@.
+;
+;======================= WRK -- RPT -- Bitmap =======================
+;
+@$RPT_DB_WORKING_BUFBODY$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-BUF PIC @+_RPT_ATR_FIELDPICTURE+@.
+;
+; ========================= PRT -- BUFTOFLD =========================
+;
+@$RPT_FDSL_FLDTOBUF$@
+      * RPT.BITMAP : @+_RPT_ATR_NAME+@
+           MOVE @+_RPT_ATR_FIELDVARIABLE+@ TO @+_RPT_ATR_NAME+@-BUF
+;
+;
+   @#DEF_IF#@ @+_RPT_ATR_PRINTWHENNEWPAGE+@
+@$RPT_ISNEWPAGE_BUF$@
+           @#DEF_SET#@ @!G_EXISTISNEWPAGE!@ @"YES"@
+           03 @!G_REPORTNAME!@-@+_RPT_ATR_NAME+@-ISNEW     PIC   9   VALUE 0.
+   @#END_IF#@
+@#END_IF#@
+;
+; ===================== RPT -- BITMAP-PRINT-ROUTINE ===================
+;
+@$RPT-CTRL-PRINT$@
+      * RPT.Bitmap : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Bitmap:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Bitmap"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: @+_RPT_ATR_FIELDVARIABLE+@ AND (@+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Detail"@) AND 
+                      (NOT @+_RPT_ATR_PRINTIFREPEAT+@) #@
+      * PRINT IF REPEAT : FALSE
+             IF (@+_RPT_ATR_NAME+@-BUF NOT = @+_RPT_ATR_NAME+@-PRE-BUF)
+        @#DEF_IF#@ @+_RPT_ATR_PRINTWHENNEWPAGE+@
+      * PRINT WHEN NEW PAGE : TRUE
+                OR (@!G_REPORTNAME!@-@+_RPT_ATR_NAME+@-ISNEW = 0)
+               MOVE 1 TO @!G_REPORTNAME!@-@+_RPT_ATR_NAME+@-ISNEW
+        @#END_IF#@
+   @#END_IF#@
+               MOVE '      <!-- Bitmap (@+_RPT_ATR_NAME+@) -->' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               MOVE '      <DIV CLASS="@+_RPT_ATR_NAME+@" >' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+    @#DEF_IF#@ @+_RPT_ATR_HYPERLINKVARIABLE+@
+               IF @+_RPT_ATR_HYPERLINKVARIABLE+@ = ZEROS OR SPACES
+                   MOVE "         <P>" TO PRINT-BUF
+               ELSE
+                   STRING '         <P><A HREF="',
+                          @+_RPT_ATR_HYPERLINKVARIABLE+@, '">'
+                        DELIMITED BY SIZE INTO PRINT-BUF
+               END-IF
+	@#ELSE_IF#@ @+_RPT_ATR_HYPERLINK+@
+               MOVE '         <P><A HREF="@+_RPT_ATR_HYPERLINK+@">' TO PRINT-BUF
+	@#ELSE#@
+               MOVE "         <P>" TO PRINT-BUF
+    @#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+   @#DEF_IF#@ @+_RPT_ATR_FIELDVARIABLE+@
+               IF @+_RPT_ATR_FIELDVARIABLE+@ = SPACES
+        @#DEF_IF#@ @+_RPT_SYS_BITMAPFULLPATH+@
+			   @#DEF_IF#@ @#EXP: @+_RPT_ATR_BITMAPPATH+@ EQUAL @"Full Path"@ #@
+                  STRING '<IMG SRC="FILE:',
+                         '@+_RPT_SYS_BITMAPFULLPATH+@',
+                         '" @!L_IMGSTYLE!@ >'
+                         DELIMITED BY SIZE INTO PRINT-BUF
+			   @#ELSE_IF#@ @#EXP: @+_RPT_ATR_BITMAPPATH+@ EQUAL @"Dynamic Full Path"@ #@
+                  CALL "C$FULLNAME" USING '@+_RPT_ATR_BITMAP+@', @+_RPT_ATR_NAME+@-FULLNAME,
+                        GIVING TOTEM-STATUS-CODE
+                  MOVE 0 TO TOTEM-IDX1
+                  INSPECT @+_RPT_ATR_NAME+@-FULLNAME TALLYING TOTEM-IDX1 FOR ALL ":"
+                  IF TOTEM-IDX1 <= 0
+                     STRING '<IMG SRC="',
+                         '@+_RPT_ATR_BITMAP+@',
+                         '" @!L_IMGSTYLE!@ >'
+                         DELIMITED BY SIZE INTO PRINT-BUF
+                  ELSE
+                     STRING '<IMG SRC="FILE:',
+                         @+_RPT_ATR_NAME+@-FULLNAME,
+                         '" @!L_IMGSTYLE!@ >'
+                         DELIMITED BY SIZE INTO PRINT-BUF
+                  END-IF
+			   @#ELSE_IF#@ @#EXP: @+_RPT_ATR_BITMAPPATH+@ EQUAL @"User Defined"@ #@
+                  STRING '<IMG SRC="',
+                         '@+_RPT_ATR_BITMAP+@',
+                         '" @!L_IMGSTYLE!@ >'
+                         DELIMITED BY SIZE INTO PRINT-BUF
+               @#END_IF#@
+        @#ELSE#@
+                  STRING '<IMG SRC="',
+                         @+_RPT_ATR_FIELDVARIABLE+@,
+                         '" @!L_IMGSTYLE!@ >'
+                         DELIMITED BY SIZE INTO PRINT-BUF
+        @#END_IF#@ 
+               ELSE
+			   @#DEF_IF#@ @#EXP: @+_RPT_ATR_BITMAPPATH+@ EQUAL @"Full Path"@ #@
+                  STRING '<IMG SRC="FILE:',
+                         @+_RPT_ATR_FIELDVARIABLE+@,
+                         '" @!L_IMGSTYLE!@ >'
+                         DELIMITED BY SIZE INTO PRINT-BUF
+			   @#ELSE_IF#@ @#EXP: @+_RPT_ATR_BITMAPPATH+@ EQUAL @"Dynamic Full Path"@ #@
+                  CALL "C$FULLNAME" USING @+_RPT_ATR_FIELDVARIABLE+@, @+_RPT_ATR_NAME+@-FULLNAME,
+                        GIVING TOTEM-STATUS-CODE
+                  MOVE 0 TO TOTEM-IDX1
+                  INSPECT @+_RPT_ATR_NAME+@-FULLNAME TALLYING TOTEM-IDX1 FOR ALL ":"
+                  IF TOTEM-IDX1 <= 0
+                     STRING '<IMG SRC="',
+                         @+_RPT_ATR_FIELDVARIABLE+@,
+                         '" @!L_IMGSTYLE!@ >'
+                         DELIMITED BY SIZE INTO PRINT-BUF
+                  ELSE
+                     STRING '<IMG SRC="FILE:',
+                         @+_RPT_ATR_NAME+@-FULLNAME,
+                         '" @!L_IMGSTYLE!@ >'
+                         DELIMITED BY SIZE INTO PRINT-BUF
+                  END-IF
+			   @#ELSE_IF#@ @#EXP: @+_RPT_ATR_BITMAPPATH+@ EQUAL @"User Defined"@ #@
+                  STRING '<IMG SRC="',
+                         @+_RPT_ATR_FIELDVARIABLE+@,
+                         '" @!L_IMGSTYLE!@ >'
+                         DELIMITED BY SIZE INTO PRINT-BUF
+               @#END_IF#@
+               END-IF
+   @#ELSE#@
+		@#DEF_IF#@ @#EXP: @+_RPT_ATR_BITMAPPATH+@ EQUAL @"Full Path"@ #@
+               STRING '<IMG SRC="FILE:',
+                      '@+_RPT_SYS_BITMAPFULLPATH+@',
+                      '" @!L_IMGSTYLE!@ >'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+		@#ELSE_IF#@ @#EXP: @+_RPT_ATR_BITMAPPATH+@ EQUAL @"Dynamic Full Path"@ #@
+               CALL "C$FULLNAME" USING '@+_RPT_ATR_BITMAP+@', @+_RPT_ATR_NAME+@-FULLNAME,
+                     GIVING TOTEM-STATUS-CODE
+               MOVE 0 TO TOTEM-IDX1
+               INSPECT @+_RPT_ATR_NAME+@-FULLNAME TALLYING TOTEM-IDX1 FOR ALL ":"
+               IF TOTEM-IDX1 <= 0
+                  STRING '<IMG SRC="',
+                      '@+_RPT_ATR_BITMAP+@',
+                      '" @!L_IMGSTYLE!@ >'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+               ELSE
+                  STRING '<IMG SRC="FILE:',
+                     @+_RPT_ATR_NAME+@-FULLNAME,
+                     '" @!L_IMGSTYLE!@ >'
+                     DELIMITED BY SIZE INTO PRINT-BUF
+               END-IF
+		@#ELSE_IF#@ @#EXP: @+_RPT_ATR_BITMAPPATH+@ EQUAL @"User Defined"@ #@
+               STRING '<IMG SRC="',
+                      '@+_RPT_ATR_BITMAP+@',
+                      '" @!L_IMGSTYLE!@ >'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+        @#END_IF#@
+   @#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+		@#DEF_IF#@ @+_RPT_ATR_HYPERLINKVARIABLE+@
+               IF @+_RPT_ATR_HYPERLINKVARIABLE+@ = ZEROS OR SPACES
+                    MOVE '         </P></DIV>' TO PRINT-BUF
+               ELSE
+                    MOVE '         </A></P></DIV>' TO PRINT-BUF
+               END-IF
+		@#ELSE_IF#@ @+_RPT_ATR_HYPERLINK+@ #@
+               MOVE '         </A></P></DIV>' TO PRINT-BUF
+		@#ELSE#@
+               MOVE '         </P></DIV>' TO PRINT-BUF
+		@#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+   @#DEF_IF#@ @+_RPT_ATR_FIELDVARIABLE+@
+               MOVE @+_RPT_ATR_NAME+@-BUF TO @+_RPT_ATR_NAME+@-PRE-BUF
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: @+_RPT_ATR_FIELDVARIABLE+@ AND (@+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Detail"@) AND
+                      (NOT @+_RPT_ATR_PRINTIFREPEAT+@) #@
+             END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Bitmap:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Bitmap"@ @"AfterPrint"@
+      * <TOTEM:END>
+;

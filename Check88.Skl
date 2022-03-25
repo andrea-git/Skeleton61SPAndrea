@@ -1,0 +1,24 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+;
+; Remarks :
+;   If the Variable in EXCEPTIONVARIABLE and TERMINATIONVARIABLE 
+;   had been declared in KEYSTATUS, you should generate its VALUE
+;   instead of his variable Name in SCREEN SECTION.
+;
+;   Why do we just check if this variable declared in KEYSTATUS ?
+;   Because 88 means condition variable, it should follow a 77 or 01
+;   level, so it's not a real variable. So the Working List won't list
+;   88 variables and the only possible resouce is KEYSTATUS.
+;
+; ===================================================================
+;
+@#DEF_SET#@ @!L_TERVALUE!@ @!G_CHECK88PARA!@
+@<_SET_PRG_KEYSTATUS>@
+   @#DEF_LOOP#@ @+_OBJ_SYS_KEYSTATUSCOUNT+@
+      @<_FETCH_NEXT_OBJ_KEYSTATUS>@
+      @#DEF_IF#@ @#EXP: @!L_TERVALUE!@ EQUAL @+_KEYSTATUS_SYS_NAME+@ #@
+         @#DEF_SET#@ @!G_CHECK88PARA!@ @+_KEYSTATUS_SYS_VALUE+@
+      @#END_IF#@
+   @#END_LOOP#@
+;

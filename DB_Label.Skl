@@ -1,0 +1,270 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; DB_Label Generation Rule.  2001/11/02
+;
+; ===================================================================
+;
+; ========================== Pre-Checking ===========================
+;
+@#DEF_IF#@ @#EXP: NOT @+_OBJ_ATR_FIELDVARIABLE+@ #@
+   @#SHOW_MSG#@ @"Warning2"@
+@#ELSE_IF#@ @#EXP: NOT @+_OBJ_ATR_FIELDPICTURE+@ #@
+   @#SHOW_MSG#@ @"Error2"@
+@#END_IF#@
+;
+; ============= DB'S FIRST TIME BUF GROUP DEFINITION ================
+;
+@#DEF_SET#@ @!G_EXISTDBCONTROL!@ @"YES"@
+; << ============ WRK -- DB -- WORKING STORAGE (CONTROL) ========= >>
+@$DB_WORKING_BUFBODY$@
+      * @+_OBJ_SYS_TYPE+@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_OCCURS+@ EQUAL @"0"@ OR @+_OBJ_ATR_OCCURS+@ EQUAL @"1"@) #@
+   @#DEF_IF#@ @+_OBJ_SYS_EDITEDPICTURE+@
+              @+_OBJ_SYS_LEVEL+@ @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@ PIC @+_OBJ_SYS_EDITEDPICTURE+@
+                            OCCURS @+_OBJ_ATR_OCCURS+@ TIMES.
+   @#ELSE#@
+              @+_OBJ_SYS_LEVEL+@ @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@
+                            OCCURS @+_OBJ_ATR_OCCURS+@ TIMES.
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_SYS_EDITEDPICTURE+@
+              @+_OBJ_SYS_LEVEL+@ @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@ PIC @+_OBJ_SYS_EDITEDPICTURE+@.
+   @#ELSE#@
+              @+_OBJ_SYS_LEVEL+@ @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@.
+   @#END_IF#@
+@#END_IF#@
+;
+; ================== SCR -- DB -- SCREEN  SECTION ===================
+;
+@$SCREEN$@
+      * DB_LABEL
+       @+_OBJ_SYS_LEVEL+@
+           @+_OBJ_ATR_NAME+@, 
+           Label, 
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@ PIXELS,
+  @#ELSE#@
+           COL @+_OBJ_ATR_COLUMNINPIXELS+@ PIXELS, 
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_COLUMN+@
+           COL @+_OBJ_ATR_COLUMN+@, 
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CCOL+@
+           CCOL @+_OBJ_ATR_CCOL+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@ PIXELS,
+  @#ELSE#@
+           LINE @+_OBJ_ATR_LINEINPIXELS+@ PIXELS,
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_LINE+@
+           LINE @+_OBJ_ATR_LINE+@,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CLINE+@
+           CLINE @+_OBJ_ATR_CLINE+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_LINESUNIT+@ EQUAL @"PIXELS"@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+           LINES @+_OBJ_ATR_LINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINESINPIXELS+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+           LINES @+_OBJ_ATR_LINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINES+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CLINES+@
+           CLINES @+_OBJ_ATR_CLINES+@ @+_OBJ_SYS_CLINESUNIT+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_SIZEUNIT+@ EQUAL @"PIXELS"@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZEVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZEINPIXELS+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZEVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CSIZE+@
+           CSIZE @+_OBJ_ATR_CSIZE+@ @+_OBJ_SYS_CSIZEUNIT+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_COLORVARIABLE+@
+           COLOR IS @+_OBJ_ATR_COLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_COLOR+@
+           COLOR IS @+_OBJ_ATR_COLOR+@,
+@#END_IF#@
+@#DEF_CASE#@ @+_OBJ_ATR_DESTROYTYPE+@
+   @#CASE#@ @"PERMANENT"@
+           PERMANENT,
+   @#CASE#@ @"TEMPORARY"@
+           TEMPORARY,
+@#END_CASE#@
+@#DEF_IF#@ @+_OBJ_ATR_ENABLEVARIABLE+@
+           ENABLED @+_OBJ_ATR_ENABLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_ENABLE+@ EQUAL @"1"@ #@
+           ENABLED 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_ENABLE+@ EQUAL @"2"@ #@
+           ENABLED 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FONTVARIABLE+@
+           FONT IS @+_OBJ_ATR_FONTVARIABLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HELPIDVARIABLE+@
+           HELP-ID @+_OBJ_ATR_HELPIDVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HELPID+@
+           HELP-ID @+_OBJ_ATR_HELPID+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_IDVARIABLE+@
+           ID IS @+_OBJ_ATR_IDVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_ID+@
+           ID IS @+_OBJ_ATR_ID+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_OCCURS+@ EQUAL @"0"@ OR @+_OBJ_ATR_OCCURS+@ EQUAL @"1"@) #@
+           OCCURS @+_OBJ_ATR_OCCURS+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEIGHTINCELLS+@
+           HEIGHT-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_WIDTHINCELLS+@
+           WIDTH-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FORMATPICTURE+@
+           PIC @+_OBJ_ATR_FORMATPICTURE+@,
+           FROM @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@,
+@#ELSE#@
+           TITLE @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_JUSTIFICATION+@
+           @+_OBJ_ATR_JUSTIFICATION+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_LABELOFFSET+@ EQUAL @"20"@) #@
+           LABEL-OFFSET @+_OBJ_ATR_LABELOFFSET+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_NOKEYLETTER+@
+           NO-KEY-LETTER,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_TRANSPARENT+@
+           TRANSPARENT,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEVARIABLE+@
+           VISIBLE @+_OBJ_ATR_VISIBLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"1"@ #@
+           VISIBLE 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"2"@ #@
+           VISIBLE 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ADDITIONALPROPERTIES+@
+    @<_SET_OBJ_ADDITIONALLINE>@
+    @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+       @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+    @#END_LOOP#@
+@#END_IF#@
+           .
+
+;
+; ======================= PRD -- FONT PROCESS =======================
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+   @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_OBJ_ATR_FONTVARIABLE+@
+   @%FontProcess.Skl%@
+@#END_IF#@
+;
+; ===================== PRD -- DB -- INIT_VALUE =====================
+;
+@$INIT_VALUE$@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_TITLE+@ EQUAL @"\"\""@) #@
+      * DB_LABEL
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+        @#END_IF#@
+          @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+          @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MOVE @+_OBJ_ATR_TITLE+@ TO @+_OBJ_ATR_FIELDVARIABLE+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+        @#END_IF#@           
+@#END_IF#@
+;
+; ====================== PRD -- DB -- BUFTOFLD ======================
+; Attention : Data Label won't move Buffer to Field. It's rule.
+; ====================== PRD -- DB -- FLDTOBUF ======================
+;
+@$FDSL_FLDTOBUF$@
+      * DB_LABEL : @+_OBJ_ATR_NAME+@
+   @<_SET_OBJ_FIELDEXPRESSION>@
+   @#DEF_IF#@ @+_OBJ_SYS_LINECOUNT+@
+      * FIELD EXPRESSION ( @+_OBJ_ATR_NAME+@ )
+      @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+      @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+      @#END_LOOP#@
+      * END OF EXPRESSION
+   @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+        @#END_IF#@
+          @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+          @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MOVE @+_OBJ_ATR_FIELDVARIABLE+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@  TO @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+        @#END_IF#@           
+;
+; Enable condition
+@#DEF_IF#@ @+_OBJ_ATR_ENABLECONDITION+@
+@$VERIFY-ENABLECONDITION$@
+      * @+_OBJ_ATR_NAME+@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+        @#END_IF#@
+          @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+          @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              IF (@+_OBJ_ATR_ENABLECONDITION+@)
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, ENABLED = TRUE
+              ELSE
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, ENABLED = FALSE
+              END-IF
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+        @#END_IF#@           
+@#END_IF#@

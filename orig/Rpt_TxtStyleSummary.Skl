@@ -1,0 +1,252 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report Control Generation Rule.  2001/04/19
+;
+; Remarks:
+;   The same as RPT.Label.
+;
+; PS 1 :
+;   The Rule of when the summary control will be reset is :
+;   Everytime when it was display, the value of summary control
+;   would be reset except it was in Detail Section.
+;
+; ===================================================================
+@$RPT_SUM_BUF$@
+   ;
+   ; If the first Summary Control in the Report.
+   ;
+   @#DEF_IF#@ @#EXP: NOT @!G_EXISTSUM!@ #@
+      @#DEF_SET#@ @!G_EXISTSUM!@ @"YES"@
+   @#END_IF#@
+   ;
+      * @+_RPT_ATR_NAME+@ (@+_RPT_ATR_SUMMARYTYPE+@)
+   @#DEF_CASE#@ @+_RPT_ATR_SUMMARYTYPE+@
+     @#CASE#@ @"SUM"@
+           03 @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@		PIC  @+_RPT_ATR_INTERNALBUFFERPICTURE+@ VALUE 0.
+           03 @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@	PIC  @+_RPT_ATR_INTERNALBUFFERPICTURE+@ VALUE 0.
+     @#CASE#@ @"COUNT"@
+           03 @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@		PIC  @+_RPT_ATR_INTERNALBUFFERPICTURE+@ VALUE 0.
+           03 @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@	PIC  @+_RPT_ATR_INTERNALBUFFERPICTURE+@ VALUE 0.
+     @#CASE#@ @"AVERAGE"@
+           03 @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@		PIC  @+_RPT_ATR_INTERNALBUFFERPICTURE+@ VALUE 0.
+           03 @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@	PIC  @+_RPT_ATR_INTERNALBUFFERPICTURE+@ VALUE 0.
+           03 @+_RPT_ATR_NAME+@-SUMBUF-CNT@!G_MODE!@	PIC  9(16) VALUE 0.
+           03 @+_RPT_ATR_NAME+@-SUMBUF-CNT-OLD@!G_MODE!@  PIC  9(16) VALUE 0.
+           03 @+_RPT_ATR_NAME+@-SUMBUF-AVEBUF@!G_MODE!@   PIC  @+_RPT_ATR_INTERNALBUFFERPICTURE+@ VALUE 0.
+           03 @+_RPT_ATR_NAME+@-SUMBUF-AVE@!G_MODE!@      PIC  @+_RPT_ATR_INTERNALBUFFERPICTURE+@.
+     @#CASE#@ @"MAX"@
+           03 @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@          PIC  @+_RPT_ATR_FIELDPICTURE+@.
+           03 @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@      PIC  @+_RPT_ATR_FIELDPICTURE+@.
+     @#CASE#@ @"MIN"@
+           03 @+_RPT_ATR_NAME+@-SUMBUF-FIRST@!G_MODE!@    PIC  9 VALUE 1.
+           03 @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@          PIC  @+_RPT_ATR_FIELDPICTURE+@.
+           03 @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@      PIC  @+_RPT_ATR_FIELDPICTURE+@.
+   @#END_CASE#@
+           03 @+_RPT_ATR_NAME+@-OFF-GROUP@!G_MODE!@       PIC  9 VALUE 0.
+;
+@$RPT-OTHER-PARAGRAPH$@
+       @+_RPT_ATR_NAME+@-SUMRTN@!G_MODE!@.
+   ;
+   ; Field Expression
+   ;
+   @<_SET_OBJ_FIELDEXPRESSION>@
+   @#DEF_IF#@ @+_OBJ_SYS_LINECOUNT+@
+      * FIELD EXPRESSION ( @+_RPT_ATR_NAME+@ )
+      @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+      @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+      @#END_LOOP#@
+      * END OF FIELD EXPRESSION
+   @#END_IF#@
+           MOVE @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@ TO @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@
+   @#DEF_IF#@ @+_RPT_ATR_CONDITION+@
+           IF NOT (@+_RPT_ATR_CONDITION+@)
+              EXIT PARAGRAPH
+           END-IF
+   @#END_IF#@
+   @#DEF_CASE#@ @+_RPT_ATR_SUMMARYTYPE+@
+      @#CASE#@ @"SUM"@
+           ADD @+_RPT_ATR_FIELDVARIABLE+@ TO @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@
+      @#CASE#@ @"COUNT"@
+           ADD 1 TO @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@
+      @#CASE#@ @"AVERAGE"@
+           ADD @+_RPT_ATR_FIELDVARIABLE+@ TO @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@
+           MOVE @+_RPT_ATR_NAME+@-SUMBUF-CNT@!G_MODE!@ TO @+_RPT_ATR_NAME+@-SUMBUF-CNT-OLD@!G_MODE!@
+           ADD 1 TO @+_RPT_ATR_NAME+@-SUMBUF-CNT@!G_MODE!@
+      @#CASE#@ @"MAX"@
+           IF @+_RPT_ATR_FIELDVARIABLE+@ > @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@
+              MOVE @+_RPT_ATR_FIELDVARIABLE+@ TO @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@
+           END-IF
+      @#CASE#@ @"MIN"@
+           IF (@+_RPT_ATR_FIELDVARIABLE+@ < @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@) OR
+              (@+_RPT_ATR_NAME+@-SUMBUF-FIRST@!G_MODE!@ = 1)
+              MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF-FIRST@!G_MODE!@
+              MOVE @+_RPT_ATR_FIELDVARIABLE+@ TO @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@
+           END-IF
+   @#END_CASE#@
+           .
+
+       @+_RPT_ATR_NAME+@-SUMRESET@!G_MODE!@.
+   @#DEF_CASE#@ @+_RPT_ATR_SUMMARYTYPE+@
+     @#CASE#@ @"SUM"@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@
+     @#CASE#@ @"COUNT"@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@
+     @#CASE#@ @"AVERAGE"@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF-CNT@!G_MODE!@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF-CNT-OLD@!G_MODE!@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF-AVE@!G_MODE!@
+     @#CASE#@ @"MAX"@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@
+     @#CASE#@ @"MIN"@
+           MOVE 1 TO @+_RPT_ATR_NAME+@-SUMBUF-FIRST@!G_MODE!@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@
+   @#END_CASE#@
+           .
+
+;
+@#DEF_IF#@ @#EXP: @+_RPT_ATR_FILE+@ EQUAL @"Working Storage"@ #@
+   ; Get Primary File of the DataSet
+   @<_PUSH_MEM>@
+      @<_SET_DATASET_MASTERFDSL>@
+      @#DEF_SET#@ @!L_WRKFILE!@ @+_FDSL_SYS_FDNAME+@
+   @<_POP_MEM>@
+   ;
+   @<_PUSH_MEM>@
+      @<_SET_DATASET_FDSLCHILD>@
+      @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+         @<_FETCH_NEXT_DATASET_FDSL>@
+         @<_SET_FDSL_RELATION>@
+         @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+            @<_FETCH_NEXT_FDSL_RELATION>@
+            @#DEF_IF#@ @#EXP: (@+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@) #@
+               @#DEF_SET#@ @!L_WRKFILE!@ @+_FDSL_RELATION_SLAVEFD+@
+            @#END_IF#@
+         @#END_LOOP#@
+      @#END_LOOP#@
+   @<_POP_MEM>@
+@#ELSE#@
+   @#DEF_SET#@ @!L_WRKFILE!@ @+_RPT_ATR_FILE+@
+@#END_IF#@
+;
+@$SUMMARY-RESET-PARAGRAPH$@
+           PERFORM @+_RPT_ATR_NAME+@-SUMRESET@!G_MODE!@
+;
+@$SUMMARY-@!L_WRKFILE!@$@
+           PERFORM @+_RPT_ATR_NAME+@-SUMRTN@!G_MODE!@
+@$SUMMARY-ON-@!L_WRKFILE!@$@
+           MOVE 0 TO @+_RPT_ATR_NAME+@-OFF-GROUP@!G_MODE!@
+@$SUMMARY-OFF-@!L_WRKFILE!@$@
+           MOVE 1 TO @+_RPT_ATR_NAME+@-OFF-GROUP@!G_MODE!@
+@$SUMMARY-FINAL-@!L_WRKFILE!@$@
+    @#DEF_IF#@ @#EXP: NOT (@!G_SECTIONTYPE!@ EQUAL @"Detail"@) #@
+           IF @+_RPT_ATR_NAME+@-OFF-GROUP@!G_MODE!@ = 0
+              PERFORM @+_RPT_ATR_NAME+@-SUMRTN@!G_MODE!@
+           END-IF
+    @#END_IF#@
+;
+;
+   @#DEF_IF#@ @+_RPT_ATR_FIELDVARIABLE+@
+           @#DEF_SET#@ @!G_EXISTRPTBUF!@ @"YES"@
+;
+; ================ WRK -- RPT -- Pre Entry-Field Buf ================
+; Remarks:
+;   There's a Entry-Field's property : Print if Repeat. Every time when
+;   you fetch next record and going to print the field out, you should
+;   check if the data value is the same as previous time, then decide
+;   whether to print it or not.
+;
+@$RPT_PRE_DATABUF$@
+      * @+_RPT_SYS_TYPE+@
+     @#DEF_IF#@ @+_RPT_ATR_FIELDEDITEDFORMAT+@
+           03 @+_RPT_ATR_NAME+@-PRE-BUF@!G_MODE!@ PIC @+_RPT_ATR_FIELDEDITEDFORMAT+@.
+     @#ELSE#@
+           03 @+_RPT_ATR_NAME+@-PRE-BUF@!G_MODE!@.
+     @#END_IF#@
+;
+; ==================== WRK -- RPT -- Entry-Field ====================
+;
+@$RPT_DB_WORKING_BUFBODY$@
+      * @+_RPT_SYS_TYPE+@
+     @#DEF_IF#@ @+_RPT_ATR_FIELDEDITEDFORMAT+@
+           03 @+_RPT_ATR_NAME+@-BUF@!G_MODE!@ PIC @+_RPT_ATR_FIELDEDITEDFORMAT+@.
+     @#ELSE#@
+           03 @+_RPT_ATR_NAME+@-BUF@!G_MODE!@.
+     @#END_IF#@
+;
+; ========================= PRT -- BUFTOFLD =========================
+;
+@$RPT_FDSL_FLDTOBUF$@
+           MOVE @+_RPT_ATR_FIELDVARIABLE+@ TO @+_RPT_ATR_NAME+@-BUF@!G_MODE!@
+   @#END_IF#@
+;
+@#DEF_SET#@ @!L_LINE!@ @"1"@
+@#DEF_ADD#@ @!L_LINE!@ @+_RPT_ATR_LINE+@
+;
+@#DEF_SET#@ @!L_COLUMN!@ @"1"@
+@#DEF_ADD#@ @!L_COLUMN!@ @+_RPT_ATR_COLUMN+@
+;
+@#DEF_SET#@ @!L_SIZE!@ @"0"@
+@#DEF_ADD#@ @!L_SIZE!@ @+_RPT_ATR_SIZE+@
+;
+@$RPT-CTRL-PRINT$@
+      * RPT.Entry-Field : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Summary:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Summary"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: @!G_SECTIONTYPE!@ EQUAL @"Detail"@ #@
+        @#DEF_IF#@ @#EXP: @+_RPT_ATR_SUMMARYTYPE+@ EQUAL @"AVERAGE"@ #@
+               COMPUTE @+_RPT_ATR_NAME+@-SUMBUF-AVEBUF@!G_MODE!@ = @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@ / @+_RPT_ATR_NAME+@-SUMBUF-CNT@!G_MODE!@
+               MOVE @+_RPT_ATR_NAME+@-SUMBUF-AVEBUF@!G_MODE!@ TO @+_RPT_ATR_NAME+@-SUMBUF-AVE@!G_MODE!@
+               MOVE @+_RPT_ATR_NAME+@-SUMBUF-AVE@!G_MODE!@ TO @+_RPT_ATR_NAME+@-BUF@!G_MODE!@
+        @#ELSE#@
+               MOVE @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@ TO @+_RPT_ATR_NAME+@-BUF@!G_MODE!@
+        @#END_IF#@
+   @#ELSE#@
+       @#DEF_IF#@ @#EXP: @+_RPT_ATR_SUMMARYTYPE+@ EQUAL @"AVERAGE"@ #@
+               IF @+_RPT_ATR_NAME+@-OFF-GROUP@!G_MODE!@ = 0
+                  COMPUTE @+_RPT_ATR_NAME+@-SUMBUF-AVEBUF@!G_MODE!@ = @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@ / @+_RPT_ATR_NAME+@-SUMBUF-CNT-OLD@!G_MODE!@
+               ELSE
+                  COMPUTE @+_RPT_ATR_NAME+@-SUMBUF-AVEBUF@!G_MODE!@ = @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@ / @+_RPT_ATR_NAME+@-SUMBUF-CNT@!G_MODE!@
+               END-IF
+               MOVE @+_RPT_ATR_NAME+@-SUMBUF-AVEBUF@!G_MODE!@ TO @+_RPT_ATR_NAME+@-SUMBUF-AVE@!G_MODE!@
+               MOVE @+_RPT_ATR_NAME+@-SUMBUF-AVE@!G_MODE!@    TO @+_RPT_ATR_NAME+@-BUF@!G_MODE!@
+       @#ELSE#@
+               IF @+_RPT_ATR_NAME+@-OFF-GROUP@!G_MODE!@ = 0
+                  MOVE @+_RPT_ATR_NAME+@-SUMBUF-OLD@!G_MODE!@ TO @+_RPT_ATR_NAME+@-BUF@!G_MODE!@
+               ELSE
+                  MOVE @+_RPT_ATR_NAME+@-SUMBUF@!G_MODE!@ TO @+_RPT_ATR_NAME+@-BUF@!G_MODE!@
+               END-IF
+       @#END_IF#@
+   @#END_IF#@
+               MOVE @+_RPT_ATR_NAME+@-BUF@!G_MODE!@ TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:@!L_SIZE!@)
+    ; PS 1.
+   @#DEF_IF#@ @#EXP: NOT (@!G_SECTIONTYPE!@ EQUAL @"Detail"@) #@
+               PERFORM @+_RPT_ATR_NAME+@-SUMRESET@!G_MODE!@
+               IF @+_RPT_ATR_NAME+@-OFF-GROUP@!G_MODE!@ = 0
+                  PERFORM @+_RPT_ATR_NAME+@-SUMRTN@!G_MODE!@
+               END-IF
+               MOVE 0 TO @+_RPT_ATR_NAME+@-OFF-GROUP@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Summary:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Summary"@ @"AfterPrint"@
+      * <TOTEM:END>
+;

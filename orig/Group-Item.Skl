@@ -1,0 +1,106 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Label Generation Rule.  2001/04/19
+;
+; ===================================================================
+; ================== SCR -- DB -- SCREEN  SECTION ===================
+;
+@$SCREEN$@
+      * Group
+       @+_OBJ_SYS_LEVEL+@
+@#DEF_IF#@ @+_OBJ_ATR_NAME+@
+           @+_OBJ_ATR_NAME+@, 
+		   @#DEF_SET#@ @!GROUP_NAME!@ @"@+_OBJ_ATR_NAME+@-BUF@!G_MODE!@"@
+@#ELSE#@
+		   @#DEF_SET#@ @!GROUP_NAME!@ @"FILLER"@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_COLUMN+@
+           COL @+_OBJ_ATR_COLUMN+@, 
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_LINE+@
+           LINE @+_OBJ_ATR_LINE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_COLORVARIABLE+@
+           COLOR IS @+_OBJ_ATR_COLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_COLOR+@
+           COLOR IS @+_OBJ_ATR_COLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ENABLEVARIABLE+@
+           ENABLED @+_OBJ_ATR_ENABLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_ENABLE+@ EQUAL @"1"@ #@
+           ENABLED 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_ENABLE+@ EQUAL @"2"@ #@
+           ENABLED 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_OCCURS+@ EQUAL @"0"@ OR @+_OBJ_ATR_OCCURS+@ EQUAL @"1"@) #@
+           OCCURS @+_OBJ_ATR_OCCURS+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_TITLE+@ EQUAL @""""@) #@
+           VALUE @+_OBJ_ATR_TITLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FORMATPICTURE+@
+           PIC @+_OBJ_ATR_FORMATPICTURE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FROM+@
+           FROM @+_OBJ_ATR_FROM+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_TO+@
+           TO @+_OBJ_ATR_TO+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_USING+@
+           USING @+_OBJ_ATR_USING+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEVARIABLE+@
+           VISIBLE @+_OBJ_ATR_VISIBLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"1"@ #@
+           VISIBLE 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"2"@ #@
+           VISIBLE 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ADDITIONALPROPERTIES+@
+    @<_SET_OBJ_ADDITIONALLINE>@
+    @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+       @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+    @#END_LOOP#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_EVT_AFTERPROCEDURE+@ AND @+_OBJ_EVT_AFTERPROCEDURETHRU+@ #@
+           AFTER PROCEDURE @+_OBJ_EVT_AFTERPROCEDURE+@ THRU @+_OBJ_EVT_AFTERPROCEDURETHRU+@, 
+@#ELSE_IF#@ @+_OBJ_EVT_AFTERPROCEDURE+@
+           AFTER PROCEDURE @+_OBJ_EVT_AFTERPROCEDURE+@, 
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_EVT_BEFOREPROCEDURE+@ AND @+_OBJ_EVT_BEFOREPROCEDURETHRU+@ #@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@ THRU @+_OBJ_EVT_BEFOREPROCEDURETHRU+@, 
+@#ELSE_IF#@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@, 
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_EVT_PROCEDURE+@ AND @+_OBJ_EVT_THRUPROCEDURE+@ #@
+           EVENT PROCEDURE @+_OBJ_EVT_PROCEDURE+@ THRU @+_OBJ_EVT_THRUPROCEDURE+@,
+@#ELSE_IF#@ @#EXP: @+_OBJ_EVT_PROCEDURE+@ #@
+           EVENT PROCEDURE @+_OBJ_EVT_PROCEDURE+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_EXPEVT_PROCEDURE+@ AND @+_OBJ_EXPEVT_THRUPROCEDURE+@ #@
+           EXCEPTION PROCEDURE @+_OBJ_EXPEVT_PROCEDURE+@ THRU @+_OBJ_EXPEVT_THRUPROCEDURE+@, 
+@#ELSE_IF#@ @+_OBJ_EXPEVT_PROCEDURE+@
+           EXCEPTION PROCEDURE @+_OBJ_EXPEVT_PROCEDURE+@, 
+@#END_IF#@
+           .
+
+; << ============ WRK -- DB -- WORKING STORAGE (CONTROL) ========= >>
+@$DB_WORKING_BUFBODY$@
+      * @+_OBJ_SYS_TYPE+@
+@#DEF_IF#@ @+_OBJ_SYS_HASDATACHILD+@
+   @#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_OCCURS+@ EQUAL @"0"@ OR @+_OBJ_ATR_OCCURS+@ EQUAL @"1"@) #@
+              @+_OBJ_SYS_LEVEL+@ @!GROUP_NAME!@ OCCURS @+_OBJ_ATR_OCCURS+@ TIMES.
+   @#ELSE#@
+              @+_OBJ_SYS_LEVEL+@ @!GROUP_NAME!@.
+   @#END_IF#@
+@#END_IF#@

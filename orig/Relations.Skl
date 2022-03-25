@@ -1,0 +1,97 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Relations Generation Rule.   2001/11/02
+;
+; Remarks:
+;
+;  We generate -REF- paragraphs for each Relation, so we go through
+;  each DataSet, each FDSL, each Relations one by one.  
+;
+;  1. TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-BUF in Working Storage :
+;
+;     In 1-M, it's a loop to read next record, so the last record end
+;       of the Loop is not the correct data what we want. To avoid 
+;       causing data error, we should Move record data to a buffer,
+;       and Move it back at the end of the Loop.
+;       (Relations_1_M.Skl)
+;
+;     And this buffer would be used in -UPD paragraph, cause we should check
+;       if this record had been existed or not, we would read it first. So
+;       before read, we move data to this buffer, and move it back after read.
+;       (Relations_1_1.Skl)
+;
+;     A FD could be used by DB_Frame or Rpt.SubReport in different DataSet, so
+;     we define this FD variable for each DataSet.
+;
+; ===================================================================
+;
+; =========== Prepare -REF- Paragraphs for each Relation ============
+;
+@<_SET_PRG_DATASET>@
+@#DEF_IF#@ @+_PRG_SYS_DATASETNO+@
+   @#DEF_LOOP#@ @+_PRG_SYS_DATASETNO+@
+      @<_FETCH_NEXT_PRG_DATASET>@
+      @<_SET_DATASET_FDSLCHILD>@
+      @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+         @<_FETCH_NEXT_DATASET_FDSL>@
+;
+@$WORKING$@
+       77 TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-BUF     PIC X(@+_FDSL_SYS_FDSIZE+@).
+      @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+       77 TMP-@+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-RELIDX  PIC 9(9).
+      @#END_IF#@
+;
+         @<_SET_FDSL_RELATION>@
+         @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+            @<_FETCH_NEXT_FDSL_RELATION>@
+;
+@$REL-CLEAR-TMP$@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INITREC
+;
+            @%Relations_MultiKey.Skl%@
+            @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@ #@
+               @%Relations_1_M.Skl%@
+            @#ELSE#@
+               @%Relations_1_1.Skl%@
+            @#END_IF#@
+         ; end of @+_FDSL_SYS_RELATIONNO+@
+         @#END_LOOP#@
+         ;
+@$RELATION-CLEAR$@
+      * FD's Initialize Paragraph
+       @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-INITREC.
+       @#DEF_IF#@ @#EXP: NOT @+_FDSL_SYS_ISVARIABLEOCCURS+@ #@
+           INITIALIZE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+               REPLACING NUMERIC       DATA BY ZEROS
+                         ALPHANUMERIC  DATA BY SPACES
+                         ALPHABETIC    DATA BY SPACES
+         @#DEF_IF#@ @#EXP: @+_FDSL_SYS_FDKEY+@ AND (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+               MOVE 0 TO @+_FDSL_SYS_FDKEY+@
+         @#END_IF#@
+       @#ELSE#@
+           MOVE SPACES TO @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+           MOVE 0 TO @+_FDSL_SYS_ISVARIABLEOCCURS+@
+       @#END_IF#@
+           @#GET_MEM#@   @"REL-CLEAR-TMP"@
+           @#CLEAR_MEM#@ @"REL-CLEAR-TMP"@
+           .
+
+      ; end of @+_DATASET_SYS_FDSLNO+@
+      @#END_LOOP#@
+;
+@$RELATION-IU-DISP$@
+      *
+       @+_DATASET_SYS_NAME+@-DISPATCH-BUFTOFLD.
+    @#DEF_SET#@    @!L_EXISTIU!@ @""@
+    @#DEF_SETMEM#@ @!L_EXISTIU!@ @"REL_ALL_IU_DISPATCH_@+_DATASET_SYS_NAME+@"@
+    @#DEF_IF#@ @!L_EXISTIU!@
+           EVALUATE TOTEM-Form-Index ALSO TOTEM-Frame-Index
+           @#GET_MEM#@   @"REL_ALL_IU_DISPATCH_@+_DATASET_SYS_NAME+@"@
+           @#CLEAR_MEM#@ @"REL_ALL_IU_DISPATCH_@+_DATASET_SYS_NAME+@"@
+           END-EVALUATE
+    @#END_IF#@
+           .
+
+   @#END_LOOP#@
+@#END_IF#@
+;

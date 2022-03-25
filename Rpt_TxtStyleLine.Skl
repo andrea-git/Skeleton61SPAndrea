@@ -1,0 +1,49 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Style (Line) Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+; ===================================================================
+;
+; ===================== RPT -- LINE-PRINT-ROUTINE ===================
+;
+@#DEF_SET#@ @!L_LINE!@ @"1"@
+@#DEF_ADD#@ @!L_LINE!@ @+_RPT_ATR_LINE+@
+;
+@#DEF_SET#@ @!L_SIZELINES!@ @"0"@
+@#DEF_ADD#@ @!L_SIZELINES!@ @+_RPT_ATR_SIZELINES+@
+;
+@#DEF_SET#@ @!L_COLUMN!@ @"1"@
+@#DEF_ADD#@ @!L_COLUMN!@ @+_RPT_ATR_COLUMN+@
+;
+@$RPT-CTRL-PRINT$@
+      * RPT.Line : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Line:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Line"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: @+_RPT_ATR_KIND+@ EQUAL @"HORIZONTAL"@ #@
+               MOVE ALL "-" TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:@!L_SIZELINES!@)
+   @#ELSE#@
+               MOVE @!L_LINE!@ TO TOTEM-IDX2
+               PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL TOTEM-IDX1 > @!L_SIZELINES!@
+                   MOVE "|" TO @!G_SECTIONNAME!@-LINES(TOTEM-IDX2)(@!L_COLUMN!@:1)
+                   ADD 1 TO TOTEM-IDX2
+               END-PERFORM
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Line:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Line"@ @"AfterPrint"@
+      * <TOTEM:END>
+;

@@ -1,0 +1,2887 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; DB_MasterGrid Generation Rule.  2001/11/02
+;
+; Remarks :
+;   If it's Single File Multi Record's Insert/Update/Delete by Grid.
+;   When we check if the Grid's File equal to the FD Name of Master
+;   File in DataSet, it would be fit the condition.
+;
+;   This Skeleton provide the method to I/U/D a Single File Data
+;   directly.
+;
+;  Default Event Paragraphs Listing :
+;
+;    1.  Data.Grid = EVENT, Msg-Paged-Next
+;    2.  Data.Grid = EVENT, Msg-Paged-Prev
+;    3.  Data.Grid = EVENT, Msg-Paged-First
+;    4.  Data.Grid = EVENT, Msg-Paged-Last
+;    5.  Data.Grid = EVENT, Msg-Validate
+;
+; ===================================================================
+;
+@#DEF_SET#@ @!G_EXISTMASTERGRID!@ @"YES"@
+@#DEF_SET#@ @!L_NUMHEADINGS!@ @"0"@
+@#DEF_IF#@ @+_OBJ_ATR_NUMCOLHEADINGS+@
+    @#DEF_SET#@ @!L_NUMHEADINGS!@ @+_OBJ_ATR_NUMCOLHEADINGS+@
+@#ELSE_IF#@ @+_OBJ_ATR_COLUMNHEADINGS+@
+    @#DEF_SET#@ @!L_NUMHEADINGS!@ @"1"@
+@#END_IF#@
+@#DEF_SET#@ @!L_STARTROW!@ @"1"@
+@#DEF_ADD#@ @!L_STARTROW!@ @!L_NUMHEADINGS!@
+@#DEF_SET#@ @!L_INTERACT!@ @""@
+;
+@#DEF_SET#@ @!L_PKEY!@ @+_FDSL_SYS_SLPKEY+@
+@#DEF_SET#@ @!L_PKEYSPLIT!@ @""@
+@<_PUSH_MEM>@
+@<_SET_FDSL_PKEY>@
+; LK6B0464
+@#DEF_SET#@ @!L_PKEYPICLENGTH!@ @"0"@
+@#DEF_LOOP#@ @+_KEY_SYS_KEYNO+@
+   @<_FETCH_NEXT_KEY_ITEM>@
+   @#DEF_ADD#@ @!L_PKEYPICLENGTH!@ @+_KEY_SYS_PICLENGTH+@
+@#END_LOOP#@
+@#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+   @#DEF_SET#@ @!L_PKEY!@ @"@+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF"@
+   @#DEF_SET#@ @!L_PKEYSPLIT!@ @"YES"@
+@#END_IF#@
+@<_POP_MEM>@
+;
+@#DEF_SET#@ @!L_FDKEY!@ @+_FDSL_SYS_FDKEY+@
+@#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+   @#DEF_SET#@ @!L_FDKEY!@ @"@+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-SPLIT-BUF1"@
+@#END_IF#@
+;
+@#DEF_SET#@ @!L_SNAME!@ @!G_SCREENNAME!@
+@#DEF_SET#@ @!L_FRMIDX!@ @"0"@
+@#DEF_IF#@ @!G_FRAMENAME!@
+    @#DEF_SET#@ @!L_SNAME!@ @!G_FRAMENAME!@
+    @#DEF_SET#@ @!L_FRMIDX!@ @!G_FRAMEINDEX!@
+@#END_IF#@
+;
+; ================== SCR -- DB -- SCREEN  SECTION ===================
+;
+@$SCREEN$@
+      * DB_GRID
+       @+_OBJ_SYS_LEVEL+@
+           @+_OBJ_ATR_NAME+@, 
+           Grid, 
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@ PIXELS,
+  @#ELSE#@
+           COL @+_OBJ_ATR_COLUMNINPIXELS+@ PIXELS, 
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_COLUMN+@
+           COL @+_OBJ_ATR_COLUMN+@, 
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@ PIXELS,
+  @#ELSE#@
+           LINE @+_OBJ_ATR_LINEINPIXELS+@ PIXELS,
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_LINE+@
+           LINE @+_OBJ_ATR_LINE+@,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_LINESUNIT+@ EQUAL @"PIXELS"@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+           LINES @+_OBJ_ATR_LINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINESINPIXELS+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+           LINES @+_OBJ_ATR_LINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINES+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_SIZEUNIT+@ EQUAL @"PIXELS"@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZEVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZEINPIXELS+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZEVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ADJUSTABLECOLUMNS+@
+           ADJUSTABLE-COLUMNS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_BORDER+@
+           @+_OBJ_ATR_BORDER+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CENTEREDHEADINGS+@
+           CENTERED-HEADINGS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_COLORVARIABLE+@
+           COLOR IS @+_OBJ_ATR_COLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_COLOR+@
+           COLOR IS @+_OBJ_ATR_COLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_SYS_DATACOLUMNS+@
+           DATA-COLUMNS @+_OBJ_SYS_DATACOLUMNS+@,
+   @#DEF_IF#@ @+_OBJ_SYS_ALIGNMENT+@
+           ALIGNMENT @+_OBJ_SYS_ALIGNMENT+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_SEPARATION+@
+           SEPARATION @+_OBJ_SYS_SEPARATION+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_DATATYPE+@
+           DATA-TYPES @+_OBJ_SYS_DATATYPE+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_COLUMNDIVIDERS+@
+           COLUMN-DIVIDERS @+_OBJ_SYS_COLUMNDIVIDERS+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_NUMCOLHEADINGS+@
+           NUM-COL-HEADINGS @+_OBJ_ATR_NUMCOLHEADINGS+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_COLUMNHEADINGS+@
+           COLUMN-HEADINGS,
+@#END_IF#@
+@#DEF_SET#@ @!L_CURSORCOLOR!@ @"482"@
+@#DEF_IF#@ @+_OBJ_ATR_CURSORCOLORVARIABLE+@
+           CURSOR-COLOR @+_OBJ_ATR_CURSORCOLORVARIABLE+@,
+           @#DEF_SET#@ @!L_CURSORCOLOR!@ @+_OBJ_ATR_CURSORCOLORVARIABLE+@
+@#ELSE_IF#@ @+_OBJ_ATR_CURSORCOLOR+@
+           CURSOR-COLOR @+_OBJ_ATR_CURSORCOLOR+@
+           @#DEF_SET#@ @!L_CURSORCOLOR!@ @+_OBJ_ATR_CURSORCOLOR+@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CURSORFRAMEWIDTHVARIABLE+@
+           CURSOR-FRAME-WIDTH @+_OBJ_ATR_CURSORFRAMEWIDTHVARIABLE+@,
+@#ELSE#@
+           CURSOR-FRAME-WIDTH @+_OBJ_ATR_CURSORFRAMEWIDTH+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CURSORXVARIABLE+@
+           CURSOR-X @+_OBJ_ATR_CURSORXVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_CURSORX+@
+           CURSOR-X @+_OBJ_ATR_CURSORX+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CURSORYVARIABLE+@
+           CURSOR-Y @+_OBJ_ATR_CURSORYVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_CURSORY+@
+           CURSOR-Y @+_OBJ_ATR_CURSORY+@,
+@#END_IF#@
+@#DEF_CASE#@ @+_OBJ_ATR_DESTROYTYPE+@
+  @#CASE#@ @"PERMANENT"@
+           PERMANENT,
+  @#CASE#@ @"TEMPORARY"@
+           TEMPORARY,
+@#END_CASE#@
+@#DEF_IF#@ @+_OBJ_ATR_DIVIDERCOLORVARIABLE+@
+           DIVIDER-COLOR @+_OBJ_ATR_DIVIDERCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_DIVIDERCOLOR+@
+           DIVIDER-COLOR @+_OBJ_ATR_DIVIDERCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_DRAGCOLORVARIABLE+@
+           DRAG-COLOR @+_OBJ_ATR_DRAGCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_DRAGCOLOR+@
+           DRAG-COLOR @+_OBJ_ATR_DRAGCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ENABLEVARIABLE+@
+           ENABLED @+_OBJ_ATR_ENABLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_ENABLE+@ EQUAL @"1"@ #@
+           ENABLED 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_ENABLE+@ EQUAL @"2"@ #@
+           ENABLED 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ENDCOLORVARIABLE+@
+           END-COLOR @+_OBJ_ATR_ENDCOLORVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_ENDCOLOR+@
+           END-COLOR @+_OBJ_ATR_ENDCOLOR+@,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FONTVARIABLE+@
+           FONT IS @+_OBJ_ATR_FONTVARIABLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEADINGCOLORVARIABLE+@
+           HEADING-COLOR @+_OBJ_ATR_HEADINGCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HEADINGCOLOR+@
+           HEADING-COLOR @+_OBJ_ATR_HEADINGCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEADINGDIVIDERCOLORVARIABLE+@
+           HEADING-DIVIDER-COLOR @+_OBJ_ATR_HEADINGDIVIDERCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HEADINGDIVIDERCOLOR+@
+           HEADING-DIVIDER-COLOR @+_OBJ_ATR_HEADINGDIVIDERCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEADINGFONTVARIABLE+@
+           HEADING-FONT IS @+_OBJ_ATR_HEADINGFONTVARIABLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HELPIDVARIABLE+@
+           HELP-ID @+_OBJ_ATR_HELPIDVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HELPID+@
+           HELP-ID @+_OBJ_ATR_HELPID+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HSCROLL+@,
+           HSCROLL,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_IDVARIABLE+@
+           ID IS @+_OBJ_ATR_IDVARIABLE+@,
+		   @#DEF_SET#@ @!L_SYSID!@ @+_OBJ_ATR_IDVARIABLE+@
+@#ELSE_IF#@ @+_OBJ_ATR_ID+@
+           ID IS @+_OBJ_ATR_ID+@,
+		   @#DEF_SET#@ @!L_SYSID!@ @+_OBJ_ATR_ID+@
+@#ELSE#@
+		   @#DEF_SET#@ @!L_SYSID!@ @!G_SYSID!@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_OCCURS+@ EQUAL @"0"@ OR @+_OBJ_ATR_OCCURS+@ EQUAL @"1"@) #@
+           OCCURS @+_OBJ_ATR_OCCURS+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEIGHTINCELLS+@
+           HEIGHT-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_WIDTHINCELLS+@
+           WIDTH-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_KEYVARIABLE+@
+           KEY IS @+_OBJ_ATR_KEYVARIABLE+@,
+@#ELSE_IF#@ @#EXP: NOT (@+_OBJ_ATR_KEY+@ EQUAL @""@) #@
+           KEY IS "@+_OBJ_ATR_KEY+@",
+@#END_IF#@
+;@#DEF_IF#@ @+_OBJ_ATR_LASTROWVARIABLE+@
+;           LAST-ROW @+_OBJ_ATR_LASTROWVARIABLE+@,
+;@#ELSE_IF#@ @+_OBJ_ATR_LASTROW+@
+;           LAST-ROW @+_OBJ_ATR_LASTROW+@,
+;@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_NOTAB+@
+           NO-TAB,
+@#END_IF#@
+; NUM-ROWS must be zero. 
+;@#DEF_IF#@ @+_OBJ_ATR_NUMROWSVARIABLE+@
+;           NUM-ROWS @+_OBJ_ATR_NUMROWSVARIABLE+@,
+;@#ELSE_IF#@ @+_OBJ_ATR_NUMROWS+@
+;           NUM-ROWS @+_OBJ_ATR_NUMROWS+@,
+;@#END_IF#@
+           NUM-ROWS 0,
+           PAGED,
+@#DEF_IF#@ @+_OBJ_ATR_POPUPMENU+@
+           POP-UP MENU IS @+_OBJ_ATR_POPUPMENU+@,
+@#ELSE#@
+    @#DEF_IF#@ @+_OBJ_ATR_DISPLAYPOPUPMENU+@
+           POP-UP MENU IS @+_OBJ_ATR_NAME+@-Mn-Handle,
+    @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_ROWDIVIDERS+@ EQUAL @"1"@) #@
+           ROW-DIVIDERS @+_OBJ_ATR_ROWDIVIDERS+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_SYS_ROWCOLORPATTERN+@
+           ROW-COLOR-PATTERN = @+_OBJ_SYS_ROWCOLORPATTERN+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ROWHEADINGS+@
+           ROW-HEADINGS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_TILEDHEADINGS+@
+           TILED-HEADINGS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_USETAB+@
+           USE-TAB,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VIRTUALWIDTH+@
+           VIRTUAL-WIDTH @+_OBJ_ATR_VIRTUALWIDTH+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEVARIABLE+@
+           VISIBLE @+_OBJ_ATR_VISIBLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"1"@ #@
+           VISIBLE 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"2"@ #@
+           VISIBLE 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VPADDINGVARIABLE+@
+           VPADDING @+_OBJ_ATR_VPADDINGVARIABLE+@,
+@#ELSE#@
+           VPADDING @+_OBJ_ATR_VPADDING+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VSCROLL+@
+           VSCROLL,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ADDITIONALPROPERTIES+@
+    @<_SET_OBJ_ADDITIONALLINE>@
+    @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+       @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+    @#END_LOOP#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT ( @+_OBJ_ATR_HINT+@ OR @+_OBJ_ATR_HINTVARIABLE+@ ) #@
+  @#DEF_IF#@ @#EXP: @+_OBJ_EVT_BEFOREPROCEDURE+@ AND @+_OBJ_EVT_BEFOREPROCEDURETHRU+@ #@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@ THRU @+_OBJ_EVT_BEFOREPROCEDURETHRU+@, 
+  @#ELSE_IF#@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@, 
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_EVT_PROCEDURE+@ AND @+_OBJ_EVT_THRUPROCEDURE+@ #@
+           EVENT PROCEDURE @+_OBJ_EVT_PROCEDURE+@ THRU @+_OBJ_EVT_THRUPROCEDURE+@,
+@#ELSE_IF#@ @#EXP: @+_OBJ_EVT_PROCEDURE+@ #@
+           EVENT PROCEDURE @+_OBJ_EVT_PROCEDURE+@,
+@#ELSE#@
+           EVENT PROCEDURE @+_OBJ_ATR_NAME+@-Event,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_EXPEVT_PROCEDURE+@ AND @+_OBJ_EXPEVT_THRUPROCEDURE+@ #@
+           EXCEPTION PROCEDURE @+_OBJ_EXPEVT_PROCEDURE+@ THRU @+_OBJ_EXPEVT_THRUPROCEDURE+@, 
+@#ELSE_IF#@ @+_OBJ_EXPEVT_PROCEDURE+@
+           EXCEPTION PROCEDURE @+_OBJ_EXPEVT_PROCEDURE+@, 
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_SYS_EXPEVENT+@
+           EXCEPTION PROCEDURE @+_OBJ_ATR_NAME+@-Exception,
+  @#END_IF#@
+@#END_IF#@
+           .
+
+@#DEF_SETANSI#@ @"EVENT"@
+; ======================= BEFORE PROCEDURE ======================
+; collact in form's before procedure 
+@$BEFOREPROCEDURE$@
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_HINT+@ OR @+_OBJ_ATR_HINTVARIABLE+@ #@
+  @#DEF_IF#@ @#EXP: @+_OBJ_EVT_BEFOREPROCEDURE+@ AND @+_OBJ_EVT_BEFOREPROCEDURETHRU+@ #@
+           When @!L_SYSID!@ PERFORM @+_OBJ_EVT_BEFOREPROCEDURE+@ THRU @+_OBJ_EVT_BEFOREPROCEDURETHRU+@
+  @#ELSE_IF#@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+           When @!L_SYSID!@ PERFORM @+_OBJ_EVT_BEFOREPROCEDURE+@
+  @#END_IF#@
+@#END_IF#@
+; ======================= AFTER PROCEDURE ======================
+; collact in form's after procedure 
+@$AFTERPROCEDURE$@
+@#DEF_IF#@ @#EXP: @+_OBJ_EVT_AFTERPROCEDURE+@ AND @+_OBJ_EVT_AFTERPROCEDURETHRU+@ #@
+           When @!L_SYSID!@ PERFORM @+_OBJ_EVT_AFTERPROCEDURE+@ THRU @+_OBJ_EVT_AFTERPROCEDURETHRU+@
+@#ELSE_IF#@ @+_OBJ_EVT_AFTERPROCEDURE+@
+           When @!L_SYSID!@ PERFORM @+_OBJ_EVT_AFTERPROCEDURE+@
+@#END_IF#@
+@#DEF_SETANSI#@ @""@
+;
+; ===================================================================
+;  Only if the Primary FD is Relative File, you can't get the PKey.
+;  So the FDKeyIs would be the hidden data's KEY.
+; ===================================================================
+;
+@#DEF_IF#@ @#EXP: NOT @!L_PKEY!@ #@
+   @#DEF_SET#@ @!L_PKEY!@ @!L_FDKEY!@
+@#END_IF#@
+@<_SET_EXIST_DATASET>@
+@<_SET_DATASET_MASTERFDSL>@
+;
+; =========== POPUP MENU -- FLAGS SETTING ==========================
+;                                      LK6B0329, LK6B0330, Jimmy add
+@#DEF_IF#@ @+_OBJ_ATR_DISPLAYPOPUPMENU+@
+   @#DEF_SET#@ @!L_POPUPFLAG!@ @"0"@
+   @#DEF_IF#@  @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@) #@
+      @#DEF_SET#@ @!L_POPUPFLAG!@ @"W-DISABLED"@
+   @#END_IF#@
+@#END_IF#@
+;
+; =========== LOCAL - For Relation's Trigger Paragraph ==============
+;
+   @<_SET_FDSL_RELATION>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+      @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@ #@
+@$FDSL-REFERENCE$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+      @#ELSE#@
+@$FDSL-REFERENCE-AFTER$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+      @#END_IF#@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_INSERT+@ EQUAL @"RESTRICTED"@) #@
+@$FDSL-REFERENCE-INS$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS
+      @#END_IF#@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_UPDATE+@ EQUAL @"RESTRICTED"@) #@
+@$FDSL-REFERENCE-UPD$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD
+      @#END_IF#@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+@$FDSL-REFERENCE-DEL$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-DEL
+      @#END_IF#@
+   @#END_LOOP#@
+;
+@$FDSL-REFERENCE$@
+   @#GET_MEM#@   @"FDSL-REFERENCE-AFTER"@
+   @#CLEAR_MEM#@ @"FDSL-REFERENCE-AFTER"@
+;
+; ============= DB'S FIRST TIME BUF GROUP DEFINITION ================
+;
+@#DEF_SET#@ @!G_EXISTDBCONTROL!@ @"YES"@
+;
+; << ============ WRK -- DB -- WORKING STORAGE (CONTROL) ========= >>
+;
+@$WORKING$@
+       ;
+       ; for Limited ListBox use. Each Limited Listbox should contain 
+       ; each buffer.
+       ;
+       01 @+_OBJ_ATR_NAME+@-LIMITED-DEFINED.
+           05 @+_OBJ_ATR_NAME+@-LB-Size         PIC   9(4) VALUE IS @+_OBJ_SYS_LINECOUNTS+@.
+           05 @+_OBJ_ATR_NAME+@-Number-Reads-Needed  PIC   9(2).
+           05 @+_OBJ_ATR_NAME+@-COUNT      PIC  9(4) VALUE IS 0.
+           05 @+_OBJ_ATR_NAME+@-RECORD-BUF PIC  X(@+_FDSL_SYS_FDSIZE+@).
+           05 TMP-@+_OBJ_ATR_NAME+@-LMTBUF PIC  X(@+_FDSL_SYS_FDSIZE+@) OCCURS @+_OBJ_SYS_LINECOUNTS+@ TIMES.
+           05 @+_OBJ_ATR_NAME+@-RTN        PIC  9(1) VALUE IS 0.
+
+      * @+_OBJ_ATR_NAME+@ : MasterGrid's Working Buffer
+       01 @+_OBJ_ATR_NAME+@-CHANGE-OLD-VALUE PIC  9(01).
+       01 @+_OBJ_ATR_NAME+@-MSG-RESULT       PIC  9(01).
+       01 @+_OBJ_ATR_NAME+@-RESULT-1         PIC  9(01).
+       77 @+_OBJ_ATR_NAME+@-WCursor-X        PIC  9(5)   VALUE IS 0.
+       77 @+_OBJ_ATR_NAME+@-WCursor-Y        PIC  9(5)   VALUE IS 0.
+       77 @+_OBJ_ATR_NAME+@-OLD-WCursor-X    PIC  9(5)   VALUE IS 0.
+       77 @+_OBJ_ATR_NAME+@-OLD-WCursor-Y    PIC  9(5)   VALUE IS 0.
+       77 @+_OBJ_ATR_NAME+@-DEL-X            PIC  9(5)   VALUE IS 0.
+       77 @+_OBJ_ATR_NAME+@-DEL-Y            PIC  9(5)   VALUE IS 0.
+       77 @+_OBJ_ATR_NAME+@-WK-Last-Row      PIC  9(5)   VALUE IS 0.
+       77 @+_OBJ_ATR_NAME+@-Row-Counter      PIC  s9(5)  VALUE IS -1.
+
+       77 @+_OBJ_ATR_NAME+@-Mn-Handle  USAGE IS HANDLE OF MENU.
+
+       01 @+_OBJ_ATR_NAME+@-Record-Update-Flag  PIC 9(01) Value 0.
+           88 @+_OBJ_ATR_NAME+@-Record-Update  Value 1 False 0.
+       01 @+_OBJ_ATR_NAME+@-Cancel-Flag  PIC 9(01) Value 0.
+           88 @+_OBJ_ATR_NAME+@-Cancel  Value 1 False 0.
+;
+;
+@#DEF_SET#@ @!L_COLUMNINDEX!@ @"0"@
+;
+; << If exist columns Setting, Add these comments. >>
+;
+@$WORKING$@
+      * DB_GRID'S COLUMNS SETTING
+@$DB_WORKING_BUFBODY$@
+      * @+_OBJ_SYS_TYPE+@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_OCCURS+@ EQUAL @"0"@ OR @+_OBJ_ATR_OCCURS+@ EQUAL @"1"@) #@
+              @+_OBJ_SYS_LEVEL+@ @+_OBJ_ATR_NAME+@-BUF OCCURS @+_OBJ_ATR_OCCURS+@ TIMES.
+@#ELSE#@
+              @+_OBJ_SYS_LEVEL+@ @+_OBJ_ATR_NAME+@-BUF.
+@#END_IF#@
+@$DB_BUFOLD$@
+      * @+_OBJ_SYS_TYPE+@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_OCCURS+@ EQUAL @"0"@ OR @+_OBJ_ATR_OCCURS+@ EQUAL @"1"@) #@
+              @+_OBJ_SYS_LEVEL+@ @+_OBJ_ATR_NAME+@-BUF-OLD OCCURS @+_OBJ_ATR_OCCURS+@ TIMES.
+@#ELSE#@
+              @+_OBJ_SYS_LEVEL+@ @+_OBJ_ATR_NAME+@-BUF-OLD.
+@#END_IF#@
+@$FDSL_BUFTOFLD_MGRID$@
+      * DB_Grid : @+_OBJ_ATR_NAME+@
+@$FDSL_FLDTOBUF$@
+      * DB_Grid : @+_OBJ_ATR_NAME+@
+;
+@#DEF_SET#@ @!L_OCC1!@ @"@+_OBJ_SYS_OCCURSTIME1+@"@
+@#DEF_SET#@ @!L_OCC2!@ @"@+_OBJ_SYS_OCCURSTIME2+@"@
+@#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+@#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+@#DEF_SET#@ @!L_SUBSCRIPT!@ @"@+_OBJ_SYS_OCCURSSUBSCRIPT+@"@
+@#DEF_SET#@ @!L_LEVEL!@ @"@+_OBJ_SYS_LEVEL+@"@
+@#DEF_ADD#@ @!L_LEVEL!@ @"01"@
+@#DEF_FORMAT#@ @!L_LEVEL!@ @"2"@
+  @<_PUSH_MEM>@
+  @<_SET_OBJ_COLUMNCTRL>@
+     @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+     @<_FETCH_NEXT_GRID_OBJ>@
+     @#DEF_ADD#@ @!L_COLUMNINDEX!@ @"1"@
+     @#DEF_SET#@ @!L_GRIDBUF!@ @+_OBJ_ATR_NAME+@
+     @#DEF_APPEND#@ @!L_GRIDBUF!@ @"-BUF-"@
+     @#DEF_APPEND#@ @!L_GRIDBUF!@ @!L_COLUMNINDEX!@
+;
+; << ============ WRK -- DB -- WORKING STORAGE (CONTROL) ========= >>
+   @#DEF_IF#@ @+_GRID_SYS_EDITEDPICTURE+@
+@$DB_WORKING_BUFBODY$@
+                 @!L_LEVEL!@ @!L_GRIDBUF!@ PIC @+_GRID_SYS_EDITEDPICTURE+@.
+@$DB_BUFOLD$@
+                 @!L_LEVEL!@ @!L_GRIDBUF!@-OLD PIC @+_GRID_SYS_EDITEDPICTURE+@.
+   @#ELSE#@
+@$DB_WORKING_BUFBODY$@
+                 @!L_LEVEL!@ @!L_GRIDBUF!@.
+@$DB_BUFOLD$@
+                 @!L_LEVEL!@ @!L_GRIDBUF!@-OLD.
+   @#END_IF#@
+;
+; ====================== PRD -- DB -- BUFTOFLD ======================
+@$FDSL_BUFTOFLD_MGRID$@
+        @#DEF_IF#@ @!L_OCC1!@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+              MOVE @!L_GRIDBUF!@@!L_SUBSCRIPT!@ TO @+_GRID_SYS_NAME+@@!L_SUBSCRIPT!@
+        @#DEF_IF#@ @!L_OCC1!@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           END-PERFORM
+        @#END_IF#@           
+;
+; ====================== PRD -- DB -- FLDTOBUF ======================
+@$FDSL_FLDTOBUF$@
+        @#DEF_IF#@ @!L_OCC1!@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+              MOVE @+_GRID_SYS_NAME+@@!L_SUBSCRIPT!@ TO @!L_GRIDBUF!@@!L_SUBSCRIPT!@
+        @#DEF_IF#@ @!L_OCC1!@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           END-PERFORM
+        @#END_IF#@           
+;
+; ===================== PRD -- DB -- VALIDATION =====================
+@$COL-VALIDATION$@
+@#DEF_SETANSI#@ @"EVENT"@
+    @<_SET_COLUMN_VALIDATE>@
+    @#DEF_IF#@ @+_VALIDATE_SYS_VALIDATIONNO+@
+                 WHEN @!L_COLUMNINDEX!@ ALSO ANY 
+        @#DEF_IF#@ @!L_OCC1!@
+                    PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+                    PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+                       INQUIRE @+_OBJ_ATR_NAME+@@!L_SUBSCRIPT!@(EVENT-DATA-2, EVENT-DATA-1)
+                         RECORD-DATA IN @+_OBJ_ATR_NAME+@-BUF@!L_SUBSCRIPT!@
+        @#DEF_IF#@ @!L_OCC1!@
+                    END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+                    END-PERFORM
+        @#END_IF#@           
+                    PERFORM @!L_SNAME!@-Buf-To-Fld
+                    SET TOTEM-CHECK-OK TO FALSE
+                    PERFORM @+_OBJ_ATR_NAME+@-COL@!L_COLUMNINDEX!@-VALIDATION
+                    IF NOT TOTEM-CHECK-OK
+                       MOVE EVENT-ACTION-FAIL TO EVENT-ACTION
+                       MOVE 1 TO Accept-Control
+      @#DEF_IF#@ @!G_ISMESSAGELINE!@
+                    ELSE
+                       PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG
+      @#END_IF#@
+                    END-IF
+;
+; ===================== PRD -- DB -- VALIDATION =====================
+@$ALL-COL-VALIDATION$@
+@#DEF_SETANSI#@ @""@
+              SET TOTEM-CHECK-OK TO FALSE
+              PERFORM @+_OBJ_ATR_NAME+@-COL@!L_COLUMNINDEX!@-VALIDATION
+              IF NOT TOTEM-CHECK-OK
+      @#DEF_IF#@ @!G_INPAGENUM!@
+                 MOVE @!G_INPAGENUM!@ TO @!G_TABNAME!@-TAB-VALUE
+                 PERFORM @!G_TABNAME!@-TABCHANGE
+      @#END_IF#@
+                 MOVE 4 TO ACCEPT-CONTROL
+                 MOVE @!L_SYSID!@ TO CONTROL-ID
+        @#DEF_IF#@ @!L_OCC1!@
+                 PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+                 PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+                    MODIFY @+_OBJ_ATR_NAME+@@!L_SUBSCRIPT!@,
+                        CURSOR-X = @!L_COLUMNINDEX!@,
+                        CURSOR-Y = @+_OBJ_ATR_NAME+@-WCursor-Y
+        @#DEF_IF#@ @!L_OCC1!@
+                 END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+                 END-PERFORM
+        @#END_IF#@           
+                 EXIT PARAGRAPH
+              END-IF
+       ;
+       @#DEF_SET#@ @!L_EXISTVALID!@   @"YES"@
+       @#DEF_SET#@ @!G_EXTRANAME!@    @"COL@!L_COLUMNINDEX!@-"@
+       @#DEF_SET#@ @!G_VALIDFIELD!@   @+_GRID_SYS_NAME+@
+       @#DEF_SET#@ @!G_VALIDPICTURE!@ @+_GRID_SYS_PICTURE+@
+       @%Validation.Skl%@
+    @#END_IF#@
+;
+; ====================== PRD -- DB -- READONLY ======================
+@$COL-READONLY$@
+@#DEF_SETANSI#@ @"EVENT"@
+    @#DEF_IF#@ @+_GRID_SYS_READONLY+@
+       @#DEF_SET#@ @!L_COLREADONLY!@ @"YES"@
+                 WHEN @!L_COLUMNINDEX!@ ALSO ANY 
+                    MOVE EVENT-ACTION-FAIL TO EVENT-ACTION
+    @#END_IF#@
+; ===================================================================
+@$COLUMN-DECIMAL$@
+           WHEN @!L_COLUMNINDEX!@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(@+_OBJ_ATR_NAME+@-WCursor-Y, 
+                              @+_OBJ_ATR_NAME+@-WCursor-X)
+                CELL-DATA IN @!L_GRIDBUF!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(@+_OBJ_ATR_NAME+@-WCursor-Y, 
+                              @+_OBJ_ATR_NAME+@-WCursor-X)
+                CELL-DATA IS @!L_GRIDBUF!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+@#DEF_SETANSI#@ @""@
+@$NONE-LABEL$@
+     @#END_LOOP#@
+  @<_POP_MEM>@
+;
+@#DEF_IF#@ @#EXP: (@!G_OPERATIONMODE!@ EQUAL @"INTERACTIVEMODE"@) AND @!L_EXISTVALID!@ #@
+    @#DEF_SET#@ @!L_INTERACT!@ @"YES"@
+@#END_IF#@
+;
+;
+@$DB_WORKING_BUFBODY$@
+       @#GET_MEM#@   @"DB_BUFOLD"@
+       @#CLEAR_MEM#@ @"DB_BUFOLD"@
+;
+;
+@#DEF_SET#@ @!L_ROWCOLOR!@ @"257"@
+@#DEF_IF#@ @+_REGION_SYS_COLORVARIABLE+@
+   @#DEF_SET#@ @!L_ROWCOLOR!@ @+_REGION_SYS_COLORVARIABLE+@
+@#ELSE_IF#@ @+_REGION_SYS_COLOR+@
+   @#DEF_SET#@ @!L_ROWCOLOR!@ @+_REGION_SYS_COLOR+@
+@#END_IF#@
+@$DISPLAY_COLUMNS_INIT_VALUE$@
+;      * @+_OBJ_ATR_NAME+@'S DISPLAY-COLUMNS
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, DISPLAY-COLUMNS @+_OBJ_SYS_DISPLAYCOLUMNS+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+;
+; ======================= PRD -- EVENT PROCESS ======================
+;
+;
+@#DEF_SETANSI#@ @"EVENT"@
+@#DEF_IF#@ @+_REGION_SYS_ISSETTING+@
+    @%Grid_RegionColor.Skl%@
+@#END_IF#@
+;
+; ======================= PRD -- EVENT PROCESS ======================
+;
+   @#DEF_IF#@ @+_OBJ_EVT_PROCEDURE+@
+       @#DEF_SET#@ @!L_EVENT!@ @+_OBJ_EVT_PROCEDURE+@
+   @#ELSE#@
+       @#DEF_SET#@ @!L_EVENT!@ @"@+_OBJ_ATR_NAME+@-Event"@
+   @#END_IF#@
+;
+@$EVENT-PRO-HEAD-@!L_EVENT!@$@
+   @#DEF_IF#@ @+_REGION_SYS_ISSETTING+@
+      * MASTERGRID (@+_OBJ_ATR_NAME+@)
+           IF Event-Control-Id = @!L_SYSID!@ AND
+                 Event-Window-Handle = @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_ATR_NAME+@-REGION-COLOR@!G_MODE!@
+           END-IF
+   @#END_IF#@
+           IF Event-Control-Id = @!L_SYSID!@ AND
+                 Event-Window-Handle = @!G_SCREENHANDLE!@
+              MOVE Event-Data-1 TO @+_OBJ_ATR_NAME+@-WCursor-X
+              MOVE Event-Data-2 TO @+_OBJ_ATR_NAME+@-Wcursor-Y
+           END-IF
+@$EVENT-PRO-@!L_EVENT!@$@
+     @#DEF_IF#@ @+_OBJ_CMD_HELP+@
+           WHEN Cmd-Help ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_CMD_HELP+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_BEGINDRAG+@
+           WHEN Msg-Begin-Drag ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_BEGINDRAG+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_BEGINHEADINGDRAG+@
+           WHEN Msg-End-Heading-Drag ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_BEGINHEADINGDRAG+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_BITMAPCLICKED+@
+           WHEN Msg-Bitmap-Clicked ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_BITMAPCLICKED+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_BITMAPDBLCLICK+@
+           WHEN Msg-Bitmap-Dblclick ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_BITMAPDBLCLICK+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_CANCELENTRY+@
+           WHEN Msg-Cancel-Entry ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_CANCELENTRY+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_COLWIDTHCHANGED+@
+           WHEN Msg-Col-Width-Changed ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_COLWIDTHCHANGED+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_ENDHEADINGDRAG+@
+           WHEN Msg-End-Heading-Drag ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_ENDHEADINGDRAG+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_ENDMENU+@
+           WHEN Msg-End-Menu ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_ENDMENU+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_GOTOCELLDRAG+@
+           WHEN Msg-Goto-Cell-Drag ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_GOTOCELLDRAG+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_GRIDRBUTTONDOWN+@
+           WHEN Msg-Grid-Rbutton-Down ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_GRIDRBUTTONDOWN+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_GRIDRBUTTONUP+@
+           WHEN Msg-Grid-Rbutton-Up ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_GRIDRBUTTONUP+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_HEADINGCLICKED+@
+           WHEN Msg-Heading-Clicked ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_HEADINGCLICKED+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_HEADINGDBLCLICK+@
+           WHEN Msg-Heading-Dblclick ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_HEADINGDBLCLICK+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_HEADINGDRAGGED+@
+           WHEN Msg-Heading-Dragged ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_HEADINGDRAGGED+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_INITMENU+@
+           WHEN Msg-Init-Menu ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_INITMENU+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_MENUINPUT+@
+           WHEN Msg-Menu-Input ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_MENUINPUT+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_PAGEDNEXTPAGE+@
+           WHEN Msg-Paged-NextPage ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_PAGEDNEXTPAGE+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_PAGEDPREVPAGE+@
+           WHEN Msg-Paged-PrevPage ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_PAGEDPREVPAGE+@
+     @#END_IF#@
+     ; ==============================================================
+	 ;  CodeGen's Default Code.
+     ;    1. Data.Grid = EVENT,     Msg-Paged-Next
+     ;    2. Data.Grid = EVENT,     Msg-Paged-Prev
+     ;    3. Data.Grid = EVENT,     Msg-Paged-First
+     ;    4. Data.Grid = EVENT,     Msg-Paged-Last
+     ;    5. Data.Grid = EVENT,     Msg-Validate
+     ; ==============================================================
+           WHEN Msg-Paged-Next ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+     @#DEF_IF#@ @+_OBJ_MSG_PAGEDNEXT+@
+              PERFORM @+_OBJ_MSG_PAGEDNEXT+@
+     @#ELSE#@
+              PERFORM @+_OBJ_ATR_NAME+@-MSG-NEXT
+     @#END_IF#@
+           WHEN Msg-Paged-Prev ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+     @#DEF_IF#@ @+_OBJ_MSG_PAGEDPREV+@
+              PERFORM @+_OBJ_MSG_PAGEDPREV+@
+     @#ELSE#@
+              PERFORM @+_OBJ_ATR_NAME+@-MSG-PREV
+     @#END_IF#@
+           WHEN Msg-Paged-First ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+     @#DEF_IF#@ @+_OBJ_MSG_PAGEDFIRST+@
+              PERFORM @+_OBJ_MSG_PAGEDFIRST+@
+     @#ELSE#@
+              PERFORM @+_OBJ_ATR_NAME+@-MSG-PAGEFIRST
+     @#END_IF#@
+           WHEN Msg-Paged-Last ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+     @#DEF_IF#@ @+_OBJ_MSG_PAGEDLAST+@
+              PERFORM @+_OBJ_MSG_PAGEDLAST+@
+     @#ELSE#@
+              PERFORM @+_OBJ_ATR_NAME+@-MSG-PAGELAST
+     @#END_IF#@
+           WHEN Msg-Validate ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+     @#DEF_IF#@ @+_OBJ_MSG_VALIDATE+@
+              PERFORM @+_OBJ_MSG_VALIDATE+@
+     @#ELSE#@
+	          PERFORM @+_OBJ_ATR_NAME+@-MSG-VALIDATE
+     @#END_IF#@
+     ; ==============================================================
+	 ;  CodeGen's Default Event.
+     ;    1. Data.Grid = EVENT, Msg-Begin-Entry
+     ;    2. Data.Grid = EVENT, Msg-Finish-Entry
+     ;    3. Data.Grid = EVENT, Cmd-Goto
+     ;    4. Data.Grid = EVENT, Msg-End-Drag
+     ;    5. Data.Grid = EVENT, Msg-Goto-Cell
+     ;    6. Data.Grid = EVENT, Msg-Goto-Cell-Mouse
+     ; ==============================================================
+      * MASTERGRID DEFAULT CODE : MSG-BEGIN-ENTRY
+; ===================================================================
+; Msg-Begin-Entry : Default Code.
+; ===================================================================
+     @#DEF_IF#@ @#EXP: @+_OBJ_MSG_BEGINENTRY+@ OR @!L_COLREADONLY!@ #@
+           WHEN Msg-Begin-Entry ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+          @#DEF_IF#@ @+_OBJ_MSG_BEGINENTRY+@
+              PERFORM @+_OBJ_MSG_BEGINENTRY+@
+          @#END_IF#@
+   ; ==================== <<<  READONLY  >>> ========================
+          @#DEF_IF#@ @!L_COLREADONLY!@
+      * COLUMN READONLY
+              EVALUATE EVENT-DATA-1 ALSO EVENT-DATA-2
+                 @#GET_MEM#@   @"COL-READONLY"@
+                 @#CLEAR_MEM#@ @"COL-READONLY"@
+              END-EVALUATE 
+          @#END_IF#@
+     @#END_IF#@
+; ===================================================================
+; Msg-Finish-Entry : Default Code.
+; ===================================================================
+      * MASTERGRID DEFAULT CODE : MSG-FINISH-ENTRY
+           WHEN Msg-Finish-Entry ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+          @#DEF_IF#@ @+_OBJ_MSG_FINISHENTRY+@
+              PERFORM @+_OBJ_MSG_FINISHENTRY+@
+          @#END_IF#@
+              PERFORM @+_OBJ_ATR_NAME+@-CELL-CONTENT-FREE-CHECK
+          @#DEF_IF#@ @!L_INTERACT!@
+   ; ==================== <<<  VALIDATION  >>> ======================
+      * COLUMN'S VALIDATION
+              EVALUATE EVENT-DATA-1 ALSO EVENT-DATA-2
+                 @#GET_MEM#@   @"COL-VALIDATION"@
+                 @#CLEAR_MEM#@ @"COL-VALIDATION"@
+              END-EVALUATE 
+          @#END_IF#@
+      * MASTERGRID DEFAULT CODE : CMD-GOTO
+           WHEN Cmd-Goto ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+          @#DEF_IF#@ @+_OBJ_CMD_GOTO+@
+              PERFORM @+_OBJ_CMD_GOTO+@
+          @#END_IF#@
+              CONTINUE
+      * MASTERGRID DEFAULT CODE : MSG-END-DRAG
+           WHEN Msg-End-Drag ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+          @#DEF_IF#@ @+_OBJ_MSG_ENDDRAG+@
+              PERFORM @+_OBJ_MSG_ENDDRAG+@
+          @#END_IF#@
+              PERFORM @+_OBJ_ATR_NAME+@-Change
+      * MASTERGRID DEFAULT CODE : MSG-GOTO-CELL
+           WHEN Msg-Goto-Cell ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+          @#DEF_IF#@ @+_OBJ_MSG_GOTOCELL+@
+              PERFORM @+_OBJ_MSG_GOTOCELL+@
+          @#END_IF#@
+              PERFORM @+_OBJ_ATR_NAME+@-Change
+      * MASTERGRID DEFAULT CODE : MSG-GOTO-CELL-MOUSE
+           WHEN Msg-Goto-Cell-Mouse ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+          @#DEF_IF#@ @+_OBJ_MSG_GOTOCELLMOUSE+@
+              PERFORM @+_OBJ_MSG_GOTOCELLMOUSE+@
+          @#END_IF#@
+              PERFORM @+_OBJ_ATR_NAME+@-Change
+     @#DEF_IF#@ @+_OBJ_EVT_OTHER+@
+@$EVENT-OTHER-@!L_EVENT!@$@
+              WHEN @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+                 PERFORM @+_OBJ_EVT_OTHER+@
+     @#END_IF#@
+;
+;
+; ===================== PRD -- EXCEPTION PROCESS ====================
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_EXPEVENT+@ OR @+_OBJ_EXPEVT_PROCEDURE+@ #@
+   @#DEF_IF#@ @+_OBJ_EXPEVT_PROCEDURE+@
+       @#DEF_SET#@ @!L_EXPEVENT!@ @+_OBJ_EXPEVT_PROCEDURE+@
+   @#ELSE#@
+       @#DEF_SET#@ @!L_EXPEVENT!@ @"@+_OBJ_ATR_NAME+@-Exception"@
+   @#END_IF#@
+@$EXPEVENT-PRO-@!L_EXPEVENT!@$@
+   @#DEF_IF#@ @+_OBJ_EXPCMD_GOTO+@
+              WHEN Cmd-Goto ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+                 PERFORM @+_OBJ_EXPCMD_GOTO+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_EXPCMD_HELP+@
+              WHEN Cmd-Help ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+                 PERFORM @+_OBJ_EXPCMD_HELP+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_EXPEVT_OTHER+@
+@$EXPEVENT-OTHER-@!L_EXPEVENT!@$@
+                 WHEN @!L_SYSID!@ 
+                    PERFORM @+_OBJ_EXPEVT_OTHER+@
+   @#END_IF#@
+@#END_IF#@
+;
+; ============ EVT -- DEFAULT CODE GEN IN EVENT PROCEDURE ===========
+;
+@$EVENT$@
+; ====    Data.List-Box = EVENT, Msg-Paged-Next   ===================
+; ===================================================================
+@#DEF_SETPARA#@ @"1"@ @+_OBJ_MSG_PAGEDNEXT+@
+@#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_ISINTERNALFUNCTION+@) #@
+  @#DEF_IF#@ @+_OBJ_MSG_PAGEDNEXT+@
+@$DEFAULTCODE_@+_OBJ_MSG_PAGEDNEXT+@$@
+   @#ELSE#@
+@$EVENT$@
+       @+_OBJ_ATR_NAME+@-MSG-NEXT.
+  @#END_IF#@
+       @#DEF_SETPARA#@ @"1"@ @+_OBJ_MSG_PAGEDNEXT+@
+       @#DEF_IF#@ @#EXP: @+_SYS_CHECK_DEFAULTCODE+@ EQUAL @"YES"@ #@
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X IN @+_OBJ_ATR_NAME+@-WCursor-X,
+                   Cursor-Y IN @+_OBJ_ATR_NAME+@-WCursor-Y
+           PERFORM @+_OBJ_ATR_NAME+@-CHANGE-UPDATE
+           IF @+_OBJ_ATR_NAME+@-Cancel
+                 EXIT PARAGRAPH
+           END-IF				 				 
+           IF @+_OBJ_ATR_NAME+@-WCursor-Y > @!L_STARTROW!@
+              MOVE    @+_OBJ_ATR_NAME+@-WCursor-Y TO @+_OBJ_ATR_NAME+@-OLD-WCursor-Y
+              COMPUTE @+_OBJ_ATR_NAME+@-OLD-WCursor-Y = @+_OBJ_ATR_NAME+@-WCursor-Y - 1
+              PERFORM @+_OBJ_ATR_NAME+@-GET-NEXT-REC
+           @#DEF_IF#@ @+_OBJ_ATR_SYNCHRONIZATION+@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read
+              PERFORM @!L_SNAME!@-IUD-Display
+           @#END_IF#@
+           ELSE IF @+_OBJ_ATR_NAME+@-WCursor-Y = @!L_STARTROW!@
+              MOVE    @+_OBJ_ATR_NAME+@-WCursor-Y TO @+_OBJ_ATR_NAME+@-OLD-WCursor-Y
+              PERFORM @+_OBJ_ATR_NAME+@-GET-NEXT-REC
+;              PERFORM @!L_SNAME!@-NAVI-FOR-MASTERGRID
+              PERFORM @!L_SNAME!@-Buf-To-Fld
+           @#DEF_IF#@ @+_OBJ_ATR_SYNCHRONIZATION+@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read
+              PERFORM @!L_SNAME!@-IUD-Display
+           @#END_IF#@
+           END-IF
+       @#END_IF#@
+   @#DEF_IF#@ @#EXP: NOT (@+_OBJ_MSG_PAGEDNEXT+@) #@
+           .
+
+   @#END_IF#@
+@#END_IF#@
+
+; ====    Data.List-Box = EVENT, Msg-Paged-Prev   ===================
+; ===================================================================
+@#DEF_SETPARA#@ @"1"@ @+_OBJ_MSG_PAGEDPREV+@
+@#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_ISINTERNALFUNCTION+@) #@
+  @#DEF_IF#@ @+_OBJ_MSG_PAGEDPREV+@
+@$DEFAULTCODE_@+_OBJ_MSG_PAGEDPREV+@$@
+   @#ELSE#@
+@$EVENT$@
+       @+_OBJ_ATR_NAME+@-MSG-PREV.
+  @#END_IF#@
+       @#DEF_SETPARA#@ @"1"@ @+_OBJ_MSG_PAGEDPREV+@
+       @#DEF_IF#@ @#EXP: @+_SYS_CHECK_DEFAULTCODE+@ EQUAL @"YES"@ #@
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   LAST-ROW = @+_OBJ_ATR_NAME+@-COUNT
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X IN @+_OBJ_ATR_NAME+@-WCursor-X,
+                   Cursor-Y IN @+_OBJ_ATR_NAME+@-WCursor-Y
+           PERFORM @+_OBJ_ATR_NAME+@-CHANGE-UPDATE
+           IF @+_OBJ_ATR_NAME+@-Cancel
+                 EXIT PARAGRAPH
+           END-IF				 				 
+           IF @+_OBJ_ATR_NAME+@-WCursor-Y < @+_OBJ_ATR_NAME+@-COUNT
+              MOVE    @+_OBJ_ATR_NAME+@-WCursor-Y TO @+_OBJ_ATR_NAME+@-OLD-WCursor-Y
+              COMPUTE @+_OBJ_ATR_NAME+@-OLD-WCursor-Y = @+_OBJ_ATR_NAME+@-WCursor-Y + 1
+              PERFORM @+_OBJ_ATR_NAME+@-GET-PREV-REC
+           @#DEF_IF#@ @+_OBJ_ATR_SYNCHRONIZATION+@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read
+              PERFORM @!L_SNAME!@-IUD-Display
+           @#END_IF#@
+           ELSE IF @+_OBJ_ATR_NAME+@-WCursor-Y = @+_OBJ_ATR_NAME+@-COUNT
+              SUBTRACT 1 FROM @+_OBJ_ATR_NAME+@-OLD-WCursor-Y
+              PERFORM @+_OBJ_ATR_NAME+@-GET-PREV-REC
+;              PERFORM @!L_SNAME!@-NAVI-FOR-MASTERGRID
+              PERFORM @!L_SNAME!@-Buf-To-Fld
+           @#DEF_IF#@ @+_OBJ_ATR_SYNCHRONIZATION+@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read
+              PERFORM @!L_SNAME!@-IUD-Display
+           @#END_IF#@
+           END-IF
+       @#END_IF#@
+   @#DEF_IF#@ @#EXP: NOT (@+_OBJ_MSG_PAGEDPREV+@) #@
+           .
+
+   @#END_IF#@
+@#END_IF#@
+
+; ====    Data.List-Box = EVENT, Msg-Paged-First   ===============
+; ===================================================================
+@#DEF_SETPARA#@ @"1"@ @+_OBJ_MSG_PAGEDFIRST+@
+@#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_ISINTERNALFUNCTION+@) #@
+  @#DEF_IF#@ @+_OBJ_MSG_PAGEDFIRST+@
+@$DEFAULTCODE_@+_OBJ_MSG_PAGEDFIRST+@$@
+   @#ELSE#@
+@$EVENT$@
+       @+_OBJ_ATR_NAME+@-MSG-PAGEFIRST.
+  @#END_IF#@
+       @#DEF_SETPARA#@ @"1"@ @+_OBJ_MSG_PAGEDFIRST+@
+       @#DEF_IF#@ @#EXP: @+_SYS_CHECK_DEFAULTCODE+@ EQUAL @"YES"@ #@
+           PERFORM @!L_SNAME!@-FIRST@!G_MODE!@ 
+           SET EVENT-ACTION TO EVENT-ACTION-COMPLETE
+       @#END_IF#@
+   @#DEF_IF#@ @#EXP: NOT (@+_OBJ_MSG_PAGEDFIRST+@) #@
+           .
+
+   @#END_IF#@
+@#END_IF#@
+; ====    Data.List-Box = EVENT, Msg-Paged-LAST   ===============
+; ===================================================================
+@#DEF_SETPARA#@ @"1"@ @+_OBJ_MSG_PAGEDLAST+@
+@#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_ISINTERNALFUNCTION+@) #@
+  @#DEF_IF#@ @+_OBJ_MSG_PAGEDLAST+@
+@$DEFAULTCODE_@+_OBJ_MSG_PAGEDLAST+@$@
+   @#ELSE#@
+@$EVENT$@
+       @+_OBJ_ATR_NAME+@-MSG-PAGELAST.
+  @#END_IF#@
+       @#DEF_SETPARA#@ @"1"@ @+_OBJ_MSG_PAGEDLAST+@
+       @#DEF_IF#@ @#EXP: @+_SYS_CHECK_DEFAULTCODE+@ EQUAL @"YES"@ #@
+           PERFORM @!L_SNAME!@-LAST@!G_MODE!@ 
+           SET EVENT-ACTION TO EVENT-ACTION-COMPLETE
+       @#END_IF#@
+   @#DEF_IF#@ @#EXP: NOT (@+_OBJ_MSG_PAGEDLAST+@) #@
+           .
+
+   @#END_IF#@
+@#END_IF#@
+
+; ====    Data.Grid = EVENT, Msg-Validate   =========================
+; ===================================================================
+@#DEF_SETPARA#@ @"1"@ @+_OBJ_MSG_VALIDATE+@
+@#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_ISINTERNALFUNCTION+@) #@
+  @#DEF_IF#@ @+_OBJ_MSG_VALIDATE+@
+@$DEFAULTCODE_@+_OBJ_MSG_VALIDATE+@$@
+   @#ELSE#@
+@$EVENT$@
+       @+_OBJ_ATR_NAME+@-MSG-VALIDATE.
+  @#END_IF#@
+       @#DEF_SETPARA#@ @"1"@ @+_OBJ_MSG_VALIDATE+@
+       @#DEF_IF#@ @#EXP: @+_SYS_CHECK_DEFAULTCODE+@ EQUAL @"YES"@ #@
+           PERFORM @+_OBJ_ATR_NAME+@-CHANGE-UPDATE
+           IF @+_OBJ_ATR_NAME+@-Cancel
+                 EXIT PARAGRAPH
+           END-IF				 				 
+       @#END_IF#@
+   @#DEF_IF#@ @#EXP: NOT (@+_OBJ_MSG_VALIDATE+@) #@
+           .
+
+   @#END_IF#@
+@#END_IF#@
+@#DEF_SETANSI#@ @""@
+;
+; ======================= PRD -- FONT PROCESS =======================
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+   @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_OBJ_ATR_FONTVARIABLE+@
+   @%FontProcess.Skl%@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEADINGFONTVARIABLE+@
+   @<_PUSH_MEM>@
+   @<_SET_OBJ_HEADINGFONT>@
+   @#DEF_IF#@ @+_OBJ_SYS_ISFONTCREATE+@ 
+      @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_OBJ_ATR_HEADINGFONTVARIABLE+@
+      @%FontProcess.Skl%@
+   @#END_IF#@
+   @<_POP_MEM>@
+@#END_IF#@
+;
+; ===================== PRD -- DB -- INIT_DATA ======================
+; Remarks:
+;    ( The same as DB_ListBox )
+;    If the Control's FD was triggered by other Relation ( It means
+;    the FD is belong to someone Relation's Slave FD ), we don't
+;    perform the initial paragraph ( -Content ). Just when it was
+;    an independent FD, then we would browse all data in initial.
+;
+   @#DEF_SET#@ @!L_FDNAME!@ @+_FDSL_SYS_FDNAME+@
+   @#DEF_SET#@ @!L_WASTRIGGER!@ @""@
+   @<_PUSH_MEM>@
+      @<_SET_DATASET_FDSLCHILD>@
+      @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+         @<_FETCH_NEXT_DATASET_FDSL>@
+         @<_SET_FDSL_RELATION>@
+         @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+            @<_FETCH_NEXT_FDSL_RELATION>@
+            @#DEF_IF#@ @#EXP: @!L_FDNAME!@ EQUAL @+_FDSL_RELATION_SLAVEFD+@ #@
+               @#DEF_SET#@ @!L_WASTRIGGER!@ @"YES"@
+            @#END_IF#@
+         @#END_LOOP#@
+      @#END_LOOP#@
+   @<_POP_MEM>@
+;
+@$INIT_DATA$@
+      * DB_GRID
+           PERFORM @+_OBJ_ATR_NAME+@-CellSetting
+   @#DEF_IF#@ @#EXP: NOT @!L_WASTRIGGER!@ #@
+; bug: LK6B0281
+           PERFORM @+_OBJ_ATR_NAME+@-Content
+;           IF @+_OBJ_ATR_NAME+@-WK-LAST-ROW >= @!L_STARTROW!@
+;              PERFORM @!L_SNAME!@-First
+;           END-IF
+   @#END_IF#@
+;
+; ========== PRD -- DB -- INIT_DATA'S PARAGRAPH (Content) ===========
+;
+   @#DEF_IF#@ @+_FDSL_SYS_STARTVALUE+@
+      @#DEF_SET#@ @!L_STARTVALUE!@ @+_FDSL_SYS_STARTVALUE+@
+   @#ELSE#@
+      @#DEF_SET#@ @!L_STARTVALUE!@ @"Low-Value"@
+   @#END_IF#@
+;
+   @#DEF_IF#@ @+_FDSL_SYS_ENDVALUE+@
+      @#DEF_SET#@ @!L_ENDVALUE!@ @+_FDSL_SYS_ENDVALUE+@
+   @#ELSE#@
+      @#DEF_SET#@ @!L_ENDVALUE!@ @"High-Value"@
+   @#END_IF#@
+;
+   @#DEF_SET#@ @!L_STARTROW!@ @"1"@
+   @#DEF_SET#@ @!L_LASTROW!@ @+_OBJ_SYS_LINECOUNTS+@
+   @#DEF_ADD#@ @!L_STARTROW!@ @!L_NUMHEADINGS!@
+   @#DEF_ADD#@ @!L_LASTROW!@ @!L_NUMHEADINGS!@
+;
+@$INITDATA-PROCEDURE$@
+      * DB_GRID
+       @+_OBJ_ATR_NAME+@-Content.
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Grid:@+_OBJ_ATR_NAME+@, BeforeLoadRecord>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Grid"@ @"BeforeLoadRecord"@
+      * <TOTEM:END>
+      * reset
+           SET @+_OBJ_ATR_NAME+@-Record-Update TO FALSE
+           SET @+_OBJ_ATR_NAME+@-Cancel TO False
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW = TOTEM-IDX1
+           PERFORM VARYING TOTEM-IDX2 FROM @!L_STARTROW!@ BY 1 
+                 UNTIL TOTEM-IDX2 > TOTEM-IDX1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RECORD-TO-DELETE = @!L_STARTROW!@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              END-PERFORM
+           @#END_IF#@           
+           END-PERFORM
+      * fetch
+           MOVE   0 TO @+_OBJ_ATR_NAME+@-COUNT
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, MASS-UPDATE = 1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-INITSTART
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-IF
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+                OR (@+_FDSL_SYS_FILESTATUS88+@ AND @+_OBJ_ATR_NAME+@-COUNT > @+_OBJ_SYS_LINECOUNTS+@)
+                @#GET_MEM#@   @"FDSL-REFERENCE"@
+                PERFORM @!G_SCREENNAME!@-Fld-To-Buf                
+                IF @+_OBJ_ATR_NAME+@-COUNT < @+_OBJ_SYS_LINECOUNTS+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+   @#DEF_IF#@ @+_OBJ_ATR_CONDITION+@
+                   IF (@+_OBJ_ATR_CONDITION+@)
+   @#END_IF#@                
+                      ADD 1 TO @+_OBJ_ATR_NAME+@-COUNT
+                      MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                             RECORD-TO-ADD = @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                      INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                             LAST-ROW = @+_OBJ_ATR_NAME+@-Row-Counter
+                      MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                             X = 1, 
+                             Y = @+_OBJ_ATR_NAME+@-Row-Counter
+                             HIDDEN-DATA   = @!L_PKEY!@
+                             LENGTH = @!L_PKEYPICLENGTH!@
+                      MOVE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@ TO 
+                             TMP-@+_OBJ_ATR_NAME+@-LMTBUF(@+_OBJ_ATR_NAME+@-COUNT) 
+   @#DEF_IF#@ @+_OBJ_ATR_CONDITION+@                                           
+                   END-IF
+   @#END_IF#@  
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 END-PERFORM
+           @#END_IF#@           
+                ELSE
+                   EXIT PERFORM
+                END-IF
+   @#DEF_IF#@ @!L_PKEYSPLIT!@
+                PERFORM @+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_SLPKEY+@-SPLITBUF-TOFLD
+   @#END_IF#@
+                PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-PERFORM
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, MASS-UPDATE = 0
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           MOVE  1 TO Event-Data-1 
+                      @+_OBJ_ATR_NAME+@-WCursor-X 
+                      @+_OBJ_ATR_NAME+@-OLD-WCursor-X
+           MOVE  @!L_STARTROW!@ TO Event-Data-2 
+                      @+_OBJ_ATR_NAME+@-WCursor-Y 
+                      @+_OBJ_ATR_NAME+@-OLD-WCursor-Y
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   LAST-ROW IN @+_OBJ_ATR_NAME+@-WK-LAST-ROW
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Grid:@+_OBJ_ATR_NAME+@, AfterLoadRecord>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Grid"@ @"AfterLoadRecord"@
+      * <TOTEM:END>
+           .
+
+       @+_OBJ_ATR_NAME+@-GET-NEXT-REC.
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW = @+_OBJ_ATR_NAME+@-COUNT
+           COMPUTE @+_OBJ_ATR_NAME+@-COUNT = @+_OBJ_ATR_NAME+@-COUNT - @!L_NUMHEADINGS!@
+           MOVE TMP-@+_OBJ_ATR_NAME+@-LMTBUF(@+_OBJ_ATR_NAME+@-COUNT) TO
+              @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-IF
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@ OR
+                    (@+_FDSL_SYS_FILESTATUS88+@ AND
+                       @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@ =
+                         TMP-@+_OBJ_ATR_NAME+@-LMTBUF(@+_OBJ_ATR_NAME+@-COUNT))
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-PERFORM
+; LK6B0328           
+        @#DEF_IF#@ @+_OBJ_ATR_CONDITION+@
+           MOVE 0 TO TOTEM-IDX1
+           PERFORM UNTIL TOTEM-IDX1 = 1           
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+              IF (@+_OBJ_ATR_CONDITION+@ OR NOT @+_FDSL_SYS_FILESTATUS88+@)
+                 MOVE 1 TO TOTEM-IDX1
+              END-IF
+           END-PERFORM
+        @#ELSE#@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+        @#END_IF#@
+           IF @+_FDSL_SYS_FILESTATUS88+@
+                 @#GET_MEM#@   @"FDSL-REFERENCE"@
+                 PERFORM @!G_SCREENNAME!@-Fld-To-Buf
+                 PERFORM @+_OBJ_ATR_NAME+@-LMT-SCROLLUP
+                 MOVE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@ TO 
+                         TMP-@+_OBJ_ATR_NAME+@-LMTBUF(@+_OBJ_ATR_NAME+@-COUNT)
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                    MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                         RECORD-TO-DELETE = @!L_STARTROW!@
+                         RECORD-TO-ADD    = @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                    INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                         LAST-ROW = @+_OBJ_ATR_NAME+@-Row-Counter
+                    MODIFY  @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                         X = 1, 
+                         Y = @+_OBJ_ATR_NAME+@-Row-Counter
+                         HIDDEN-DATA   = @!L_PKEY!@
+                         LENGTH = @!L_PKEYPICLENGTH!@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 END-PERFORM
+           @#END_IF#@           
+                 PERFORM @+_OBJ_ATR_NAME+@-Change-Verify
+;Chrisitne
+           ELSE
+                 MOVE @+_OBJ_ATR_NAME+@-WCursor-X TO @+_OBJ_ATR_NAME+@-OLD-WCursor-X
+                 MOVE @+_OBJ_ATR_NAME+@-WCursor-Y TO @+_OBJ_ATR_NAME+@-OLD-WCursor-Y
+                 PERFORM @+_OBJ_ATR_NAME+@-Change-Verify
+                 SET EVENT-ACTION TO EVENT-ACTION-FAIL
+           END-IF
+           .
+
+       @+_OBJ_ATR_NAME+@-GET-PREV-REC.
+           MOVE TMP-@+_OBJ_ATR_NAME+@-LMTBUF(1) TO
+              @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-IF
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@ OR
+                    (@+_FDSL_SYS_FILESTATUS88+@ AND 
+                       @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+                         = TMP-@+_OBJ_ATR_NAME+@-LMTBUF(1))
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-PERFORM
+; LK6B0328      
+        @#DEF_IF#@ @+_OBJ_ATR_CONDITION+@     
+           MOVE 0 TO TOTEM-IDX1
+           PERFORM UNTIL TOTEM-IDX1 = 1           
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Prev
+              IF (@+_OBJ_ATR_CONDITION+@ OR NOT @+_FDSL_SYS_FILESTATUS88+@)
+                 MOVE 1 TO TOTEM-IDX1
+              END-IF
+           END-PERFORM
+        @#ELSE#@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Prev
+        @#END_IF#@           
+           IF @+_FDSL_SYS_FILESTATUS88+@
+                 @#GET_MEM#@   @"FDSL-REFERENCE"@
+                 PERFORM @!G_SCREENNAME!@-Fld-To-Buf
+                 PERFORM @+_OBJ_ATR_NAME+@-LMT-SCROLLDOWN
+                 MOVE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+                         TO TMP-@+_OBJ_ATR_NAME+@-LMTBUF(1)
+              @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+                 MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		      @#END_IF#@
+                @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+                @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                 INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW = @+_OBJ_ATR_NAME+@-COUNT
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                    MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                         RECORD-TO-DELETE = @+_OBJ_ATR_NAME+@-COUNT
+                         INSERTION-INDEX  = @!L_STARTROW!@
+                         RECORD-TO-ADD    = @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                    MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, X = 1, Y = @!L_STARTROW!@
+                         HIDDEN-DATA   = @!L_PKEY!@
+                         LENGTH = @!L_PKEYPICLENGTH!@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 END-PERFORM
+           @#END_IF#@           
+                 PERFORM @+_OBJ_ATR_NAME+@-Change-Verify
+;Chrisitne
+           ELSE
+                 MOVE @+_OBJ_ATR_NAME+@-WCursor-X TO @+_OBJ_ATR_NAME+@-OLD-WCursor-X
+                 MOVE @+_OBJ_ATR_NAME+@-WCursor-Y TO @+_OBJ_ATR_NAME+@-OLD-WCursor-Y
+                 PERFORM @+_OBJ_ATR_NAME+@-Change-Verify
+                 SET EVENT-ACTION TO EVENT-ACTION-FAIL
+           END-IF
+           .
+
+       @+_OBJ_ATR_NAME+@-LMT-SCROLLUP.
+           PERFORM VARYING TOTEM-IDX2 FROM 2 BY 1 UNTIL 
+                       TOTEM-IDX2 > @+_OBJ_SYS_LINECOUNTS+@
+               COMPUTE TOTEM-IDX3 = TOTEM-IDX2 - 1
+               MOVE TMP-@+_OBJ_ATR_NAME+@-LMTBUF(TOTEM-IDX2) TO
+                       TMP-@+_OBJ_ATR_NAME+@-LMTBUF(TOTEM-IDX3)
+           END-PERFORM
+           .
+
+       @+_OBJ_ATR_NAME+@-LMT-SCROLLDOWN.
+           COMPUTE TOTEM-IDX3 = @+_OBJ_SYS_LINECOUNTS+@ - 1
+           PERFORM VARYING TOTEM-IDX2 FROM TOTEM-IDX3 BY -1 UNTIL TOTEM-IDX2 < 1
+               COMPUTE TOTEM-TMP-VAR = TOTEM-IDX2 + 1
+               MOVE TMP-@+_OBJ_ATR_NAME+@-LMTBUF(TOTEM-IDX2) TO 
+                       TMP-@+_OBJ_ATR_NAME+@-LMTBUF(TOTEM-TMP-VAR)
+           END-PERFORM
+           .
+
+       @+_OBJ_ATR_NAME+@-BUFFER-CLEAR.
+           PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL 
+                       TOTEM-IDX1 > @+_OBJ_SYS_LINECOUNTS+@
+               MOVE SPACES TO TMP-@+_OBJ_ATR_NAME+@-LMTBUF(TOTEM-IDX1)
+           END-PERFORM
+           .
+
+       @+_OBJ_ATR_NAME+@-CLEAR-FOCUS.
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                  X = @+_OBJ_ATR_NAME+@-OLD-WCursor-X,
+                  Y = @+_OBJ_ATR_NAME+@-OLD-WCursor-Y, 
+                  ROW-COLOR    = 0,
+                  Cursor-Color = 0
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           .
+
+       @+_OBJ_ATR_NAME+@-GET-HIDDENKEY-RECORD.
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           Inquire @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                   (@+_OBJ_ATR_NAME+@-WCursor-Y, 1 ), 
+                   HIDDEN-DATA IN @!L_PKEY!@
+     @#DEF_IF#@ @!L_PKEYSPLIT!@
+           PERFORM @+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_SLPKEY+@-SPLITBUF-TOFLD
+     @#END_IF#@
+     @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+           IF @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-LOCK
+              READ @+_FDSL_SYS_FDNAME+@ WITH LOCK KEY @+_FDSL_SYS_SLPKEY+@
+           ELSE
+              READ @+_FDSL_SYS_FDNAME+@ WITH NO LOCK KEY @+_FDSL_SYS_SLPKEY+@
+           END-IF
+     @#ELSE#@
+           IF @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-LOCK
+              READ @+_FDSL_SYS_FDNAME+@ WITH LOCK
+           ELSE
+              READ @+_FDSL_SYS_FDNAME+@ WITH NO LOCK
+           END-IF
+     @#END_IF#@
+           .
+
+;
+; ============ PRD -- DB -- INIT_DATA'S PARAGRAPH (Cell) ============
+;
+@#DEF_SET#@ @!L_OCC1!@ @"@+_OBJ_SYS_OCCURSTIME1+@"@
+@#DEF_SET#@ @!L_OCC2!@ @"@+_OBJ_SYS_OCCURSTIME2+@"@
+@#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+@#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+@#DEF_SET#@ @!L_SUBSCRIPT!@ @"@+_OBJ_SYS_OCCURSSUBSCRIPT+@"@
+@$INITDATA-PROCEDURE$@
+      * DB_GRID
+       @+_OBJ_ATR_NAME+@-CellSetting.
+@#DEF_IF#@ @+_OBJ_ATR_ACTION+@
+        @#DEF_IF#@ @!L_OCC1!@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+              MODIFY @+_OBJ_ATR_NAME+@@!L_SUBSCRIPT!@, ACTION Action-@+_OBJ_ATR_ACTION+@
+        @#DEF_IF#@ @!L_OCC1!@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           END-PERFORM
+        @#END_IF#@           
+@#END_IF#@
+      *  CELLS' SETTING
+@<_PUSH_MEM>@
+@#DEF_SET#@ @!L_GRIDNAME!@ @+_OBJ_ATR_NAME+@
+@<_SET_OBJ_CELLCTRL>@
+;  what if no cell data, but have bitmap
+;  @#DEF_IF#@ @#EXP: (NOT @+_GRID_SYS_CTRLNO+@) AND @+_OBJ_ATR_COLUMNHEADINGS+@ #@
+     @#DEF_SET#@ @!L_IDX!@ @"1"@
+        @#DEF_IF#@ @!L_OCC1!@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+	 @#DEF_LOOP#@ @!L_NUMHEADINGS!@
+           MODIFY @!L_GRIDNAME!@@!L_SUBSCRIPT!@, X = 1, Y = @!L_IDX!@,
+                CELL-DATA = " ",
+ 	    @#DEF_ADD#@ @!L_IDX!@ @"1"@
+	 @#END_LOOP#@
+  @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+     @<_FETCH_NEXT_GRID_OBJ>@
+@$INITDATA-PROCEDURE$@
+     @#DEF_IF#@ @+_GRID_SYS_HASDATA+@
+              MODIFY @!L_GRIDNAME!@@!L_SUBSCRIPT!@, X = @+_GRID_SYS_COLUMN+@, Y = @+_GRID_SYS_ROW+@,
+       @#DEF_IF#@ @+_GRID_SYS_COLORVARIABLE+@
+                CELL-COLOR = @+_GRID_SYS_COLORVARIABLE+@,
+       @#ELSE_IF#@ @+_GRID_SYS_COLOR+@
+                CELL-COLOR = @+_GRID_SYS_COLOR+@,
+       @#END_IF#@
+       @#DEF_IF#@ @+_GRID_SYS_FONTVARIABLE+@
+                CELL-FONT @+_GRID_SYS_FONTVARIABLE+@,
+       @#END_IF#@
+       @#DEF_IF#@ @#EXP: NOT (@+_GRID_SYS_DATA+@ EQUAL @""@) #@
+                CELL-DATA = @+_GRID_SYS_DATA+@,
+       @#END_IF#@
+       @#DEF_IF#@ @+_GRID_SYS_BITMAP+@
+                BITMAP = @+_GRID_SYS_BITMAPHANDLE+@,
+         @#DEF_IF#@ @+_GRID_SYS_BITMAPTRAILING+@
+                BITMAP-TRAILING = 1,
+         @#END_IF#@
+                BITMAP-NUMBER = @+_GRID_SYS_BITMAPNUMBER+@,
+                BITMAP-WIDTH = @+_GRID_SYS_BITMAPWIDTH+@,
+;
+         @#DEF_SET#@ @!G_TMPBITMAP!@          @+_GRID_SYS_BITMAP+@
+         @#DEF_SET#@ @!G_TMPBITMAPFILE!@      @+_GRID_SYS_BITMAPFILE+@
+         @#DEF_SET#@ @!G_TMPBMPHANDLE!@       @+_GRID_SYS_BITMAPHANDLE+@
+         @#DEF_SET#@ @!G_TMPBMPRELATIVEFILE!@ @+_GRID_SYS_BITMAPRELATIVEFILE+@
+         @#DEF_SET#@ @!G_COPYRESOURCE!@		  @+_GRID_SYS_COPYRESOURCE+@
+         @%BmpProcess.Skl%@
+;
+       @#END_IF#@
+     @#END_IF#@
+  @#END_LOOP#@
+        @#DEF_IF#@ @!L_OCC1!@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           END-PERFORM
+        @#END_IF#@           
+@<_POP_MEM>@
+;
+@$INITDATA-PROCEDURE$@
+      *  COLUMNS' SETTING
+@<_PUSH_MEM>@
+@<_SET_OBJ_COLUMNCTRL>@
+  @#DEF_SET#@ @!L_COLUMNCNT!@ @"0"@
+  @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+     @<_FETCH_NEXT_GRID_OBJ>@
+     @#DEF_ADD#@ @!L_COLUMNCNT!@ @"1"@
+     @#DEF_IF#@ @+_GRID_SYS_HASDATA+@
+        @#DEF_IF#@ @!L_OCC1!@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+              MODIFY @!L_GRIDNAME!@@!L_SUBSCRIPT!@, X = @!L_COLUMNCNT!@  
+       @#DEF_IF#@ @+_GRID_SYS_COLORVARIABLE+@
+                COLUMN-COLOR = @+_GRID_SYS_COLORVARIABLE+@,
+       @#ELSE_IF#@ @+_GRID_SYS_COLOR+@
+                COLUMN-COLOR = @+_GRID_SYS_COLOR+@,
+       @#END_IF#@
+       @#DEF_IF#@ @+_GRID_SYS_FONTVARIABLE+@
+                COLUMN-FONT = @+_GRID_SYS_FONTVARIABLE+@,
+       @#END_IF#@
+        @#DEF_IF#@ @!L_OCC1!@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           END-PERFORM
+        @#END_IF#@           
+     @#END_IF#@
+  @#END_LOOP#@
+@<_POP_MEM>@
+      *  ROWS' SETTING
+@<_PUSH_MEM>@
+@<_SET_OBJ_ROWCTRL>@
+  @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+     @<_FETCH_NEXT_GRID_OBJ>@
+     @#DEF_IF#@ @+_GRID_SYS_HASDATA+@
+        @#DEF_IF#@ @!L_OCC1!@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+              MODIFY @!L_GRIDNAME!@@!L_SUBSCRIPT!@, Y = @+_GRID_SYS_ROW+@  
+       @#DEF_IF#@ @+_GRID_SYS_COLORVARIABLE+@
+                ROW-COLOR = @+_GRID_SYS_COLORVARIABLE+@,
+       @#ELSE_IF#@ @+_GRID_SYS_COLOR+@
+                ROW-COLOR = @+_GRID_SYS_COLOR+@,
+       @#END_IF#@
+       @#DEF_IF#@ @+_GRID_SYS_FONTVARIABLE+@
+                ROW-FONT = @+_GRID_SYS_FONTVARIABLE+@,
+       @#END_IF#@
+        @#DEF_IF#@ @!L_OCC1!@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           END-PERFORM
+        @#END_IF#@           
+     @#END_IF#@
+  @#END_LOOP#@
+@<_POP_MEM>@
+           .
+
+;
+; ======================= PRD -- POP UP PROCESS =======================
+;                                         LK6B0329, LK6B0330, Jimmy add
+@#DEF_IF#@ @+_OBJ_ATR_DISPLAYPOPUPMENU+@
+@$POPUP_PROCESS$@
+           PERFORM @+_OBJ_ATR_NAME+@-Mn-Menu
+           Move MENU-HANDLE TO @+_OBJ_ATR_NAME+@-Mn-Handle
+@$DESTROY_POPUP_PROCESS$@
+           CALL "W$MENU" USING WMENU-DESTROY-DELAYED @+_OBJ_ATR_NAME+@-Mn-Handle
+@$MENU$@
+       @+_OBJ_ATR_NAME+@-Mn-Menu.
+           PERFORM @+_OBJ_ATR_NAME+@-Mn-INIT
+           THRU    @+_OBJ_ATR_NAME+@-Mn-EXIT.
+
+       @+_OBJ_ATR_NAME+@-Mn-INIT.
+           CALL "W$MENU" USING WMENU-NEW-POPUP GIVING MENU-HANDLE
+           IF MENU-HANDLE = ZERO
+              GO TO @+_MENU_SYS_NAME+@-Mn-Exit
+           END-IF
+           @#DEF_ADD#@ @!G_MANUID!@ @"1"@
+           @#DEF_SET#@ @!L_EPTVAL_UPDATE!@ @!G_MANUID!@
+           CALL "W$MENU" USING WMENU-ADD, @+_MENU_SYS_HANDLE+@, 0, @!L_POPUPFLAG!@,
+                "@!S_NAUPD!@" , @!L_EPTVAL_UPDATE!@
+           @#DEF_ADD#@ @!G_MANUID!@ @"1"@
+           @#DEF_SET#@ @!L_EPTVAL_DELETE!@ @!G_MANUID!@
+           CALL "W$MENU" USING WMENU-ADD, @+_MENU_SYS_HANDLE+@, 0, @!L_POPUPFLAG!@,
+                "@!S_NADEL!@" , @!L_EPTVAL_DELETE!@
+           .
+
+       @+_OBJ_ATR_NAME+@-Mn-EXIT.
+           MOVE ZERO TO Return-Code.
+
+@$MENU-EVALUATE$@
+      * @+_OBJ_ATR_NAME+@
+              WHEN @+_KEYSTATUS_SYS_ITEMNAME+@ = @!L_EPTVAL_UPDATE!@
+                 PERFORM @+_OBJ_ATR_NAME+@-Change-Update
+              WHEN @+_KEYSTATUS_SYS_ITEMNAME+@ = @!L_EPTVAL_DELETE!@
+                 PERFORM @+_OBJ_ATR_NAME+@-Delete
+@#END_IF#@
+;
+; ======================= PRD -- FONT PROCESS =======================
+;
+@$FONT_PROCESS$@
+@<_PUSH_MEM>@
+   @<_SET_OBJ_CELLCTRL>@
+   @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+      @<_FETCH_NEXT_GRID_OBJ>@
+      @#DEF_IF#@ @#EXP: @+_GRID_SYS_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+         @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_GRID_SYS_FONTVARIABLE+@
+         @%FontProcess.Skl%@
+      @#END_IF#@
+   @#END_LOOP#@
+@<_POP_MEM>@
+@<_PUSH_MEM>@
+   @<_SET_OBJ_COLUMNCTRL>@
+  @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+      @<_FETCH_NEXT_GRID_OBJ>@
+      @#DEF_IF#@ @#EXP: @+_GRID_SYS_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+         @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_GRID_SYS_FONTVARIABLE+@
+         @%FontProcess.Skl%@
+      @#END_IF#@
+   @#END_LOOP#@
+@<_POP_MEM>@
+@<_PUSH_MEM>@
+   @<_SET_OBJ_ROWCTRL>@
+   @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+      @<_FETCH_NEXT_GRID_OBJ>@
+      @#DEF_IF#@ @#EXP: @+_GRID_SYS_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+         @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_GRID_SYS_FONTVARIABLE+@
+         @%FontProcess.Skl%@
+      @#END_IF#@
+   @#END_LOOP#@
+@<_POP_MEM>@
+;
+; ================= PRD -- EVENT PROCESS PARAGRAPH ==================
+;
+@$EVENT$@
+@#DEF_SETANSI#@ @"EVENT"@
+       @+_OBJ_ATR_NAME+@-CELL-OLD-VALUE.
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              Inquire @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                   (@+_OBJ_ATR_NAME+@-WCursor-Y, 
+                    @+_OBJ_ATR_NAME+@-WCursor-X)
+                   RECORD-DATA in @+_OBJ_ATR_NAME+@-BUF-OLD@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           .
+
+       @+_OBJ_ATR_NAME+@-RESTORE-RECORD.
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY  @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                   (@+_OBJ_ATR_NAME+@-OLD-WCursor-Y, 
+                    @+_OBJ_ATR_NAME+@-OLD-WCursor-X)
+                   RECORD-DATA IS @+_OBJ_ATR_NAME+@-BUF-OLD@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           .
+
+       @+_OBJ_ATR_NAME+@-CELL-CONTENT-FREE-CHECK.
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X in @+_OBJ_ATR_NAME+@-WCursor-X, 
+                   Cursor-Y in @+_OBJ_ATR_NAME+@-WCursor-Y
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+             INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                   (@+_OBJ_ATR_NAME+@-WCursor-Y, 
+                    @+_OBJ_ATR_NAME+@-WCursor-X)
+                   Record-DATA IN @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+             EVALUATE @+_OBJ_ATR_NAME+@-WCursor-X
+              @#GET_MEM#@   @"COLUMN-DECIMAL"@
+              @#CLEAR_MEM#@ @"COLUMN-DECIMAL"@
+             END-EVALUATE
+             MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                   (@+_OBJ_ATR_NAME+@-WCursor-Y, 
+                    @+_OBJ_ATR_NAME+@-WCursor-X)
+                   Record-DATA IS @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+             IF @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@ not = @+_OBJ_ATR_NAME+@-BUF-OLD@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+              SET @+_OBJ_ATR_NAME+@-Record-Update to TRUE
+              @#DEF_IF#@ @+_OBJ_ATR_DISPLAYPOPUPMENU+@
+              CALL "W$MENU" USING WMENU-enable,
+                      @+_OBJ_ATR_NAME+@-Mn-Handle, @!L_EPTVAL_UPDATE!@
+              @#END_IF#@
+             END-IF
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           .
+
+       @+_OBJ_ATR_NAME+@-FIND-TEXT.
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X IN @+_OBJ_ATR_NAME+@-WCursor-X,
+                   Cursor-Y IN @+_OBJ_ATR_NAME+@-WCursor-Y.
+           PERFORM @+_OBJ_ATR_NAME+@-CHANGE-UPDATE
+           IF @+_OBJ_ATR_NAME+@-Cancel
+                 EXIT PARAGRAPH
+           END-IF				 				 
+           MOVE @+_OBJ_ATR_NAME+@-WCursor-X TO 
+                   @+_OBJ_ATR_NAME+@-OLD-WCursor-X
+           MOVE @+_OBJ_ATR_NAME+@-WCursor-Y TO 
+                   @+_OBJ_ATR_NAME+@-OLD-WCursor-Y
+
+           MOVE 0 TO @+_OBJ_ATR_NAME+@-RTN
+           PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL 
+                       TOTEM-IDX1 > @+_OBJ_SYS_LINECOUNTS+@
+              IF TMP-@+_OBJ_ATR_NAME+@-LMTBUF(TOTEM-IDX1) = 
+                   @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+                 MOVE 1 TO @+_OBJ_ATR_NAME+@-RTN
+                 EXIT PERFORM
+              END-IF
+           END-PERFORM
+
+           IF @+_OBJ_ATR_NAME+@-RTN = 1
+      *       the cound cursor position ----
+              INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                      Cursor-X IN @+_OBJ_ATR_NAME+@-WCursor-X,
+                      Cursor-Y IN @+_OBJ_ATR_NAME+@-WCursor-Y
+
+              MOVE 1 TO @+_OBJ_ATR_NAME+@-WCursor-X
+              COMPUTE TOTEM-IDX2 = TOTEM-IDX1 + @!L_NUMHEADINGS!@
+              MOVE TOTEM-IDX2 TO @+_OBJ_ATR_NAME+@-WCursor-Y
+
+              IF @+_OBJ_ATR_NAME+@-Wcursor-Y = 
+                                   @+_OBJ_ATR_NAME+@-OLD-WCursor-Y
+               @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+               @#END_IF#@
+               @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+               @#END_IF#@
+                 @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+                 @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                        Cursor-X = @+_OBJ_ATR_NAME+@-OLD-WCursor-X, 
+                        Cursor-Y = @+_OBJ_ATR_NAME+@-OLD-WCursor-Y, 
+                        Cursor-Color = 0
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                        X = @+_OBJ_ATR_NAME+@-Wcursor-X, 
+                        Y = @+_OBJ_ATR_NAME+@-WCursor-Y, 
+                        Cursor-X = @+_OBJ_ATR_NAME+@-Wcursor-X,
+                        Cursor-Y = @+_OBJ_ATR_NAME+@-WCursor-Y,
+                        ROW-COLOR    = @!L_ROWCOLOR!@,
+                        Cursor-Color = @!L_CURSORCOLOR!@,
+               @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                END-PERFORM
+               @#END_IF#@
+               @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                END-PERFORM
+               @#END_IF#@           
+                 MOVE @+_OBJ_ATR_NAME+@-WCursor-X TO 
+                        @+_OBJ_ATR_NAME+@-OLD-WCursor-X
+             ELSE 
+                PERFORM @+_OBJ_ATR_NAME+@-CHANGE-VERIFY                 
+             END-IF
+           END-IF
+           .
+
+@#DEF_SETANSI#@ @""@
+@$MASTERGRID-CALLBY-CHANGEVERIFY$@
+       @+_OBJ_ATR_NAME+@-Add@!G_MODE!@.
+   @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) #@
+   ; ===================================================================
+   ; If the FD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+           PERFORM @!L_SNAME!@-Buf-To-Fld@!G_MODE!@
+           PERFORM @!G_SCREENNAME!@-VALIDATION-ROUTINE@!G_MODE!@
+           IF NOT TOTEM-CHECK-OK
+               SET @+_OBJ_ATR_NAME+@-Cancel TO True
+               EXIT PARAGRAPH
+           END-IF
+           PERFORM @!L_SNAME!@-DUMMY-ADD@!G_MODE!@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-INITREC
+           PERFORM @!L_SNAME!@-Buf-To-Fld@!G_MODE!@
+           MOVE SPACES TO TOTEM-TRANSACTION-FLAG
+      * write
+      @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           START TRANSACTION
+           IF TRANSACTION-STATUS NOT = 0
+              PERFORM @!G_SCREENNAME!@-ERR-CHECKING@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Write
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-INS"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-INS"@
+              PERFORM @!L_SNAME!@-RESUMMARY-INS@!G_MODE!@
+              PERFORM @!L_SNAME!@-DUMMY-UPDATE-INIT@!G_MODE!@
+              IF TOTEM-TRANSACTION-FLAG = SPACES
+                 MOVE "301" TO TOTEM-MSG-ID
+                 COMMIT TRANSACTION
+              ELSE
+                 PERFORM MESSAGE-FOR-FILEERROR
+                 ROLLBACK TRANSACTION
+              END-IF
+              PERFORM @!L_SNAME!@-IUD-Display@!G_MODE!@
+           ELSE
+              SET @+_OBJ_ATR_NAME+@-Cancel TO True
+              PERFORM MESSAGE-FOR-FILEERROR
+              ROLLBACK TRANSACTION
+           END-IF
+      @#ELSE#@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Write
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-INS"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-INS"@
+              PERFORM @!L_SNAME!@-RESUMMARY-INS@!G_MODE!@
+              PERFORM @!L_SNAME!@-DUMMY-UPDATE-INIT@!G_MODE!@
+              MOVE "301" TO TOTEM-MSG-ID
+              PERFORM @!L_SNAME!@-IUD-Display@!G_MODE!@
+           ELSE
+              SET @+_OBJ_ATR_NAME+@-Cancel TO True
+           END-IF
+      @#END_IF#@
+; Limitation: Can't show message box in MasterGridPage
+;      @#DEF_IF#@ @+_OBJ_ATR_DISPLAYMESSAGEBOX+@
+;           PERFORM @!L_SNAME!@-ERR-CHECKING@!G_MODE!@
+;      @#END_IF#@
+   @#END_IF#@
+           .
+     
+       @+_OBJ_ATR_NAME+@-Update@!G_MODE!@.
+   @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) #@
+   ; ===================================================================
+   ; If the FD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+           PERFORM @!L_SNAME!@-Buf-To-Fld@!G_MODE!@
+           PERFORM @!G_SCREENNAME!@-VALIDATION-ROUTINE@!G_MODE!@
+           IF NOT TOTEM-CHECK-OK
+               SET @+_OBJ_ATR_NAME+@-Cancel TO True
+               EXIT PARAGRAPH
+           END-IF
+           PERFORM @!L_SNAME!@-DUMMY-UPDATE@!G_MODE!@
+           PERFORM @!L_SNAME!@-Buf-To-Fld@!G_MODE!@
+           MOVE SPACES TO TOTEM-TRANSACTION-FLAG
+      * write
+      @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           START TRANSACTION
+           IF TRANSACTION-STATUS NOT = 0
+              PERFORM @!G_SCREENNAME!@-ERR-CHECKING@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Rewrite
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-UPD"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-UPD"@
+              PERFORM @!L_SNAME!@-RESUMMARY-DEL@!G_MODE!@
+              PERFORM @!L_SNAME!@-DUMMY-UPDATE-INIT@!G_MODE!@
+              IF TOTEM-TRANSACTION-FLAG = SPACES
+                 MOVE "302" TO TOTEM-MSG-ID
+                 COMMIT TRANSACTION
+              ELSE
+                 PERFORM MESSAGE-FOR-FILEERROR
+                 ROLLBACK TRANSACTION
+              END-IF
+              PERFORM @!L_SNAME!@-IUD-Display@!G_MODE!@
+           ELSE
+              SET @+_OBJ_ATR_NAME+@-Cancel TO True
+              PERFORM MESSAGE-FOR-FILEERROR
+              ROLLBACK TRANSACTION
+           END-IF
+      @#ELSE#@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Rewrite
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-UPD"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-UPD"@
+              PERFORM @!L_SNAME!@-RESUMMARY-DEL@!G_MODE!@
+              PERFORM @!L_SNAME!@-DUMMY-UPDATE-INIT@!G_MODE!@
+              MOVE "302" TO TOTEM-MSG-ID
+              PERFORM @!L_SNAME!@-IUD-Display@!G_MODE!@
+           ELSE
+              SET @+_OBJ_ATR_NAME+@-Cancel TO True
+           END-IF
+      @#END_IF#@
+; Limitation: Can't show message box in MasterGridPage
+;      @#DEF_IF#@ @+_OBJ_ATR_DISPLAYMESSAGEBOX+@
+;           PERFORM @!L_SNAME!@-ERR-CHECKING@!G_MODE!@
+;      @#END_IF#@
+   @#END_IF#@
+           .
+
+       @+_OBJ_ATR_NAME+@-Delete@!G_MODE!@.
+   @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) #@
+   ; ===================================================================
+   ; If the FD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+; Limitation: Can't show message box in MasterGridPage
+;	  @#DEF_IF#@ @+_OBJ_ATR_MODIFYAUTOMATION+@
+;           MOVE "203" TO TOTEM-MSG-ID
+;           PERFORM MESSAGE-BOX-DISPLAY
+;           IF TOTEM-MSG-RETURN-VALUE NOT = 1
+;              EXIT PARAGRAPH 
+;          END-IF
+;      @#END_IF#@
+           MOVE SPACES TO TOTEM-TRANSACTION-FLAG
+           PERFORM @!L_SNAME!@-DUMMY-DELETE@!G_MODE!@
+      * delete
+           PERFORM @!L_SNAME!@-Buf-To-Fld@!G_MODE!@
+      @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           START TRANSACTION
+           IF TRANSACTION-STATUS NOT = 0
+              PERFORM @!G_SCREENNAME!@-ERR-CHECKING@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Delete
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-DEL"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-DEL"@
+              ; It's in @!L_SNAME!@-CLEAR paragraph
+              PERFORM @!L_SNAME!@-CLEAR@!G_MODE!@
+              PERFORM @!L_SNAME!@-DUMMY-DELETE-INIT@!G_MODE!@
+              IF TOTEM-TRANSACTION-FLAG = SPACES
+                 MOVE "303" TO TOTEM-MSG-ID
+                 COMMIT TRANSACTION
+                 PERFORM @!L_SNAME!@-CLEAR@!G_MODE!@
+                 PERFORM @!L_SNAME!@-DUMMY-DELETE-INIT@!G_MODE!@
+              ELSE
+                 PERFORM MESSAGE-FOR-FILEERROR
+                 ROLLBACK TRANSACTION
+              END-IF
+           ELSE
+              PERFORM MESSAGE-FOR-FILEERROR
+              ROLLBACK TRANSACTION
+           END-IF
+      @#ELSE#@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Rec-Delete
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"FDSL-REFERENCE-DEL"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-DEL"@
+              ; It's in @!L_SNAME!@-CLEAR paragraph
+              PERFORM @!L_SNAME!@-CLEAR@!G_MODE!@
+              PERFORM @!L_SNAME!@-DUMMY-DELETE-INIT@!G_MODE!@
+              MOVE "303" TO TOTEM-MSG-ID
+           END-IF
+      @#END_IF#@
+; Limitation: Can't show message box in MasterGridPage
+;      @#DEF_IF#@ @+_OBJ_ATR_DISPLAYMESSAGEBOX+@
+;           PERFORM @!G_SCREENNAME!@-ERR-CHECKING@!G_MODE!@
+;      @#END_IF#@
+   @#END_IF#@
+           .
+
+       @+_OBJ_ATR_NAME+@-Change.
+             IF Event-Data-2 = @+_OBJ_ATR_NAME+@-OLD-WCursor-Y
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                       X = @+_OBJ_ATR_NAME+@-OLD-WCursor-X, 
+                       Y = @+_OBJ_ATR_NAME+@-OLD-WCursor-Y, 
+                       Cursor-Color = 0
+                MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                       X = Event-Data-1, 
+                       Y = Event-Data-2, 
+                       Cursor-X     = Event-Data-1,
+                       Cursor-Y     = Event-Data-2,
+                       ROW-COLOR    = @!L_ROWCOLOR!@,
+                       Cursor-Color = @!L_CURSORCOLOR!@           
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              END-PERFORM
+           @#END_IF#@           
+                MOVE Event-Data-1 TO @+_OBJ_ATR_NAME+@-OLD-WCursor-X
+                PERFORM @+_OBJ_ATR_NAME+@-CELL-OLD-VALUE
+             ELSE
+                MOVE @+_OBJ_ATR_NAME+@-OLD-WCursor-X TO 
+                     @+_OBJ_ATR_NAME+@-WCursor-X
+                MOVE @+_OBJ_ATR_NAME+@-OLD-WCursor-Y TO 
+                     @+_OBJ_ATR_NAME+@-WCursor-Y
+                PERFORM @+_OBJ_ATR_NAME+@-CHANGE-UPDATE
+                IF @+_OBJ_ATR_NAME+@-Cancel
+                     EXIT PARAGRAPH
+                END-IF				 				 
+                MOVE Event-Data-1 TO @+_OBJ_ATR_NAME+@-WCursor-X
+                MOVE Event-Data-2 TO @+_OBJ_ATR_NAME+@-WCursor-Y
+                PERFORM @+_OBJ_ATR_NAME+@-CHANGE-VERIFY
+      *
+             @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+                MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+    		 @#END_IF#@
+               @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+               @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW = TOTEM-IDX1
+                IF @+_OBJ_ATR_NAME+@-WCursor-Y <= TOTEM-IDX1 AND
+                       NOT @+_OBJ_ATR_NAME+@-Record-Update
+                   PERFORM @!L_SNAME!@-Buf-To-Fld
+                @#DEF_IF#@ @+_OBJ_ATR_SYNCHRONIZATION+@
+      *             PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read 
+; LK6B0473                   PERFORM @!L_SNAME!@-DUMMY-CURR@!G_MODE!@
+                   PERFORM @!L_SNAME!@-IUD-Display
+                @#END_IF#@
+                ELSE
+                   PERFORM @!L_SNAME!@-ALLGRID-RESET@!G_MODE!@
+                END-IF
+      *
+             END-IF
+           .
+
+       @+_OBJ_ATR_NAME+@-Change-Update.
+           MOVE 1 TO @+_OBJ_ATR_NAME+@-CHANGE-OLD-VALUE
+           IF @+_OBJ_ATR_NAME+@-Record-Update 
+; Limitation: Can't show message box in MasterGridPage
+;	  @#DEF_IF#@ @+_OBJ_ATR_MODIFYAUTOMATION+@
+                 SET @+_OBJ_ATR_NAME+@-Record-Update to False
+                 @#DEF_IF#@ @+_OBJ_ATR_DISPLAYPOPUPMENU+@
+                 CALL "W$MENU" USING WMENU-disable,
+                      @+_OBJ_ATR_NAME+@-Mn-Handle, @!L_EPTVAL_UPDATE!@
+                 @#END_IF#@
+                 SET @+_OBJ_ATR_NAME+@-Cancel TO False
+                 MOVE @+_OBJ_ATR_NAME+@-WCursor-Y TO TOTEM-IDX1
+                 COMPUTE TOTEM-IDX1 = TOTEM-IDX1 - 1
+; ???
+;                 MOVE @+_OBJ_ATR_NAME+@-BUF TO TMP-@+_OBJ_ATR_NAME+@-LMTBUF(TOTEM-IDX1)
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                    INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                        (@+_OBJ_ATR_NAME+@-WCursor-Y, 
+                         @+_OBJ_ATR_NAME+@-WCursor-X)
+                         Record-DATA in @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 END-PERFORM
+           @#END_IF#@           
+                 MOVE @!L_FRMIDX!@ TO TOTEM-Frame-Index
+                 PERFORM @+_OBJ_ATR_NAME+@-Update@!G_MODE!@
+
+                 IF @+_OBJ_ATR_NAME+@-Cancel
+                      MOVE Event-Action-Fail TO Event-Action
+                      MOVE 0 TO @+_OBJ_ATR_NAME+@-Change-Old-Value
+                      SET @+_OBJ_ATR_NAME+@-Record-Update TO True
+                      @#DEF_IF#@ @+_OBJ_ATR_DISPLAYPOPUPMENU+@
+                      CALL "W$MENU" USING WMENU-enable,
+                          @+_OBJ_ATR_NAME+@-Mn-Handle, @!L_EPTVAL_UPDATE!@
+                      @#END_IF#@
+                 END-IF				 				 
+; Limitation... maybe it'll be fixed some day.
+;	  @#ELSE#@
+;              DISPLAY MESSAGE BOX 
+;                 "@!S_MSG501!@"
+;                 TITLE   TOTEM-MSG-TITLE
+;                 Type    MB-Yes-No-Cancel     ICON    is MB-WARNING-ICON
+;                 DEFAULT is MB-No
+;                 GIVING  @+_OBJ_ATR_NAME+@-MSG-RESULT
+;              IF @+_OBJ_ATR_NAME+@-MSG-RESULT = MB-No
+;                 SET @+_OBJ_ATR_NAME+@-Cancel TO False
+;                 SET @+_OBJ_ATR_NAME+@-Record-Update to False
+;                 PERFORM @+_OBJ_ATR_NAME+@-Restore-Record
+;              ELSE IF @+_OBJ_ATR_NAME+@-MSG-RESULT = MB-Yes
+;                 SET @+_OBJ_ATR_NAME+@-Record-Update to False
+;                 SET @+_OBJ_ATR_NAME+@-Cancel TO False
+;                 MOVE @+_OBJ_ATR_NAME+@-WCursor-Y TO TOTEM-IDX1
+;                 COMPUTE TOTEM-IDX1 = TOTEM-IDX1 - 1
+;                 MOVE @+_OBJ_ATR_NAME+@-BUF TO TMP-@+_OBJ_ATR_NAME+@-LMTBUF(TOTEM-IDX1)
+;                 MOVE @!L_FRMIDX!@ TO TOTEM-Frame-Index
+;                 PERFORM @+_OBJ_ATR_NAME+@-Update@!G_MODE!@
+;
+;                 IF @+_OBJ_ATR_NAME+@-Cancel 
+;                      MOVE Event-Action-Fail TO Event-Action
+;                      MOVE 0 TO @+_OBJ_ATR_NAME+@-Change-Old-Value
+;                      SET @+_OBJ_ATR_NAME+@-Record-Update TO True
+;                 END-IF				 				 
+;              ELSE 
+;                 SET @+_OBJ_ATR_NAME+@-Cancel TO True
+;                 MOVE Event-Action-Fail TO Event-Action
+;				 MOVE 0 TO @+_OBJ_ATR_NAME+@-CHANGE-OLD-VALUE
+;                 MOVE @+_OBJ_ATR_NAME+@-OLD-WCursor-X TO 
+;                        @+_OBJ_ATR_NAME+@-WCursor-X
+;                 MOVE @+_OBJ_ATR_NAME+@-OLD-WCursor-Y TO 
+;                        @+_OBJ_ATR_NAME+@-WCursor-Y
+;                 EXIT PARAGRAPH
+;              END-IF
+;      @#END_IF#@	  
+           END-IF
+           .
+
+       @+_OBJ_ATR_NAME+@-Change-Verify.
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@,
+                  X = @+_OBJ_ATR_NAME+@-OLD-WCursor-X,
+                  Y = @+_OBJ_ATR_NAME+@-OLD-WCursor-Y, 
+                  ROW-COLOR    = 0,
+                  Cursor-Color = 0
+              MOVE @!L_SYSID!@ to Event-Control-ID
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@,, 
+                  X = @+_OBJ_ATR_NAME+@-WCursor-X,
+                  Y = @+_OBJ_ATR_NAME+@-WCursor-Y,
+                  CURSOR-X = @+_OBJ_ATR_NAME+@-WCursor-X,
+                  CURSOR-Y = @+_OBJ_ATR_NAME+@-WCursor-Y,
+                  ROW-COLOR = @!L_ROWCOLOR!@,
+                  Cursor-Color = @!L_CURSORCOLOR!@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           IF @+_OBJ_ATR_NAME+@-CHANGE-OLD-VALUE = 1
+                  PERFORM @+_OBJ_ATR_NAME+@-CELL-OLD-VALUE
+           END-IF
+           MOVE @+_OBJ_ATR_NAME+@-WCursor-X TO
+                  @+_OBJ_ATR_NAME+@-OLD-WCursor-X
+           MOVE @+_OBJ_ATR_NAME+@-WCursor-Y TO
+                  @+_OBJ_ATR_NAME+@-OLD-WCursor-Y
+           PERFORM @+_OBJ_ATR_NAME+@-GET-HIDDENKEY-RECORD
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                        (@+_OBJ_ATR_NAME+@-WCursor-Y, 
+                         @+_OBJ_ATR_NAME+@-WCursor-X)
+                   Record-DATA in @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+;           PERFORM @!L_SNAME!@-NAVI-FOR-MASTERGRID
+           .
+
+@$MASTERGRID-CALLBY-FIRST$@
+      * @+_OBJ_ATR_NAME+@
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X IN @+_OBJ_ATR_NAME+@-WCursor-X,
+                   Cursor-Y IN @+_OBJ_ATR_NAME+@-WCursor-Y
+           PERFORM @+_OBJ_ATR_NAME+@-CHANGE-UPDATE
+           IF @+_OBJ_ATR_NAME+@-Cancel
+                 EXIT PARAGRAPH
+           END-IF				 				 
+           MOVE @!L_STARTROW!@ TO @+_OBJ_ATR_NAME+@-WCursor-Y
+           PERFORM @+_OBJ_ATR_NAME+@-Content
+           PERFORM @+_OBJ_ATR_NAME+@-CHANGE-VERIFY
+@$MASTERGRID-CALLBY-PREVIOUS$@
+      * @+_OBJ_ATR_NAME+@
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X IN @+_OBJ_ATR_NAME+@-WCursor-X,
+                   Cursor-Y IN @+_OBJ_ATR_NAME+@-WCursor-Y
+           PERFORM @+_OBJ_ATR_NAME+@-CHANGE-UPDATE
+           IF @+_OBJ_ATR_NAME+@-Cancel
+                 EXIT PARAGRAPH
+           END-IF				 				 
+           IF @+_OBJ_ATR_NAME+@-WCursor-Y > @!L_STARTROW!@
+              SUBTRACT 1 FROM @+_OBJ_ATR_NAME+@-WCursor-Y
+              PERFORM @+_OBJ_ATR_NAME+@-CHANGE-VERIFY
+           ELSE IF @+_OBJ_ATR_NAME+@-WCursor-Y = @!L_STARTROW!@
+              COMPUTE @+_OBJ_ATR_NAME+@-Old-WCursor-Y = 
+                               @+_OBJ_ATR_NAME+@-WCursor-Y + 1
+              PERFORM @+_OBJ_ATR_NAME+@-GET-PREV-REC@!G_MODE!@
+           END-IF.
+@$MASTERGRID-CALLBY-NEXT$@
+      * @+_OBJ_ATR_NAME+@
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X IN @+_OBJ_ATR_NAME+@-WCursor-X,
+                   Cursor-Y IN @+_OBJ_ATR_NAME+@-WCursor-Y
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Last-Row in @+_OBJ_ATR_NAME+@-WK-Last-Row.
+           PERFORM @+_OBJ_ATR_NAME+@-CHANGE-UPDATE
+           IF @+_OBJ_ATR_NAME+@-Cancel
+                 EXIT PARAGRAPH
+           END-IF				 				 
+           IF @+_OBJ_ATR_NAME+@-WCursor-Y < @+_OBJ_ATR_NAME+@-WK-Last-Row
+              ADD     1 TO @+_OBJ_ATR_NAME+@-WCursor-Y
+              PERFORM @+_OBJ_ATR_NAME+@-CHANGE-VERIFY
+           ELSE IF @+_OBJ_ATR_NAME+@-WCursor-Y = @+_OBJ_ATR_NAME+@-WK-Last-Row
+              COMPUTE @+_OBJ_ATR_NAME+@-Old-WCursor-Y = @+_OBJ_ATR_NAME+@-WCursor-Y - 1
+              PERFORM @+_OBJ_ATR_NAME+@-GET-NEXT-REC@!G_MODE!@
+           END-IF.
+@$MASTERGRID-CALLBY-LAST$@
+      * @+_OBJ_ATR_NAME+@
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X IN @+_OBJ_ATR_NAME+@-WCursor-X,
+                   Cursor-Y IN @+_OBJ_ATR_NAME+@-WCursor-Y
+           PERFORM @+_OBJ_ATR_NAME+@-CHANGE-UPDATE
+           IF @+_OBJ_ATR_NAME+@-Cancel
+                 EXIT PARAGRAPH
+           END-IF				 				 
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-INITEND
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START-NOTGREATER
+           PERFORM @+_OBJ_SYS_LINECOUNTS+@ TIMES
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Prev
+              IF NOT @+_FDSL_SYS_FILESTATUS88+@
+                 EXIT PERFORM
+              END-IF
+           END-PERFORM
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RESET-GRID  = 1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           PERFORM @+_OBJ_ATR_NAME+@-CellSetting
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, MASS-UPDATE = 1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START
+           MOVE 0 TO @+_OBJ_ATR_NAME+@-COUNT
+           PERFORM @+_OBJ_SYS_LINECOUNTS+@ TIMES
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+              IF @+_FDSL_SYS_FILESTATUS88+@
+                  @#GET_MEM#@   @"FDSL-REFERENCE"@
+                  PERFORM @!G_SCREENNAME!@-Fld-To-Buf@!G_MODE!@
+                  ADD 1 TO @+_OBJ_ATR_NAME+@-COUNT
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                  PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                  PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                  MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                     RECORD-TO-ADD = @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                  INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                          LAST-ROW = @+_OBJ_ATR_NAME+@-Row-Counter
+                  MODIFY  @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                          X = 1, 
+                          Y = @+_OBJ_ATR_NAME+@-Row-Counter
+                          HIDDEN-DATA   = @!L_PKEY!@
+                          LENGTH = @!L_PKEYPICLENGTH!@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 END-PERFORM
+           @#END_IF#@           
+                  MOVE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@ TO 
+                          TMP-@+_OBJ_ATR_NAME+@-LMTBUF(@+_OBJ_ATR_NAME+@-COUNT)
+              ELSE
+                  EXIT PERFORM
+              END-IF
+           END-PERFORM
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, MASS-UPDATE = 0
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Last-Row in @+_OBJ_ATR_NAME+@-WK-Last-Row.
+           MOVE @+_OBJ_ATR_NAME+@-WK-Last-Row TO 
+                   @+_OBJ_ATR_NAME+@-WCursor-Y
+           PERFORM @+_OBJ_ATR_NAME+@-CHANGE-VERIFY
+@$MASTERGRID-CALLBY-CURR$@
+      * @+_OBJ_ATR_NAME+@
+           MOVE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@ TO
+              @+_OBJ_ATR_NAME+@-RECORD-BUF
+           PERFORM @+_OBJ_ATR_NAME+@-FIND-TEXT
+           IF @+_OBJ_ATR_NAME+@-RTN = 0
+            @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+              MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+	   	    @#END_IF#@
+              @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+              @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW = TOTEM-IDX1
+              PERFORM VARYING TOTEM-IDX2 FROM @!L_STARTROW!@ BY 1 
+                    UNTIL TOTEM-IDX2 > TOTEM-IDX1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RECORD-TO-DELETE = @!L_STARTROW!@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 END-PERFORM
+           @#END_IF#@           
+              END-PERFORM
+              MOVE   0 TO @+_OBJ_ATR_NAME+@-COUNT
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, MASS-UPDATE = 1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              END-PERFORM
+           @#END_IF#@           
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read
+              PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+                 OR (@+_FDSL_SYS_FILESTATUS88+@ AND @+_OBJ_ATR_NAME+@-COUNT > @+_OBJ_SYS_LINECOUNTS+@)
+                 @#GET_MEM#@   @"FDSL-REFERENCE"@
+                 @#CLEAR_MEM#@ @"FDSL-REFERENCE"@
+                 PERFORM @!G_SCREENNAME!@-Fld-To-Buf                 
+                 IF @+_OBJ_ATR_NAME+@-COUNT < @+_OBJ_SYS_LINECOUNTS+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+   @#DEF_IF#@ @+_OBJ_ATR_CONDITION+@
+                    IF (@+_OBJ_ATR_CONDITION+@)
+   @#END_IF#@                 
+                       ADD 1 TO @+_OBJ_ATR_NAME+@-COUNT
+                       MODIFY  @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                               RECORD-TO-ADD = @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                       INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                               LAST-ROW = @+_OBJ_ATR_NAME+@-Row-Counter
+                       MODIFY  @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                               X = 1, 
+                               Y = @+_OBJ_ATR_NAME+@-Row-Counter
+                               HIDDEN-DATA   = @!L_PKEY!@
+                               LENGTH = @!L_PKEYPICLENGTH!@
+                       MOVE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@ TO 
+                               TMP-@+_OBJ_ATR_NAME+@-LMTBUF(@+_OBJ_ATR_NAME+@-COUNT)
+   @#DEF_IF#@ @+_OBJ_ATR_CONDITION+@                                                
+                    END-IF
+   @#END_IF#@ 
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 END-PERFORM
+           @#END_IF#@           
+                 ELSE
+                    EXIT PERFORM
+                 END-IF
+   @#DEF_IF#@ @!L_PKEYSPLIT!@
+                 PERFORM @+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_SLPKEY+@-SPLITBUF-TOFLD
+   @#END_IF#@
+                 PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+              END-PERFORM
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, MASS-UPDATE = 0
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              END-PERFORM
+           @#END_IF#@           
+              IF @+_OBJ_ATR_NAME+@-COUNT <= @+_OBJ_SYS_LINECOUNTS+@
+                 PERFORM @!L_SNAME!@-DUMMY-LAST
+              END-IF
+              MOVE @+_OBJ_ATR_NAME+@-RECORD-BUF TO
+                 @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+              PERFORM @+_OBJ_ATR_NAME+@-FIND-TEXT
+              PERFORM @!L_SNAME!@-FLD-TO-BUF
+           END-IF
+;           PERFORM @!L_SNAME!@-NAVI-FOR-MASTERGRID@!G_MODE!@
+@$MASTERGRID-CALLBY-ADD$@
+      * @+_OBJ_ATR_NAME+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              INITIALIZE @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+               REPLACING NUMERIC       DATA BY ZEROS
+                         ALPHANUMERIC  DATA BY SPACES
+                         ALPHABETIC    DATA BY SPACES
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X IN @+_OBJ_ATR_NAME+@-WCursor-X,
+                   Cursor-Y IN @+_OBJ_ATR_NAME+@-WCursor-Y
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Last-Row in @+_OBJ_ATR_NAME+@-WCursor-Y.
+           Inquire @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(@+_OBJ_ATR_NAME+@-WCursor-Y, 1 ), 
+                   HIDDEN-DATA IN @!L_PKEY!@
+     @#DEF_IF#@ @!L_PKEYSPLIT!@
+           PERFORM @+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_SLPKEY+@-SPLITBUF-TOFLD
+     @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              Inquire @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(@+_OBJ_ATR_NAME+@-WCursor-Y, 1 ),
+                   RECORD-DATA IN @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+              MODIFY  @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X = 1,
+                   Cursor-Y = @+_OBJ_ATR_NAME+@-WCursor-Y
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+;           PERFORM @!L_SNAME!@-NAVI-FOR-MASTERGRID@!G_MODE!@
+@$MASTERGRID-CALLBY-UPDATE$@
+      * @+_OBJ_ATR_NAME+@
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X in @+_OBJ_ATR_NAME+@-WCursor-X,
+                   Cursor-Y in @+_OBJ_ATR_NAME+@-WCursor-Y,
+           Inquire @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(@+_OBJ_ATR_NAME+@-WCursor-Y, 1 ), 
+                   HIDDEN-DATA IN @!L_PKEY!@
+     @#DEF_IF#@ @!L_PKEYSPLIT!@
+           PERFORM @+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_SLPKEY+@-SPLITBUF-TOFLD
+     @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                   (@+_OBJ_ATR_NAME+@-WCursor-Y, 1 ),
+                   RECORD-DATA IN @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+     @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+           IF @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-LOCK
+              READ @+_FDSL_SYS_FDNAME+@ WITH LOCK KEY @+_FDSL_SYS_SLPKEY+@
+           ELSE
+              READ @+_FDSL_SYS_FDNAME+@ WITH NO LOCK KEY @+_FDSL_SYS_SLPKEY+@
+           END-IF
+     @#ELSE#@
+           IF @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-LOCK
+              READ @+_FDSL_SYS_FDNAME+@ WITH LOCK
+           ELSE
+              READ @+_FDSL_SYS_FDNAME+@ WITH NO LOCK
+           END-IF
+     @#END_IF#@
+     @#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+           PERFORM @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-MERGE-SPLITBUF
+     @#END_IF#@
+;           PERFORM @!L_SNAME!@-NAVI-FOR-MASTERGRID@!G_MODE!@
+@$MASTERGRID-CALLBY-UPDATE-INIT$@
+      * @+_OBJ_ATR_NAME+@
+           SET @+_OBJ_ATR_NAME+@-Record-Update TO FALSE
+           PERFORM @+_OBJ_ATR_NAME+@-CELL-OLD-VALUE 
+@$MASTERGRID-CALLBY-DELETE$@
+      * @+_OBJ_ATR_NAME+@
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X in @+_OBJ_ATR_NAME+@-WCursor-X,
+                   Cursor-Y in @+_OBJ_ATR_NAME+@-WCursor-Y,
+           Inquire @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(@+_OBJ_ATR_NAME+@-WCursor-Y, 1 ), 
+                   HIDDEN-DATA IN @!L_PKEY!@
+     @#DEF_IF#@ @!L_PKEYSPLIT!@
+           PERFORM @+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_SLPKEY+@-SPLITBUF-TOFLD
+     @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                   (@+_OBJ_ATR_NAME+@-WCursor-Y, 1 ),
+                   RECORD-DATA IN @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+;           PERFORM @!L_SNAME!@-NAVI-FOR-MASTERGRID@!G_MODE!@
+@$MASTERGRID-CALLBY-DELETE-INIT$@
+      * @+_OBJ_ATR_NAME+@
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                   Cursor-X in @+_OBJ_ATR_NAME+@-DEL-X,
+                   Cursor-Y in @+_OBJ_ATR_NAME+@-DEL-Y,
+           SET @+_OBJ_ATR_NAME+@-Record-Update TO FALSE
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW = TOTEM-IDX1
+           PERFORM VARYING TOTEM-IDX2 FROM @!L_STARTROW!@ BY 1 
+                 UNTIL TOTEM-IDX2 > TOTEM-IDX1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+             PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+             PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RECORD-TO-DELETE = @!L_STARTROW!@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+             END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+             END-PERFORM
+           @#END_IF#@           
+           END-PERFORM
+           IF TOTEM-IDX1 > @!L_STARTROW!@
+              IF @+_OBJ_ATR_NAME+@-WCursor-Y = @!L_STARTROW!@
+                 MOVE TMP-@+_OBJ_ATR_NAME+@-LMTBUF(2) TO 
+                          @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+              ELSE
+                 MOVE TMP-@+_OBJ_ATR_NAME+@-LMTBUF(1) TO 
+                          @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+              END-IF
+              PERFORM @+_OBJ_ATR_NAME+@-BUFFER-CLEAR
+              PERFORM @!L_SNAME!@-DUMMY-CURR
+           END-IF
+           MOVE @+_OBJ_ATR_NAME+@-DEL-X TO @+_OBJ_ATR_NAME+@-WCursor-X
+           MOVE @+_OBJ_ATR_NAME+@-DEL-Y TO @+_OBJ_ATR_NAME+@-WCursor-Y
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW = TOTEM-IDX1
+           IF @+_OBJ_ATR_NAME+@-WCursor-Y > TOTEM-IDX1
+              MOVE TOTEM-IDX1 TO @+_OBJ_ATR_NAME+@-WCursor-Y
+           END-IF
+           PERFORM @+_OBJ_ATR_NAME+@-CHANGE-VERIFY
+      *
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW = TOTEM-IDX1
+                IF @+_OBJ_ATR_NAME+@-WCursor-Y <= TOTEM-IDX1
+                   PERFORM @!L_SNAME!@-Buf-To-Fld
+                   PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read
+                   PERFORM @!L_SNAME!@-IUD-Display
+                END-IF
+
+;
+; =============== PRD -- TO VALIDATION IN BLOCKMODE =================
+;
+@#DEF_IF#@ @!L_EXISTVALID!@
+@$FORM-VALIDATION-HEAD$@
+      * @+_OBJ_ATR_NAME+@'s Validation
+;           SET TOTEM-CHECK-OK TO FALSE
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                    Cursor-X in @+_OBJ_ATR_NAME+@-WCursor-X, 
+                    Cursor-Y in @+_OBJ_ATR_NAME+@-WCursor-Y
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(@+_OBJ_ATR_NAME+@-WCursor-Y, @+_OBJ_ATR_NAME+@-WCursor-X)
+                    Record-DATA in @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           PERFORM @!L_SNAME!@-BUF-TO-FLD
+              @#GET_MEM#@   @"ALL-COL-VALIDATION"@
+              @#CLEAR_MEM#@ @"ALL-COL-VALIDATION"@
+@#END_IF#@
+;
+; =========== PRD -- DB -- FOR VALIDATION'S ENTRY POINT =============
+;
+@$FORM-VALIDATION$@
+       @+_OBJ_ATR_NAME+@-BEFORE-VALIDATION.
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Grid:@+_OBJ_ATR_NAME+@, BeforeValidation>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Grid"@ @"BeforeValidation"@
+      * <TOTEM:END>
+           .
+
+       @+_OBJ_ATR_NAME+@-AFTER-VALIDATION.
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Grid:@+_OBJ_ATR_NAME+@, AfterValidation>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Grid"@ @"AfterValidation"@
+      * <TOTEM:END>
+           .
+
+;
+; Hint property
+@#DEF_IF#@ @+_OBJ_ATR_HINTVARIABLE+@
+@$HINT$@
+           WHEN @!L_SYSID!@ MOVE @+_OBJ_ATR_HINTVARIABLE+@ to TOTEM-HINT-TEXT
+@#ELSE_IF#@ @+_OBJ_ATR_HINT+@
+@$HINT$@
+           WHEN @!L_SYSID!@ MOVE "@+_OBJ_ATR_HINT+@" to TOTEM-HINT-TEXT
+@#END_IF#@
+;
+;
+; ===================================================================
+;   End of @!L_MASTERGRID!@ 
+; ===================================================================
+;
+@#CLEAR_MEM#@ @"FDSL-REFERENCE"@

@@ -1,0 +1,141 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; CodeGen dispatching Controls Generation Rule.  2001/11/02
+;
+; Remarks:
+;  We get different kind of Controls and dispatch to different 
+;  Skeleton to generate it.
+;  And this Skeleton would be called by
+;       Main.Skl       / Frame.Skl      / DB_Frame.Skl
+;       Page.Skl       / Toolbar.Skl
+;
+; ===================================================================
+@#KEEP_IN_MEM#@
+;
+; Dispatch Control Type.
+;
+@#DEF_CASE#@ @+_OBJ_SYS_TYPE+@
+    @#CASE#@ @"Group-Item"@
+         @%Group-Item.Skl%@
+    @#CASE#@ @"Label"@
+         @%Label.Skl%@
+    @#CASE#@ @"Push-Button"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%Push_Button.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Entry-Field"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%Entry_Field.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Check-Box"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%Check_Box.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Radio-Button"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%Radio_Box.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Bitmap"@
+         @%Bitmap.Skl%@
+    @#CASE#@ @"Menu"@
+         @%Menu.Skl%@
+    @#CASE#@ @"ToolBar"@
+         @%ToolBar.Skl%@
+    @#CASE#@ @"Bar"@
+         @%Bar.Skl%@
+    @#CASE#@ @"Tab-Control"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%Tab.Skl%@
+    @#CASE#@ @"Tree-View"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%Tree.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Grid"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%Grid.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Frame"@
+         @%Frame.Skl%@
+    @#CASE#@ @"Scroll-Bar"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%ScrollBar.Skl%@
+    @#CASE#@ @"Combo-Box"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%ComboBox.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"List-Box"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%ListBox.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Web-Browser"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%WebBrowser.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Status-Bar"@
+         @%StatusBar.Skl%@
+;
+;   DATA CONTROL
+;
+    @#CASE#@ @"Data.Label"@
+         @%DB_Label.Skl%@
+    @#CASE#@ @"Data.Entry-Field"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%DB_Entry_Field.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Data.Check-Box"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%DB_Check_Box.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Data.Radio-Button"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%DB_Radio_Box.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Data.Combo-Box"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%DB_ComboBox.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Data.List-Box"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+      @#DEF_IF#@ @+_OBJ_ATR_LIMITED+@
+         ; It's Limited List Box.
+         @%DB_ListBoxPage.Skl%@
+      @#ELSE#@
+         ; It's Unlimited List Box.
+         @%DB_ListBox.Skl%@
+      @#END_IF#@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Data.Grid"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%DB_Grid.Skl%@
+		 @#DEF_ADD#@ @!G_SYSID!@ @+_OBJ_SYS_OCCURS+@
+    @#CASE#@ @"Data.Occurs"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @%DB_Occurs.Skl%@
+    @#CASE#@ @"Data.Navigator"@
+         @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @<_SET_DATASET_MASTERFDSL>@
+         @%Navigator.Skl%@
+    @#CASE#@ @"Data.Frame"@
+         @<_PUSH_MEM>@
+         @%DB_Frame.Skl%@
+         @<_POP_MEM>@
+    @#CASE#@ @"Data.Image"@
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_IMAGEENTRYFIELD+@ OR @+_OBJ_SYS_IMAGEPUSHBUTTON+@ #@
+            @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"YES"@
+         @#END_IF#@
+         @%DB_Bitmap.Skl%@
+    @#CASE#@ @"Data.Date-Time"@
+         @%DB_DateTime.Skl%@
+    @#CASE#@ @"Data.Summary"@
+         @%DB_Summary.Skl%@
+    @#CASE#@ @"Data.Table"@
+         @%DB_Table.Skl%@
+    @#CASE#@ @"Data.ZoomProgram"@
+         @%DB_ZoomProgram.Skl%@
+;
+; ActiveX
+;
+    @#CASE#@ @"OCX.ACTIVEX"@
+         @%ActiveX.Skl%@
+@#END_CASE#@
+;

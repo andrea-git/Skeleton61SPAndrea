@@ -1,0 +1,139 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Event Procedure Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+; ===================================================================
+;
+; ======================= PRD -- EVENT PROCESS ======================
+;
+; ===================================================================
+;   EVENT
+; ===================================================================
+;
+   @#DEF_SET#@ @!L_PREDOIT!@ @""@
+   @#DEF_SET#@ @!L_DOIT!@    @""@
+   @#DEF_SET#@ @!L_OTHER!@   @""@
+   @#DEF_IF#@ @+_OBJ_EVT_PROCEDURE+@
+       @#DEF_SET#@ @!L_EVENT!@ @+_OBJ_EVT_PROCEDURE+@
+   @#ELSE#@
+       @#DEF_SET#@ @!L_EVENT!@ @"@+_OBJ_ATR_NAME+@-Event@!G_MODE!@"@
+   @#END_IF#@
+   ;
+   @#DEF_IF#@ @+_OBJ_EVT_PROCEDURE+@
+	 @#DEF_FIND#@ @!L_FIND!@ @!G_ALREADYDEFCODE!@ @"@+_OBJ_EVT_PROCEDURE+@."@
+   @#ELSE#@
+     @#DEF_SET#@ @!L_FIND!@ @""@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: NOT @!L_FIND!@ #@
+     @#DEF_SETPARA#@ @"1"@ @!L_EVENT!@
+     @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDEPARAGRAPH+@) AND (NOT @+_SYS_CHECK_EXISTPARAGRAPH+@) #@
+        @#DEF_SETMEM#@ @!L_PREDOIT!@ @"EVENT-PRO-HEAD-@!L_EVENT!@"@
+        @#DEF_SETMEM#@ @!L_DOIT!@    @"EVENT-PRO-@!L_EVENT!@"@
+        @#DEF_SETMEM#@ @!L_OTHER!@   @"EVENT-OTHER-@!L_EVENT!@"@
+     @#ELSE#@
+	    @#DEF_SET#@ @!L_FIND!@ @"YES"@
+     @#END_IF#@
+   @#END_IF#@
+   ;
+   @#DEF_IF#@ @#EXP: ( NOT @!L_FIND!@ ) AND (@!L_DOIT!@ OR @!L_PREDOIT!@ OR @!L_OTHER!@ OR @+_OBJ_EVT_PROCEDURE+@) #@
+     @#DEF_IF#@ @+_OBJ_EVT_PROCEDURE+@
+       @#DEF_APPEND#@ @!G_ALREADYDEFCODE!@ @"@+_OBJ_EVT_PROCEDURE+@."@
+     @#END_IF#@
+@$EVENT$@
+       @!L_EVENT!@.
+           @#GET_MEM#@   @"EVENT-PRO-HEAD-@!L_EVENT!@"@
+           @#CLEAR_MEM#@ @"EVENT-PRO-HEAD-@!L_EVENT!@"@
+      @#DEF_IF#@ @!L_DOIT!@
+           EVALUATE Event-Type ALSO Event-Control-Id ALSO
+                                    Event-Window-Handle
+              @#GET_MEM#@   @"EVENT-PRO-@!L_EVENT!@"@
+              @#CLEAR_MEM#@ @"EVENT-PRO-@!L_EVENT!@"@
+         @#DEF_IF#@ @!L_OTHER!@
+      * OTHER
+           WHEN OTHER
+              EVALUATE Event-Control-Id ALSO
+                                    Event-Window-Handle
+              @#GET_MEM#@   @"EVENT-OTHER-@!L_EVENT!@"@
+              @#CLEAR_MEM#@ @"EVENT-OTHER-@!L_EVENT!@"@
+              END-EVALUATE
+      *
+         @#END_IF#@
+           END-EVALUATE
+      @#ELSE_IF#@ @!L_OTHER!@
+      * OTHER
+           EVALUATE Event-Control-Id ALSO
+                                    Event-Window-Handle
+              @#GET_MEM#@   @"EVENT-OTHER-@!L_EVENT!@"@
+              @#CLEAR_MEM#@ @"EVENT-OTHER-@!L_EVENT!@"@
+           END-EVALUATE
+      *
+      @#END_IF#@
+           .
+
+   @#END_IF#@
+;
+; ===================================================================
+;   EXP-EVENT
+; ===================================================================
+;
+   @#DEF_SET#@ @!L_DOIT!@  @""@
+   @#DEF_SET#@ @!L_OTHER!@ @""@
+   @#DEF_IF#@ @+_OBJ_EXPEVT_PROCEDURE+@
+       @#DEF_SET#@ @!L_EXPEVENT!@ @+_OBJ_EXPEVT_PROCEDURE+@
+   @#ELSE#@
+       @#DEF_SET#@ @!L_EXPEVENT!@ @"@+_OBJ_ATR_NAME+@-Exception@!G_MODE!@"@
+   @#END_IF#@
+   ;
+   @#DEF_IF#@ @+_OBJ_EXPEVT_PROCEDURE+@
+     @#DEF_FIND#@ @!L_FIND!@ @!G_ALREADYDEFCODE!@ @"@+_OBJ_EXPEVT_PROCEDURE+@."@
+   @#ELSE#@
+     @#DEF_SET#@ @!L_FIND!@ @""@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: NOT @!L_FIND!@ #@
+     @#DEF_SETPARA#@ @"1"@ @!L_EXPEVENT!@
+     @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDEPARAGRAPH+@) AND (NOT @+_SYS_CHECK_EXISTPARAGRAPH+@) #@
+        @#DEF_SETMEM#@ @!L_DOIT!@    @"EXPEVENT-PRO-@!L_EXPEVENT!@"@
+        @#DEF_SETMEM#@ @!L_OTHER!@   @"EXPEVENT-OTHER-@!L_EXPEVENT!@"@
+     @#ELSE#@
+	    @#DEF_SET#@ @!L_FIND!@ @"YES"@
+     @#END_IF#@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: ( NOT @!L_FIND!@ ) AND (@!L_DOIT!@ OR @!L_OTHER!@ OR @+_OBJ_EXPEVT_PROCEDURE+@) #@
+     @#DEF_IF#@ @+_OBJ_EXPEVT_PROCEDURE+@
+       @#DEF_APPEND#@ @!G_ALREADYDEFCODE!@ @"@+_OBJ_EXPEVT_PROCEDURE+@."@
+     @#END_IF#@
+@$EVENT$@
+       @!L_EXPEVENT!@.
+      @#DEF_IF#@ @!L_DOIT!@
+           IF @!G_KEYSTATUS96!@
+              EVALUATE Event-Type ALSO Event-Control-Id ALSO
+                                    Event-Window-Handle
+                 @#GET_MEM#@   @"EXPEVENT-PRO-@!L_EXPEVENT!@"@
+                 @#CLEAR_MEM#@ @"EXPEVENT-PRO-@!L_EXPEVENT!@"@
+              END-EVALUATE
+         @#DEF_IF#@ @!L_OTHER!@
+      * OTHER
+           ELSE
+                 EVALUATE Control-Id
+                 @#GET_MEM#@   @"EXPEVENT-OTHER-@!L_EXPEVENT!@"@
+                 @#CLEAR_MEM#@ @"EXPEVENT-OTHER-@!L_EXPEVENT!@"@
+                 END-EVALUATE
+      *
+         @#END_IF#@
+           END-IF
+      @#ELSE_IF#@ @!L_OTHER!@
+      * OTHER
+;           IF @!G_KEYSTATUS96!@
+              EVALUATE Control-Id
+                 @#GET_MEM#@   @"EXPEVENT-OTHER-@!L_EXPEVENT!@"@
+                 @#CLEAR_MEM#@ @"EXPEVENT-OTHER-@!L_EXPEVENT!@"@
+              END-EVALUATE
+;           END-IF
+      *
+      @#END_IF#@
+           .
+
+   @#END_IF#@
+;

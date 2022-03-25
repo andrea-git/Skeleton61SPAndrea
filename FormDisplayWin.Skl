@@ -1,0 +1,164 @@
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_LINEVARIABLE+@ OR @+_OBJ_ATR_ABSOLUTELINE+@ OR
+                  @+_OBJ_ATR_COLUMNVARIABLE+@ OR @+_OBJ_ATR_ABSOLUTECOLUMN+@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+              SCREEN LINE @+_OBJ_ATR_LINEVARIABLE+@,
+   @#ELSE#@
+              SCREEN LINE @+_OBJ_ATR_ABSOLUTELINE+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+              SCREEN COLUMN @+_OBJ_ATR_COLUMNVARIABLE+@,
+   @#ELSE#@
+              SCREEN COLUMN @+_OBJ_ATR_ABSOLUTECOLUMN+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+              LINES @+_OBJ_ATR_LINESVARIABLE+@,
+@#ELSE#@
+              LINES @+_OBJ_ATR_LINES+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+              SIZE @+_OBJ_ATR_SIZEVARIABLE+@,
+@#ELSE#@
+              SIZE @+_OBJ_ATR_SIZE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CELL+@
+              CELL HEIGHT @+_OBJ_ATR_CELLHEIGHT+@,
+              CELL WIDTH @+_OBJ_ATR_CELLWIDTH+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEIGHTINCELLS+@
+              HEIGHT-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_WIDTHINCELLS+@
+              WIDTH-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ACTION+@
+              ACTION @+_OBJ_ATR_ACTION+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_BINDTOTHREAD+@
+              BIND TO THREAD,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_BOXED+@
+              BOXED,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_COLORVARIABLE+@
+              COLOR @+_OBJ_ATR_COLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_COLOR+@
+              COLOR @+_OBJ_ATR_COLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_SYS_COLORREVERSE+@
+              REVERSE,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_SYS_COLORBLINK+@
+              BLINK,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_SYS_COLORUNDERLINE+@
+              UNDERLINE,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ERASESCREEN+@
+              ERASE,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FONTVARIABLE+@
+              CONTROL FONT @+_OBJ_ATR_FONTVARIABLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CONTROLSUNCROPPED+@
+              CONTROLS-UNCROPPED,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_LABELOFFSET+@ EQUAL @"20"@) #@
+              LABEL-OFFSET @+_OBJ_ATR_LABELOFFSET+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_LINKTOTHREAD+@
+              LINK TO THREAD,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_MAXLINES+@
+              MAX-LINES @+_OBJ_ATR_MAXLINES+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_MAXSIZE+@
+              MAX-SIZE @+_OBJ_ATR_MAXSIZE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_MINLINES+@
+              MIN-LINES @+_OBJ_ATR_MINLINES+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_MINSIZE+@
+              MIN-SIZE @+_OBJ_ATR_MINSIZE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_MODELESS+@
+              MODELESS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_RESIZABLE+@
+              RESIZABLE,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_POPUPMENU+@
+              POP-UP MENU IS @+_OBJ_ATR_POPUPMENU+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_SCROLL+@
+@#ELSE#@
+              NO SCROLL,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_TITLEBAR+@
+              TITLE-BAR,
+  @#DEF_IF#@ @+_OBJ_ATR_TITLEVARIABLE+@
+              TITLE @+_OBJ_ATR_TITLEVARIABLE+@,
+  @#ELSE_IF#@ @#EXP: NOT (@+_OBJ_ATR_TITLE+@ EQUAL @"\"\""@) #@
+              TITLE @+_OBJ_ATR_TITLE+@,
+  @#END_IF#@
+  @#DEF_IF#@ @+_OBJ_ATR_AUTOMINIMIZE+@
+              AUTO-MINIMIZE,
+  @#END_IF#@
+  @#DEF_IF#@ @+_OBJ_ATR_AUTORESIZE+@
+              AUTO-RESIZE,
+  @#END_IF#@
+  @#DEF_IF#@ @+_OBJ_ATR_SYSTEMMENU+@
+              WITH SYSTEM MENU,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_USERGRAY+@
+              USER-GRAY,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEVARIABLE+@
+           VISIBLE @+_OBJ_ATR_VISIBLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"1"@ #@
+           VISIBLE 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"2"@ #@
+           VISIBLE 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_USERWHITE+@
+              USER-WHITE,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_WRAP+@
+@#ELSE#@
+              No WRAP,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ADDITIONALPROPERTIES+@
+    @<_SET_OBJ_ADDITIONALLINE>@
+    @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+       @<_FETCH_NEXT_OBJ_LINEINDEX>@
+              @+_OBJ_SYS_LINEINDEX+@
+    @#END_LOOP#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_EVT_PROCEDURE+@ AND @+_OBJ_EVT_THRUPROCEDURE+@ #@
+              EVENT PROCEDURE @+_OBJ_EVT_PROCEDURE+@ THRU @+_OBJ_EVT_THRUPROCEDURE+@,
+@#ELSE_IF#@ @#EXP: @+_OBJ_EVT_PROCEDURE+@ #@
+              EVENT PROCEDURE @+_OBJ_EVT_PROCEDURE+@,
+@#ELSE#@
+   @#DEF_IF#@ @#EXP: @+_OBJ_SYS_EVENT+@ OR @!G_NEEDEVMSGCLOSE!@ #@
+              EVENT PROCEDURE @+_OBJ_ATR_NAME+@-Event@!G_MODE!@,
+   @#END_IF#@
+@#END_IF#@
+              HANDLE IS @+_OBJ_ATR_HANDLEVARIABLE+@,
+;
+;
+;======================================
+; DARWIN - MODIFICA per entry point
+;======================================
+;
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, AfterCreateWin>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"AfterCreateWin"@
+      * <TOTEM:END>
+;
+;======================================
+; DARWIN - FINE MODIFICA per entry point
+;======================================
+;
+

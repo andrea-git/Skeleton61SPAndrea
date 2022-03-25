@@ -1,0 +1,84 @@
+; CaseMaker TOTEM 6.1
+; Menu Generation Rule
+; 2001/04/19
+;
+; For Menu Detail.
+;
+@<_SET_OBJ_MENUITEM>@
+@#DEF_LOOP#@ @+_MENU_SYS_ITEMNO+@
+   @<_FETCH_NEXT_OBJ_MENUITEM>@
+;
+; for MENU
+;
+@$MENU$@
+   @#DEF_IF#@ @+_MENU_SYS_SUBHANDLE+@
+           CALL "W$MENU" USING WMENU-NEW GIVING @+_MENU_SYS_SUBHANDLE+@
+           IF @+_MENU_SYS_SUBHANDLE+@ = ZERO
+               MOVE ZERO TO @+_MENU_SYS_HANDLE+@
+               GO TO @+_MENU_SYS_NAME+@-EXIT@!G_MODE!@
+           END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_SEPARATOR+@
+           CALL "W$MENU" USING WMENU-ADD, @+_MENU_SYS_HANDLE+@, 0, W-SEPARATOR
+   @#ELSE#@
+           CALL "W$MENU" USING WMENU-ADD, @+_MENU_SYS_HANDLE+@, 0, 
+     ;
+     ; CHECKED + ENABLE + SEPARATOR 
+     ;
+            @+_MENU_SYS_ATTRIBUTE+@, 
+     ;
+     ; LABEL
+     ;
+            @+_OBJ_ATR_LABEL+@,
+     ;
+     ; IF WITH SUBMENU
+     ;
+     @#DEF_IF#@ @+_MENU_SYS_SUBHANDLE+@
+        @#DEF_IF#@ @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+            @+_OBJ_ATR_EXCEPTIONVARIABLE+@,
+        @#ELSE#@
+            @+_OBJ_ATR_EXCEPTIONVALUE+@,
+        @#END_IF#@
+            @+_MENU_SYS_SUBHANDLE+@
+     @#ELSE#@
+        ;
+        ; EXCEPTION VALUE
+        ;
+        @#DEF_IF#@ @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+            @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+        @#ELSE#@
+            @+_OBJ_ATR_EXCEPTIONVALUE+@
+        @#END_IF#@
+     @#END_IF#@
+   @#END_IF#@
+;
+; for Evaluate-Func in PRD.
+;
+   @#DEF_IF#@ @#EXP: (NOT @+_MENU_SYS_SUBHANDLE+@) AND 
+                     (NOT @+_OBJ_ATR_SEPARATOR+@)  AND
+                     @+_OBJ_EVT_LINKTO+@               #@
+@$MENU-EVALUATE$@
+      * @+_OBJ_ATR_NAME+@ - @+_OBJ_ATR_LABEL+@
+      @#DEF_IF#@ @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+              WHEN @+_KEYSTATUS_SYS_ITEMNAME+@ = @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+         @#DEF_SET#@ @!G_CHECK88PARA!@ @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+         @%Check88.Skl%@
+         @#DEF_IF#@ @#EXP: @!G_CHECK88PARA!@ EQUAL @+_OBJ_ATR_EXCEPTIONVARIABLE+@ #@  
+              WHEN @+_KEYSTATUS_SYS_ITEMNAME+@ = @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+         @#ELSE#@
+              WHEN @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+         @#END_IF#@
+      @#ELSE#@
+              WHEN @+_KEYSTATUS_SYS_ITEMNAME+@ = @+_OBJ_ATR_EXCEPTIONVALUE+@
+      @#END_IF#@
+                 PERFORM @+_OBJ_EVT_LINKTO+@
+   @#END_IF#@
+;
+   @#DEF_IF#@ @+_MENU_SYS_SUBHANDLE+@
+      @<_PUSH_MEM_MENU>@
+      @<_SET_OBJ_MENUCHILD>@
+      @%MenuDetail.Skl%@
+      @<_POP_MEM_MENU>@
+   @#END_IF#@
+@#END_LOOP#@
+;

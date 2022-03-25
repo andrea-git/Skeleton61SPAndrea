@@ -1,0 +1,280 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Macro File 1 Generation Rule.  2001/04/19
+;
+; Remarks:
+;   
+; Macro-Listing :
+;
+; ===================================================================
+; ===================================================================
+;  Macro Name : ACCEPT_CONTROL
+;  Parameters : 1.ControlName
+;               2.FDFieldName
+;  Remarks :
+; ===================================================================
+@{MACRO_ACCEPT_CONTROL}@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @<_SET_CONTROL_BY_PARAMETERS>@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_TYPE+@ EQUAL @"Data.Radio-Button"@ #@
+; ===================================================================
+;  FOR DB_RADIO-BUTTON
+; ===================================================================
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @<_PUSH_MEM>@
+      @<_SET_FORM_BY_PARAMETERS>@
+      @#DEF_SET#@ @!L_FORM!@ @+_OBJ_ATR_NAME+@
+   @<_POP_MEM>@
+   @#DEF_SET#@    @!L_VALUEVAR!@ @"@!L_FORM!@-RADIO-"@
+   @#DEF_APPEND#@ @!L_VALUEVAR!@ @+_OBJ_ATR_GROUP+@
+   @#DEF_SET#@    @!L_COMMENTOBJ!@   @""@
+   @#DEF_SET#@    @!L_EXISTRADIOON!@ @""@
+   @<_PUSH_MEM>@
+      @<_SET_RADIOBOX_GROUPOBJ>@
+      @#DEF_LOOP#@ @+_OBJ_SYS_RADIOBOXGROUPCOUNT+@
+         @<_FETCH_NEXT_RADIOBOX_GROUPOBJ>@
+         @#DEF_APPEND#@ @!L_COMMENTOBJ!@ @"@+_OBJ_ATR_NAME+@, "@
+         @#DEF_IF#@ @+_OBJ_ATR_RADIOONVALUE+@
+            @#DEF_SET#@ @!L_EXISTRADIOON!@ @"YES"@
+            @#DEF_SET#@ @!L_ONVALUE!@ @+_OBJ_ATR_RADIOONVALUE+@
+            @#DEF_IF#@ @#EXP: NOT (@+_OBJ_SYS_PICTURETYPE+@ EQUAL @"NUMERIC"@) #@
+               @#DEF_SET#@ @!L_ONVALUE!@ @"\"@+_OBJ_ATR_RADIOONVALUE+@\""@
+            @#END_IF#@
+@$RADIO-ON-BUFTOFLD$@
+           WHEN @+_OBJ_ATR_GROUPVALUE+@
+              MOVE @!L_ONVALUE!@ TO @+_SYS_PARA2+@
+         @#ELSE#@
+            @#DEF_SET#@ @!L_ONVALUE!@ @"ZERO"@
+            @#DEF_IF#@ @#EXP: NOT (@+_OBJ_SYS_PICTURETYPE+@ EQUAL @"NUMERIC"@) #@
+               @#DEF_SET#@ @!L_ONVALUE!@ @"SPACE"@
+            @#END_IF#@
+@$RADIO-ON-BUFTOFLD$@
+           WHEN @+_OBJ_ATR_GROUPVALUE+@
+              MOVE @!L_ONVALUE!@ TO @+_SYS_PARA2+@
+         @#END_IF#@
+      @#END_LOOP#@
+   @<_POP_MEM>@
+@$ACP-CONTROL-MEM$@
+      * DB_RADIOBOX : @!L_COMMENTOBJ!@
+    @#DEF_IF#@ @!L_EXISTRADIOON!@
+           EVALUATE @!L_VALUEVAR!@-BUF@!G_MODE!@
+           @#GET_MEM#@   @"RADIO-ON-BUFTOFLD"@
+           WHEN OTHER
+       @#DEF_SET#@ @!L_OTHER!@ @"ZERO"@
+       @#DEF_IF#@ @#EXP: NOT (@+_OBJ_SYS_PICTURETYPE+@ EQUAL @"NUMERIC"@) #@
+            @#DEF_SET#@ @!L_OTHER!@ @"SPACE"@
+       @#END_IF#@
+              MOVE @!L_OTHER!@ TO @+_SYS_PARA2+@
+           END-EVALUATE
+    @#ELSE#@
+           MOVE @!L_VALUEVAR!@-BUF@!G_MODE!@ TO @+_SYS_PARA2+@
+    @#END_IF#@
+@#ELSE_IF#@ @#EXP: @+_OBJ_SYS_TYPE+@ EQUAL @"Data.Check-Box"@ #@
+; ===================================================================
+;  FOR DB_CHECK-BOX
+; ===================================================================
+@$ACP-CONTROL-MEM$@
+      * DB_CHECK BOX : @+_OBJ_ATR_NAME+@
+   @#DEF_IF#@ @#EXP: @+_OBJ_ATR_CHECKOFFVALUE+@ OR @+_OBJ_ATR_CHECKONVALUE+@ #@
+      @#DEF_IF#@ @#EXP: @+_OBJ_SYS_PICTURETYPE+@ EQUAL @"NUMERIC"@ #@
+         @#DEF_SET#@ @!L_OFFVALUE!@ @"0"@
+         @#DEF_IF#@ @+_OBJ_ATR_CHECKOFFVALUE+@
+            @#DEF_SET#@ @!L_OFFVALUE!@ @+_OBJ_ATR_CHECKOFFVALUE+@
+         @#END_IF#@
+         @#DEF_SET#@ @!L_ONVALUE!@  @"1"@
+         @#DEF_IF#@ @+_OBJ_ATR_CHECKONVALUE+@
+            @#DEF_SET#@ @!L_ONVALUE!@ @+_OBJ_ATR_CHECKONVALUE+@
+         @#END_IF#@
+      @#ELSE#@
+         @#DEF_SET#@ @!L_OFFVALUE!@ @"SPACE"@
+         @#DEF_IF#@ @+_OBJ_ATR_CHECKOFFVALUE+@
+            @#DEF_SET#@ @!L_OFFVALUE!@ @"\"@+_OBJ_ATR_CHECKOFFVALUE+@\""@
+         @#END_IF#@
+         @#DEF_SET#@ @!L_ONVALUE!@  @"SPACE"@
+         @#DEF_IF#@ @+_OBJ_ATR_CHECKONVALUE+@
+            @#DEF_SET#@ @!L_ONVALUE!@ @"\"@+_OBJ_ATR_CHECKONVALUE+@\""@
+         @#END_IF#@
+      @#END_IF#@
+           IF @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@ = 1
+              MOVE @!L_ONVALUE!@ TO @+_OBJ_ATR_FIELDVARIABLE+@
+           ELSE
+              MOVE @!L_OFFVALUE!@ TO @+_OBJ_ATR_FIELDVARIABLE+@
+           END-IF
+   @#ELSE#@
+           MOVE @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@ TO @+_SYS_PARA2+@
+   @#END_IF#@
+;
+@#ELSE_IF#@ @#EXP: @+_OBJ_SYS_TYPE+@ EQUAL @"Data.Image"@ #@
+; ===================================================================
+;  FOR DB_IMAGE
+; ===================================================================
+@$ACP-CONTROL-MEM$@
+      * DB_BITMAP : @+_OBJ_ATR_NAME+@
+           MOVE @+_OBJ_ATR_NAME+@-BUF TO @+_SYS_PARA2+@
+@#ELSE#@
+; ===================================================================
+;  ELSE CONTROL
+; ===================================================================
+@$ACP-CONTROL-MEM$@
+           INQUIRE @+_SYS_PARA1+@, VALUE @+_SYS_PARA2+@
+@#END_IF#@
+@$MACRO-ACCEPT_CONTROL$@
+      * MACRO : ACCEPT_CONTROL
+           @#GET_MEM#@   @"ACP-CONTROL-MEM"@
+           @#CLEAR_MEM#@ @"ACP-CONTROL-MEM"@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : DELETE_RECORDS
+;  Parameters : 1.DatasetName
+;               2.FDName
+;               3.bReference (TRUE / FALSE) (*)
+;  Remarks :
+; ===================================================================
+@{MACRO_DELETE_RECORDS}@
+;
+; DELETE-REFERENCE
+;
+@#DEF_IF#@ @# @+_SYS_PARA3+@ EQUAL @"TRUE"@ #@
+@$FDSL-REFERENCE-DEL$@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @#DEF_SETPARA#@ @"2"@ @+_SYS_PARA2+@
+   @<_SET_FDSL_BY_PARAMETERS>@
+   @<_SET_FDSL_RELATION>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-DEL
+      @#END_IF#@
+   @#END_LOOP#@
+@#END_IF#@
+;
+@$FDSL-DEL-RECORDS$@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @#DEF_SETPARA#@ @"2"@ @+_SYS_PARA2+@
+   @<_SET_FDSL_BY_PARAMETERS>@
+   ;
+   ;
+           START @+_SYS_PARA2+@ KEY IS >= @+_FDSL_SYS_FDKEY+@
+                 NOT INVALID PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-Read-Next
+           END-START
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-Rec-Delete
+              @#GET_MEM#@   @"FDSL-REFERENCE-DEL"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE-DEL"@
+              PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-Read-Next
+           END-PERFORM
+;
+@$MACRO-DELETE_RECORDS$@
+      * MACRO : DELETE_RECORDS
+           @#GET_MEM#@   @"FDSL-DEL-RECORDS"@
+           @#CLEAR_MEM#@ @"FDSL-DEL-RECORDS"@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : DELETE_REFERENCE
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_DELETE_REFERENCE}@
+@$FDSL-REFERENCE-DEL$@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @#DEF_SETPARA#@ @"2"@ @+_SYS_PARA2+@
+   @<_SET_FDSL_BY_PARAMETERS>@
+   @<_SET_FDSL_RELATION>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-DEL
+      @#END_IF#@
+   @#END_LOOP#@
+;
+@$MACRO-DELETE_REFERENCE$@
+      * MACRO : DELETE_REFERENCE
+           @#GET_MEM#@   @"FDSL-REFERENCE-DEL"@
+           @#CLEAR_MEM#@ @"FDSL-REFERENCE-DEL"@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : FETCH_REFERENCE
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_FETCH_REFERENCE}@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @#DEF_SETPARA#@ @"2"@ @+_SYS_PARA2+@
+   @<_SET_FDSL_BY_PARAMETERS>@
+   @<_SET_FDSL_RELATION>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+      @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@ #@
+@$FDSL-REFERENCE$@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+      @#ELSE#@
+@$FDSL-REFERENCE-AFTER$@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+      @#END_IF#@
+   @#END_LOOP#@
+;
+@$FDSL-REFERENCE$@
+   @#GET_MEM#@   @"FDSL-REFERENCE-AFTER"@
+   @#CLEAR_MEM#@ @"FDSL-REFERENCE-AFTER"@
+;
+@$MACRO-FETCH_REFERENCE$@
+      * MACRO : FETCH_REFERENCE
+           @#GET_MEM#@   @"FDSL-REFERENCE"@
+           @#CLEAR_MEM#@ @"FDSL-REFERENCE"@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INSERT_REFERENCE
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_INSERT_REFERENCE}@
+@$FDSL-REFERENCE-INS$@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @#DEF_SETPARA#@ @"2"@ @+_SYS_PARA2+@
+   @<_SET_FDSL_BY_PARAMETERS>@
+   @<_SET_FDSL_RELATION>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS
+      @#END_IF#@
+   @#END_LOOP#@
+;
+@$MACRO-INSERT_REFERENCE$@
+      * MACRO : INSERT_REFERENCE
+           @#GET_MEM#@   @"FDSL-REFERENCE-INS"@
+           @#CLEAR_MEM#@ @"FDSL-REFERENCE-INS"@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : UPDATE_REFERENCE
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_UPDATE_REFERENCE}@
+@$FDSL-REFERENCE-UPD$@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @#DEF_SETPARA#@ @"2"@ @+_SYS_PARA2+@
+   @<_SET_FDSL_BY_PARAMETERS>@
+   @<_SET_FDSL_RELATION>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD
+      @#END_IF#@
+   @#END_LOOP#@
+;
+@$MACRO-UPDATE_REFERENCE$@
+      * MACRO : UPDATE_REFERENCE
+           @#GET_MEM#@   @"FDSL-REFERENCE-UPD"@
+           @#CLEAR_MEM#@ @"FDSL-REFERENCE-UPD"@
+@{END_MACRO}@
+;

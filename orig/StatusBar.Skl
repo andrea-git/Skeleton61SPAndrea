@@ -1,0 +1,142 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Message Status Bar Generation Rule.  2001/11/02
+;
+; ===================================================================
+;
+; If it's Graphical Mode. It would be called by StatusBar Control.
+;
+@#DEF_IF#@ @#EXP: NOT @!G_MODE!@ #@
+;
+; ==================== PRD -- STATUS CREATE WIN =====================
+;
+@$SET_AND_DISPLAY_STATUSBAR$@
+           DISPLAY STATUS-BAR
+    @#DEF_IF#@ @+_OBJ_ATR_FONTVARIABLE+@
+              FONT IS @+_OBJ_ATR_FONTVARIABLE+@,
+    @#END_IF#@
+    @#DEF_IF#@ @+_OBJ_ATR_GRIP+@
+              GRIP,
+    @#END_IF#@
+    @#DEF_IF#@ @+_OBJ_SYS_PANELWIDTH+@
+              PANEL-WIDTHS @+_OBJ_SYS_PANELWIDTH+@,
+              PANEL-STYLE  @+_OBJ_SYS_PANELSTYLE+@,
+              PANEL-TEXT   @+_OBJ_SYS_PANELTEXT+@,
+    @#END_IF#@
+    @#DEF_IF#@ @+_OBJ_ATR_ADDITIONALPROPERTIES+@
+       @<_SET_OBJ_ADDITIONALLINE>@
+       @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+          @<_FETCH_NEXT_OBJ_LINEINDEX>@
+              @+_OBJ_SYS_LINEINDEX+@
+       @#END_LOOP#@
+    @#END_IF#@
+              HANDLE IS @+_OBJ_ATR_HANDLEVARIABLE+@
+;
+; ======================= PRD -- FONT PROCESS =======================
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+   @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_OBJ_ATR_FONTVARIABLE+@
+   @%FontProcess.Skl%@
+@#END_IF#@
+;
+; ====================== PRD -- STATUS PROCESS ======================
+;
+@#DEF_IF#@ @!G_USERSCREEN!@
+@#DEF_SET#@ @!G_EXITSTATUS!@ @"YES"@
+@$SHOW-HINT$@
+           PERFORM @!G_SCREENNAME!@-DISPLAY-STATUS-MSG
+@$PROCEDURE$@
+       @!G_SCREENNAME!@-DISPLAY-STATUS-MSG.
+@#DEF_IF#@ @+_OBJ_SYS_PANELNO+@
+   @#DEF_SET#@ @!L_EXITHINT!@ @""@
+   @#DEF_SET#@ @!L_EXITMSG!@ @""@
+   @#DEF_SET#@ @!L_CNT!@ @"0"@
+   @#DEF_SET#@ @!L_PANEL1!@ @""@
+   @<_PUSH_MEM>@
+      @<_SET_OBJ_PANEL>@
+      @#DEF_LOOP#@ @+_OBJ_SYS_PANELNO+@
+        @<_FETCH_NEXT_OBJ_PANEL>@
+        @#DEF_ADD#@ @!L_CNT!@ @"1"@
+        @#DEF_IF#@ @#EXP: (@!L_CNT!@ EQUAL @"1"@) AND @+_PANEL_SYS_VARIABLE+@ AND @+_PANEL_SYS_TEXT+@ #@  
+		  @#DEF_SET#@ @!L_PANEL1!@ @"YES"@
+		@#END_IF#@ 
+        @#DEF_IF#@ @+_PANEL_SYS_VARIABLE+@
+            MODIFY @+_OBJ_ATR_HANDLEVARIABLE+@ PANEL-INDEX = @!L_CNT!@
+                PANEL-TEXT = @+_PANEL_SYS_VARIABLE+@
+		  @#DEF_IF#@ @#EXP: @+_PANEL_SYS_VARIABLE+@ EQUAL @"TOTEM-HINT-TEXT"@ #@
+			   @#DEF_SET#@ @!L_EXITHINT!@ @"YES"@
+		  @#END_IF#@
+		  @#DEF_IF#@ @#EXP: @+_PANEL_SYS_VARIABLE+@ EQUAL @"TOTEM-MSG-TEXT"@ #@
+			   @#DEF_SET#@ @!L_EXITMSG!@ @"YES"@
+		  @#END_IF#@
+        @#ELSE_IF#@ @#EXP: NOT (@+_PANEL_SYS_TEXT+@ EQUAL @""""@) #@
+            MODIFY @+_OBJ_ATR_HANDLEVARIABLE+@ PANEL-INDEX = @!L_CNT!@
+                PANEL-TEXT = @+_PANEL_SYS_TEXT+@
+        @#END_IF#@
+      @#END_LOOP#@
+   @<_POP_MEM>@
+   @#DEF_IF#@ @#EXP: NOT @!L_PANEL1!@ #@
+     @#DEF_IF#@ @#EXP: NOT @!L_EXITHINT!@ #@
+            MODIFY @+_OBJ_ATR_HANDLEVARIABLE+@ PANEL-INDEX = 1
+                PANEL-TEXT = TOTEM-HINT-TEXT
+     @#END_IF#@
+     @#DEF_IF#@ @#EXP: NOT @!L_EXITMSG!@ AND @!G_ISMESSAGELINE!@ #@ 
+            MODIFY @+_OBJ_ATR_HANDLEVARIABLE+@ PANEL-INDEX = 1
+                PANEL-TEXT = TOTEM-MSG-TEXT
+     @#END_IF#@
+   @#END_IF#@
+@#ELSE#@
+  @#SHOW_MSG#@ @"Warning7"@
+@#END_IF#@
+           .
+
+       @!G_SCREENNAME!@-CLEAR-STATUS-MSG.
+           MOVE SPACES TO TOTEM-MSG-1, TOTEM-MSG-2, TOTEM-MSG-3, TOTEM-MSG-TEXT
+           PERFORM @!G_SCREENNAME!@-DISPLAY-STATUS-MSG
+           .
+
+; end @!G_USERSCREEN!@
+@#END_IF#@
+;
+; If it's Text Mode. It would be called by Form.Skl. 
+;
+@#ELSE#@
+@$WORKING$@
+       01 @!G_SCREENNAME!@-ERR-WIN    PIC X(10).
+@#DEF_SET#@ @!G_EXITSTATUS!@ @"YES"@
+@#DEF_IF#@ @!G_USERSCREEN!@
+@$SHOW-HINT$@
+  @#DEF_IF#@ @#EXP: NOT @!G_ISMESSAGELINE!@ #@
+           DISPLAY SUBWINDOW 
+               LINE 24 COLUMN 1
+               SIZE 80 LINES 1
+               NO WRAP NO SCROLL ERASE
+               COLOR @+_OBJ_SYS_MESSAGECOLOR+@
+               POP-UP AREA IS @!G_SCREENNAME!@-ERR-WIN.
+           DISPLAY TOTEM-HINT-TEXT LINE 1 COLUMN 1 COLOR @+_OBJ_SYS_MESSAGECOLOR+@
+           CLOSE WINDOW @!G_SCREENNAME!@-ERR-WIN WITH NO DISPLAY
+  @#END_IF#@
+  @#DEF_IF#@ @!G_ISMESSAGELINE!@
+@$PROCEDURE$@
+       @!G_SCREENNAME!@-DISPLAY-STATUS-MSG-T.
+           DISPLAY SUBWINDOW 
+               LINE 24 COLUMN 1
+               SIZE 80 LINES 1
+               NO WRAP NO SCROLL ERASE
+               COLOR @+_OBJ_SYS_MESSAGECOLOR+@
+               POP-UP AREA IS @!G_SCREENNAME!@-ERR-WIN.
+           DISPLAY TOTEM-MSG-TEXT LINE 1 COLUMN 1 COLOR @+_OBJ_SYS_MESSAGECOLOR+@
+           CLOSE WINDOW @!G_SCREENNAME!@-ERR-WIN WITH NO DISPLAY
+           .
+
+       @!G_SCREENNAME!@-CLEAR-STATUS-MSG-T.
+           MOVE SPACES TO TOTEM-MSG-1, TOTEM-MSG-2, TOTEM-MSG-3, TOTEM-MSG-TEXT
+           PERFORM @!G_SCREENNAME!@-DISPLAY-STATUS-MSG-T
+           .
+
+  @#END_IF#@
+; end @!G_USERSCREEN!@
+@#END_IF#@
+; end @!G_MODE!@
+@#END_IF#@ 
+;

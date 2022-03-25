@@ -1,0 +1,70 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Font Process Generation Rule.  2001/04/19
+;
+; ===================================================================
+;
+; ======================= PRD -- FONT PROCESS =======================
+;
+@#DEF_SET#@	   @!L_FONT!@ @"."@
+@#DEF_APPEND#@ @!L_FONT!@ @!G_FONTVARIABLE!@
+@#DEF_APPEND#@ @!L_FONT!@ @"."@
+@#DEF_FIND#@   @!L_FIND!@ @!G_INITFONT!@ @!L_FONT!@
+@#DEF_IF#@ @#EXP: NOT @!L_FIND!@ #@
+   @#DEF_APPEND#@ @!G_INITFONT!@ @!L_FONT!@
+   @#DEF_SETPARA#@ @"1"@ @!G_FONTVARIABLE!@
+   @#DEF_IF#@ @+_SYS_CHECK_EXTERNALVARIABLE+@
+     @#DEF_SET#@ @!G_EXISTEXTERNALVAR!@ @"1"@
+@$INIT_EXTERNALVAR$@
+              INITIALIZE @!G_FONTVARIABLE!@
+   @#END_IF#@
+@$DESTROY_FONT_PROCESS$@
+   @#DEF_IF#@ @+_SYS_CHECK_EXTERNALVARIABLE+@
+      *     DESTROY @!G_FONTVARIABLE!@ 
+   @#ELSE#@
+           DESTROY @!G_FONTVARIABLE!@
+   @#END_IF#@
+@$FONT_PROCESS$@
+      * @!G_FONTVARIABLE!@
+   @#DEF_IF#@ @+_SYS_CHECK_EXTERNALVARIABLE+@
+           IF @!G_FONTVARIABLE!@ = 0
+   @#END_IF#@
+           INITIALIZE WFONT-DATA @!G_FONTVARIABLE!@
+           MOVE @+_OBJ_SYS_FONTSIZE+@ TO WFONT-SIZE
+           MOVE "@+_OBJ_SYS_FONTNAME+@" TO WFONT-NAME
+   @#DEF_IF#@ @+_OBJ_SYS_CHARDONTCARE+@ 
+           SET WFCHARSET-DONT-CARE TO TRUE
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_FONTBOLD+@
+           SET WFONT-BOLD TO TRUE
+   @#ELSE#@
+           SET WFONT-BOLD TO FALSE
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_FONTITALIC+@
+           SET WFONT-ITALIC TO TRUE
+   @#ELSE#@
+           SET WFONT-ITALIC TO FALSE
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_FONTUNDERLINE+@
+           SET WFONT-UNDERLINE TO TRUE
+   @#ELSE#@
+           SET WFONT-UNDERLINE TO FALSE
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_FONTSTRIKEOUT+@
+           SET WFONT-STRIKEOUT TO TRUE
+   @#ELSE#@   
+           SET WFONT-STRIKEOUT TO FALSE
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_FONTFIXPITCH+@
+           SET WFONT-FIXED-PITCH TO TRUE
+   @#ELSE#@
+           SET WFONT-FIXED-PITCH TO FALSE
+   @#END_IF#@
+           MOVE @+_OBJ_SYS_CHARSET+@ TO WFONT-CHAR-SET
+           CALL "W$FONT" USING WFONT-GET-FONT, 
+                     @!G_FONTVARIABLE!@, WFONT-DATA
+   @#DEF_IF#@ @+_SYS_CHECK_EXTERNALVARIABLE+@
+           END-IF
+   @#END_IF#@
+@#END_IF#@
+;

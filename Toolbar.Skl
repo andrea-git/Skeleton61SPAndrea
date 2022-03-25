@@ -1,0 +1,50 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; TOOLBAR Generation Rule
+; 2001/11/02
+;
+; ===================================================================
+;
+; BACKUP $SCREEN$ DATA TO $TMPSCREEN$
+;
+@$TMPSCREEN$@
+@#CLEAR_MEM#@ @"TMPSCREEN"@
+@#GET_MEM#@ @"SCREEN"@
+;
+; CLEAR ALL $SCREEN$ DATA TO PUT NEW TOOLBAR DATA
+;
+@#CLEAR_MEM#@ @"SCREEN"@
+@%Toolbar_Detail.Skl%@
+;
+; G_INTOOLBAR can be changed value only here.
+;
+@#DEF_SET#@ @!G_INTOOLBAR!@ @"YES"@
+@#DEF_SET#@ @!G_TOOLBARNAME!@ @+_OBJ_ATR_NAME+@
+@#DEF_SET#@ @!L_TMPSRNHANDLE!@ @!G_SCREENHANDLE!@
+@#DEF_SET#@ @!G_SCREENHANDLE!@ @+_OBJ_ATR_HANDLEVARIABLE+@
+@<_PUSH_MEM>@
+@<_SET_OBJ_CTRLCHILD>@
+   @#DEF_LOOP#@ @+_OBJ_SYS_CTRLNO+@
+      @<_FETCH_NEXT_OBJ_CTRL>@
+;      @#DEF_SET#@ @!G_ITEMLEVEL!@ @"03"@
+      @%DispatchCtrl.Skl%@
+   @#END_LOOP#@
+@<_POP_MEM>@
+@#DEF_SET#@ @!G_SCREENHANDLE!@ @!L_TMPSRNHANDLE!@
+@#DEF_SET#@ @!G_INTOOLBAR!@ @""@
+;
+; PUT TOOLBAR SCREEN TO $TOOLBARSCREEN$
+;
+@$TOOLBARSCREEN$@
+@#GET_MEM#@   @"SCREEN"@
+@#CLEAR_MEM#@ @"SCREEN"@
+;
+; RESTORE $SCREEN$ DATA FROM $TMPSCREEN$
+;
+@$SCREEN$@
+@#GET_MEM#@   @"TMPSCREEN"@
+@#CLEAR_MEM#@ @"TMPSCREEN"@
+;
+@$FORM-DISPLAY-BEFORE$@
+           DISPLAY @+_OBJ_ATR_NAME+@
+;

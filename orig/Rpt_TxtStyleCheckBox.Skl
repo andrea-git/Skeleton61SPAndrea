@@ -1,0 +1,136 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report CheckBox Control Generation Rule.  2001/04/19
+;
+; Remarks:
+;   The same as RPT.Label.
+;
+; ===================================================================
+;
+;
+@#DEF_IF#@ @+_RPT_ATR_FIELDVARIABLE+@
+     @#DEF_SET#@ @!G_EXISTRPTBUF!@ @"YES"@
+;
+; ================ WRK -- RPT -- Pre CheckBox Buf ================
+;
+@$RPT_PRE_DATABUF$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-PRE-BUF-T PIC 9 VALUE ZERO.
+;
+; ==================== WRK -- RPT -- CheckBox =======================
+;
+@$RPT_DB_WORKING_BUFBODY$@
+      * @+_OBJ_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-BUF-T PIC 9 VALUE ZERO.
+   ;
+   ; If the Picture of Field is "Numeric".
+   ;
+   @#DEF_IF#@ @#EXP: @+_RPT_SYS_PICTURETYPE+@ EQUAL @"NUMERIC"@ #@
+      @#DEF_SET#@ @!L_OFFVALUE!@ @"0"@
+      @#DEF_IF#@ @+_RPT_ATR_CHECKOFFVALUE+@
+         @#DEF_SET#@ @!L_OFFVALUE!@ @+_RPT_ATR_CHECKOFFVALUE+@
+      @#END_IF#@
+      @#DEF_SET#@ @!L_ONVALUE!@  @"1"@
+      @#DEF_IF#@ @#EXP: NOT (@+_RPT_ATR_CHECKONVALUE+@ EQUAL @""@) #@
+         @#DEF_SET#@ @!L_ONVALUE!@ @+_RPT_ATR_CHECKONVALUE+@
+      @#END_IF#@
+   ;
+   ; If the Picture is ALPHANUMERIC, you should add double quotes.
+   ;
+   @#ELSE#@
+      @#DEF_SET#@ @!L_OFFVALUE!@ @"SPACE"@
+      @#DEF_IF#@ @+_RPT_ATR_CHECKOFFVALUE+@
+;         @#DEF_SET#@ @!L_OFFVALUE!@ @"\"@+_RPT_ATR_CHECKOFFVALUE+@\""@
+         @#DEF_SET#@ @!L_OFFVALUE!@ @"@+_RPT_ATR_CHECKOFFVALUE+@"@
+      @#END_IF#@
+      @#DEF_SET#@ @!L_ONVALUE!@  @"SPACE"@
+      @#DEF_IF#@ @+_RPT_ATR_CHECKONVALUE+@
+;         @#DEF_SET#@ @!L_ONVALUE!@ @"\"@+_RPT_ATR_CHECKONVALUE+@\""@
+         @#DEF_SET#@ @!L_ONVALUE!@ @"@+_RPT_ATR_CHECKONVALUE+@"@
+      @#END_IF#@
+   @#END_IF#@
+;
+; ========================= PRT -- BUFTOFLD =========================
+;
+@$RPT_FDSL_FLDTOBUF$@
+      * RPT.CHECKBOX : @+_RPT_ATR_NAME+@
+   @<_SET_OBJ_FIELDEXPRESSION>@
+   @#DEF_IF#@ @+_OBJ_SYS_LINECOUNT+@
+      * FIELD EXPRESSION ( @+_RPT_ATR_NAME+@ )
+      @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+      @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+      @#END_LOOP#@
+      * END OF FIELD EXPRESSION
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (NOT (@+_RPT_ATR_CHECKOFFVALUE+@ EQUAL @""@)) OR 
+                     (NOT (@+_RPT_ATR_CHECKONVALUE+@  EQUAL @""@)) #@
+      @#DEF_IF#@ @#EXP: NOT (@+_RPT_ATR_CHECKOFFVALUE+@ EQUAL @""@) #@
+           IF @+_RPT_ATR_FIELDVARIABLE+@ = @!L_OFFVALUE!@
+              MOVE 0 TO @+_RPT_ATR_NAME+@-BUF-T
+           ELSE
+              MOVE 1 TO @+_RPT_ATR_NAME+@-BUF-T
+           END-IF
+      @#ELSE#@
+           IF @+_RPT_ATR_FIELDVARIABLE+@ = @!L_ONVALUE!@
+              MOVE 1 TO @+_RPT_ATR_NAME+@-BUF-T
+           ELSE
+              MOVE 0 TO @+_RPT_ATR_NAME+@-BUF-T
+           END-IF
+      @#END_IF#@
+   @#ELSE#@
+           IF @+_RPT_ATR_FIELDVARIABLE+@ = @!L_OFFVALUE!@
+              MOVE 0 TO @+_RPT_ATR_NAME+@-BUF-T
+           ELSE
+              MOVE 1 TO @+_RPT_ATR_NAME+@-BUF-T
+           END-IF
+   @#END_IF#@
+@#END_IF#@
+;
+;
+@#DEF_SET#@ @!L_LINE!@ @"1"@
+@#DEF_ADD#@ @!L_LINE!@ @+_RPT_ATR_LINE+@
+;
+@#DEF_SET#@ @!L_COLUMN!@ @"1"@
+@#DEF_ADD#@ @!L_COLUMN!@ @+_RPT_ATR_COLUMN+@
+;
+@#DEF_SET#@ @!L_SIZE!@ @"0"@
+@#DEF_ADD#@ @!L_SIZE!@ @+_RPT_ATR_SIZE+@
+;
+@#DEF_SET#@ @!L_TPOS!@ @+_RPT_ATR_COLUMN+@
+@#DEF_ADD#@ @!L_TPOS!@ @"4"@
+;
+@#DEF_SET#@ @!L_CKON!@ @+_RPT_ATR_COLUMN+@
+@#DEF_ADD#@ @!L_CKON!@ @"2"@
+;
+@#DEF_SET#@ @!L_TLEN!@ @+_RPT_ATR_SIZE+@
+@#DEF_SUB#@ @!L_TLEN!@ @"3"@
+;
+@$RPT-CTRL-PRINT$@
+      * RPT.CheckBox : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.CheckBox:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.CheckBox"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+               MOVE '[ ]' TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:3)
+               MOVE '@+_RPT_ATR_TITLE+@' TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_TPOS!@:@!L_LEN!@)
+      @#DEF_IF#@ @+_RPT_ATR_FIELDVARIABLE+@
+               IF @+_RPT_ATR_NAME+@-BUF-T = 1
+                  MOVE '*' TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_CKON!@:1)
+               END-IF
+      @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.CheckBox:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.CheckBox"@ @"AfterPrint"@
+      * <TOTEM:END>
+;

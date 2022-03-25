@@ -1,0 +1,1001 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Form Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+;     1. @+_OBJ_ATR_NAME+@-ALLGRID-RESET@!G_MODE!@.
+;        This paragraph will clear all Grids which were triggered by
+;        other FD. Why do this ? If there's 1-M-M, the second grid
+;        maybe leave some previous garbage data while the first grid
+;        can't match any data. (Because it won't go next -ref-).
+;        And it would be executed when -IUD-Display was called.
+;
+;  Default Event Paragraphs Listing :
+;
+;  Entry Point Listing :
+;
+; ===================================================================
+;
+; ===================== WRK -- WORKING STORAGE ======================
+;
+@#DEF_SET#@ @!G_NEEDEVMSGCLOSE!@ @""@
+@$WORKING$@
+       77 STATUS-@!G_SCREENNAME!@-FLAG-REFRESH@!G_MODE!@ PIC  9.
+          88 @!G_SCREENNAME!@-FLAG-REFRESH@!G_MODE!@  VALUE 1 FALSE 0. 
+@#DEF_IF#@ @!G_EXISTDBCONTROL!@
+      * DATA CONTROL BUFFER
+       01 @!G_SCREENNAME!@-BUF@!G_MODE!@.
+;           03 @+_OBJ_ATR_NAME+@-BASE-BUF@!G_MODE!@.
+              @#GET_MEM#@   @"DB_WORKING_BUFBODY"@
+              @#CLEAR_MEM#@ @"DB_WORKING_BUFBODY"@
+;           @#GET_MEM#@   @"FRAME_WORKING_BUFBODY"@
+;           @#CLEAR_MEM#@ @"FRAME_WORKING_BUFBODY"@
+
+@#END_IF#@
+;
+;
+; chech if enable condition
+	   @#DEF_SET#@ @!L_ENABLECONDITION!@ @""@
+	   @#DEF_SET#@ @!L_DOIT!@ @""@
+	   @#DEF_SETMEM#@ @!L_DOIT!@ @"VERIFY-ENABLECONDITION"@
+	   @#DEF_SET#@ @!L_DOIT1!@ @""@
+	   @#DEF_SETMEM#@ @!L_DOIT1!@ @"VERIFY-ENABLECONDITION_FRAME"@
+	   @#DEF_IF#@ @#EXP: @!L_DOIT!@ OR @!L_DOIT1!@ #@
+	       @#DEF_SET#@ @!L_ENABLECONDITION!@ @"YES"@
+      @#END_IF#@
+       @#DEF_SETMEM#@ @!L_DOAFTER!@ @"AFTERPROCEDURE"@
+;
+@$FORMSCREEN$@
+      * FORM
+       @+_OBJ_SYS_LEVEL+@ 
+           @+_OBJ_ATR_NAME+@, 
+@#DEF_IF#@ @+_OBJ_SYS_EXISTSCREENMATCH+@
+   @#DEF_IF#@ @+_OBJ_SYS_TEXTMODE+@
+           CHARACTER,
+   @#ELSE#@
+           GRAPHICAL,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HELPIDVARIABLE+@
+           HELP-ID @+_OBJ_ATR_HELPIDVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HELPID+@
+           HELP-ID @+_OBJ_ATR_HELPID+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT @!G_USERSCREEN!@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_COLORVARIABLE+@
+           COLOR @+_OBJ_ATR_COLORVARIABLE+@,		   
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_COLOR+@ AND (NOT (@+_OBJ_ATR_COLOR+@ EQUAL @"65793"@)) #@
+           COLOR @+_OBJ_ATR_COLOR+@,
+  @#END_IF#@
+  @#DEF_IF#@ @+_OBJ_ATR_ADDITIONALPROPERTIES+@
+    @<_SET_OBJ_ADDITIONALLINE>@
+    @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+       @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+    @#END_LOOP#@
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @!G_USERSCREEN!@
+ @#DEF_IF#@ @#EXP: @+_OBJ_EVT_AFTERPROCEDURE+@ AND @+_OBJ_EVT_AFTERPROCEDURETHRU+@ #@
+           AFTER PROCEDURE @+_OBJ_EVT_AFTERPROCEDURE+@ THRU @+_OBJ_EVT_AFTERPROCEDURETHRU+@, 
+ @#ELSE_IF#@ @+_OBJ_EVT_AFTERPROCEDURE+@
+
+           AFTER PROCEDURE @+_OBJ_EVT_AFTERPROCEDURE+@, 
+
+ @#ELSE_IF#@ @#EXP: @!L_DOAFTER!@ OR @!L_ENABLECONDITION!@ #@
+           AFTER PROCEDURE @+_OBJ_ATR_NAME+@-AfterProcedure@!G_MODE!@,
+ @#END_IF#@
+@#ELSE#@
+ @#DEF_IF#@ @#EXP: @+_OBJ_EVT_AFTERPROCEDURE+@ AND @+_OBJ_EVT_AFTERPROCEDURETHRU+@ #@
+           AFTER PROCEDURE @+_OBJ_EVT_AFTERPROCEDURE+@ THRU @+_OBJ_EVT_AFTERPROCEDURETHRU+@, 
+ @#ELSE_IF#@ @+_OBJ_EVT_AFTERPROCEDURE+@
+           AFTER PROCEDURE @+_OBJ_EVT_AFTERPROCEDURE+@, 
+ @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @!G_USERSCREEN!@
+ @#DEF_SETMEM#@ @!L_DOIT!@ @"HINT"@
+ @#DEF_IF#@ @#EXP: @+_OBJ_EVT_BEFOREPROCEDURE+@ AND @+_OBJ_EVT_BEFOREPROCEDURETHRU+@ #@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@ THRU @+_OBJ_EVT_BEFOREPROCEDURETHRU+@,
+ @#ELSE_IF#@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@,
+ @#ELSE_IF#@ @!L_DOIT!@
+           BEFORE PROCEDURE @+_OBJ_ATR_NAME+@-BeforeProcedure@!G_MODE!@,
+ @#END_IF#@
+@#ELSE#@
+ @#DEF_IF#@ @#EXP: @+_OBJ_EVT_BEFOREPROCEDURE+@ AND @+_OBJ_EVT_BEFOREPROCEDURETHRU+@ #@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@ THRU @+_OBJ_EVT_BEFOREPROCEDURETHRU+@,
+ @#ELSE_IF#@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@,
+ @#END_IF#@
+@#END_IF#@
+;
+;===========================================================================
+;DARWIN - MODIFICA PER AGGIUNGERE ALLA SCREEN IL PRF. DI AFTER E BEFORE
+;NEL CASO NON SIANO STATI GENERATI MA LA VOGLIO PERCHE' HO GENERATO LA COPY
+;===========================================================================
+;
+@#DEF_SET#@ @!L_EXIST_AFTER!@  @"YES"@
+@#DEF_SET#@ @!L_EXIST_BEFORE!@ @"YES"@
+@#DEF_IF#@ @!G_GENERA_AFTER!@
+   @#DEF_IF#@  @+_OBJ_EVT_AFTERPROCEDURE+@ 
+   @#ELSE_IF#@ @!L_DOAFTER!@ #@ 
+   @#ELSE#@
+           @#DEF_SET#@ @!L_EXIST_AFTER!@  @""@
+           AFTER PROCEDURE  @+_OBJ_ATR_NAME+@-AFTER-SCREEN
+   @#END_IF#@
+@#END_IF#@
+;
+@#DEF_IF#@ @!G_GENERA_BEFORE!@
+   @#DEF_IF#@  @+_OBJ_EVT_BEFOREPROCEDURE+@ 
+   @#ELSE_IF#@ @!L_DOIT!@ #@ 
+   @#ELSE#@
+           @#DEF_SET#@ @!L_EXIST_BEFORE!@ @""@
+           BEFORE PROCEDURE  @+_OBJ_ATR_NAME+@-BEFORE-SCREEN
+   @#END_IF#@
+@#END_IF#@
+;
+;=================
+;FINE MODIFICA
+;=================
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_EXPEVT_PROCEDURE+@ AND @+_OBJ_EXPEVT_THRUPROCEDURE+@ #@
+           EXCEPTION PROCEDURE @+_OBJ_EXPEVT_PROCEDURE+@ THRU @+_OBJ_EXPEVT_THRUPROCEDURE+@, 
+@#ELSE_IF#@ @+_OBJ_EXPEVT_PROCEDURE+@
+           EXCEPTION PROCEDURE @+_OBJ_EXPEVT_PROCEDURE+@, 
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_SYS_EXPEVENT+@
+           EXCEPTION PROCEDURE @+_OBJ_ATR_NAME+@-Exception@!G_MODE!@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT @!G_USERSCREEN!@ #@
+  @#DEF_IF#@ @#EXP: @+_OBJ_EVT_PROCEDURE+@ AND @+_OBJ_EVT_THRUPROCEDURE+@ #@
+           EVENT PROCEDURE @+_OBJ_EVT_PROCEDURE+@ THRU @+_OBJ_EVT_THRUPROCEDURE+@,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_EVT_PROCEDURE+@ #@
+           EVENT PROCEDURE @+_OBJ_EVT_PROCEDURE+@,
+  @#END_IF#@
+@#END_IF#@
+           .
+
+       @#GET_MEM#@   @"SCREEN"@
+       @#CLEAR_MEM#@ @"SCREEN"@
+       @#GET_MEM#@   @"TOOLBARSCREEN"@
+       @#CLEAR_MEM#@ @"TOOLBARSCREEN"@
+;
+;
+@#DEF_IF#@ @#EXP: @+_PRG_SYS_LOGOSCREENNAME+@ EQUAL @+_OBJ_ATR_NAME+@ #@
+@$LOGO_PROCESS$@
+   @#DEF_SET#@ @!G_EXISTLOGO!@ @"YES"@
+           SET ENVIRONMENT "CURSOR-MODE" TO "2"
+           DISPLAY INDEPENDENT GRAPHICAL WINDOW
+   @%FormDisplayWin.Skl%@
+           PERFORM @+_OBJ_ATR_NAME+@-INIT-VALUE@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-INIT-DATA@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-DISPLAY@!G_MODE!@
+           ACCEPT OMITTED TIME 200
+           DESTROY @+_OBJ_ATR_HANDLEVARIABLE+@
+           .
+@#END_IF#@
+;
+;
+;
+@#DEF_IF#@ @+_OBJ_ATR_DATASET+@
+   @#DEF_SET#@ @!L_FORMDATASET!@ @+_DATASET_SYS_NAME+@
+   @<_PUSH_MEM>@
+      @<_SET_DATASET_FDSLCHILD>@
+      @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+         @<_FETCH_NEXT_DATASET_FDSL>@
+         @#DEF_IF#@ @#EXP: @!L_FORMDATASET!@ EQUAL @+_DATASET_SYS_NAME+@ #@
+            @<_SET_FDSL_RELATION>@
+            @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+               @<_FETCH_NEXT_FDSL_RELATION>@
+               @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@ #@
+                  @%Form_Relation.Skl%@
+               @#END_IF#@
+            @#END_LOOP#@
+         @#END_IF#@
+      @#END_LOOP#@
+      @%Form_KeyBackRst.skl%@
+      @%Prg_FormDisp.skl%@
+   @<_POP_MEM>@
+@#END_IF#@
+;
+; ================== PRD -- PREPARE MESSAGE LINE  ===================
+;
+@#DEF_IF#@ @#EXP: @!G_MODE!@ EQUAL @"-T"@ #@
+       @%StatusBar.Skl%@
+@#END_IF#@
+;
+@#DEF_IF#@ @#EXP: NOT @+_OBJ_SYS_ISIMPORTSCREEN+@ #@
+    @#DEF_SET#@ @!G_EXITUSERSCREEN!@ @"YES"@
+@#END_IF#@
+@$PROCEDURE$@
+@#DEF_IF#@ @!G_USERSCREEN!@
+       @+_OBJ_ATR_NAME+@-Open-Routine@!G_MODE!@.
+   @#DEF_IF#@ @+_OBJ_EVT_BEFOREROUTINE+@
+           PERFORM @+_OBJ_EVT_BEFOREROUTINE+@
+   @#END_IF#@
+           PERFORM @+_OBJ_ATR_NAME+@-Scrn@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-Proc@!G_MODE!@
+   @#DEF_IF#@ @+_OBJ_EVT_AFTERROUTINE+@
+           PERFORM @+_OBJ_EVT_AFTERROUTINE+@
+   @#END_IF#@
+           .
+
+       @+_OBJ_ATR_NAME+@-Scrn@!G_MODE!@.
+           PERFORM @+_OBJ_ATR_NAME+@-Create-Win@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-Init-Value@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-Init-Data@!G_MODE!@
+      * Tab keystrok settings
+           @#GET_MEM#@   @"TAB-SET-KEYSTROK"@
+           @#CLEAR_MEM#@ @"TAB-SET-KEYSTROK"@
+      * Tool Bar
+           @#GET_MEM#@ @"DISPLAY_TOOLBAR"@
+           @#CLEAR_MEM#@ @"DISPLAY_TOOLBAR"@
+;LK6B0350
+;@#DEF_IF#@ @!G_EXISTDBCONTROL!@
+           PERFORM @+_OBJ_ATR_NAME+@-DISPLAY@!G_MODE!@
+;@#END_IF#@
+           .
+
+;
+; If this form is mainscreen, and it's windowtype equal to 
+; INITIAL or STANDARD
+;
+@#DEF_IF#@ @#EXP: (@+_PRG_SYS_MAINSCREENNAME+@ EQUAL @+_OBJ_ATR_NAME+@) AND
+                  ((@+_OBJ_ATR_WINDOWTYPE+@ EQUAL @"INITIAL"@)          OR 
+                   (@+_OBJ_ATR_WINDOWTYPE+@ EQUAL @"STANDARD"@))        #@
+        @#DEF_SET#@ @!G_NEEDEVMSGCLOSE!@ @"YES"@
+@#END_IF#@
+;
+       @+_OBJ_ATR_NAME+@-Create-Win@!G_MODE!@.
+   @#DEF_IF#@ @+_OBJ_EVT_BEFORECREATE+@
+           PERFORM @+_OBJ_EVT_BEFORECREATE+@
+   @#END_IF#@
+   ;
+   ; for FORM's Description.
+   ;
+   @<_SET_OBJ_DESCRIPTIONLINE>@
+   @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+      @<_FETCH_NEXT_OBJ_LINEINDEX>@
+      * @+_OBJ_SYS_LINEINDEX+@
+   @#END_LOOP#@
+;
+   @#DEF_IF#@ @!G_TEXTMODE!@
+           Display @+_OBJ_ATR_WINDOWTYPE+@ WINDOW
+   @#ELSE#@
+           Display @+_OBJ_ATR_WINDOWTYPE+@ GRAPHICAL WINDOW
+   @#END_IF#@
+           @%FormDisplayWin.Skl%@
+
+;
+;
+@#DEF_IF#@ @+_OBJ_ATR_MAINMENU+@
+@<_PUSH_MEM>@
+@<_SET_OBJ_MAINMENU>@
+; MainMenu
+      * Main Menu
+           PERFORM @+_OBJ_ATR_NAME+@-Menu@!G_MODE!@
+           MOVE Menu-Handle TO @+_OBJ_ATR_HANDLEVARIABLE+@
+           CALL "W$MENU" USING Wmenu-Show, @+_OBJ_ATR_HANDLEVARIABLE+@
+
+@<_POP_MEM>@
+;
+@#END_IF#@
+;
+      * Tool Bar    
+       @#GET_MEM#@   @"SET_AND_DISPLAY_TOOLBAR"@
+       @#CLEAR_MEM#@ @"SET_AND_DISPLAY_TOOLBAR"@
+;
+      * Status-bar
+       @#GET_MEM#@   @"SET_AND_DISPLAY_STATUSBAR"@
+       @#CLEAR_MEM#@ @"SET_AND_DISPLAY_STATUSBAR"@
+           DISPLAY @+_OBJ_ATR_NAME+@ UPON @+_OBJ_ATR_HANDLEVARIABLE+@
+      * DISPLAY-COLUMNS settings
+       @#GET_MEM#@   @"DISPLAY_COLUMNS_INIT_VALUE"@
+       @#CLEAR_MEM#@ @"DISPLAY_COLUMNS_INIT_VALUE"@
+   @#DEF_SETMEM#@ @!L_EXISTDATETIME!@ @"CREATE-DATETIME-THREAD"@
+   @#DEF_IF#@ @!L_EXISTDATETIME!@
+       @#GET_MEM#@   @"CREATE-DATETIME-THREAD"@
+       @#CLEAR_MEM#@ @"CREATE-DATETIME-THREAD"@
+   @#END_IF#@
+;
+   @#DEF_IF#@ @+_OBJ_EVT_AFTERCREATE+@
+           PERFORM @+_OBJ_EVT_AFTERCREATE+@
+   @#END_IF#@
+           .
+
+;
+@#DEF_SETMEM#@ @!L_DOTERMIN!@ @"CONTROL-TERMINATION"@
+;
+       @+_OBJ_ATR_NAME+@-PROC@!G_MODE!@.
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, BeforeAccept>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"BeforeAccept"@
+      * <TOTEM:END>
+           PERFORM UNTIL @!G_KEYSTATUS27!@
+   @#DEF_IF#@ @+_OBJ_SYS_ISEXISTACCEPTCTRL+@
+              ACCEPT @+_OBJ_ATR_NAME+@
+   @#ELSE#@
+              ACCEPT OMITTED LINE 1 COL 1
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_BEFORETIME+@ EQUAL @""@) #@
+                 BEFORE TIME @+_OBJ_ATR_BEFORETIME+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_ALLOWINGMESSAGES+@
+                 ALLOWING MESSAGES FROM @+_OBJ_ATR_ALLOWINGMESSAGES+@
+   @#END_IF#@
+                 ON EXCEPTION
+                    PERFORM @+_OBJ_ATR_NAME+@-Evaluate-Func@!G_MODE!@
+                 MOVE @!G_SCREENINDEX!@ TO TOTEM-Form-Index
+              END-ACCEPT
+   @#DEF_IF#@ @!L_DOTERMIN!@
+              EVALUATE TRUE
+                 @#GET_MEM#@   @"CONTROL-TERMINATION"@
+                 @#CLEAR_MEM#@ @"CONTROL-TERMINATION"@
+              END-EVALUATE
+              MOVE @!G_SCREENINDEX!@ TO TOTEM-Form-Index
+   @#END_IF#@
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, AfterEndAccept>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"AfterEndAccept"@ @"Noperiod"@
+      * <TOTEM:END>
+           END-PERFORM
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, BeforeDestroyWindow>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"BeforeDestroyWindow"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"TERMIATE-DATETIME-THREAD"@
+           @#CLEAR_MEM#@ @"TERMIATE-DATETIME-THREAD"@
+           DESTROY @+_OBJ_ATR_HANDLEVARIABLE+@
+           INITIALIZE @+_KEYSTATUS_SYS_ITEMNAME+@
+           .
+
+       @+_OBJ_ATR_NAME+@-Evaluate-Func@!G_MODE!@.
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, AfterAccept>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"AfterAccept"@
+      * <TOTEM:END>
+              ;
+              ; for Tab
+              ;
+              @#GET_MEM#@   @"TAB-EVALUATE"@
+              @#CLEAR_MEM#@ @"TAB-EVALUATE"@
+           EVALUATE TRUE
+              WHEN @!G_KEYSTATUS27!@
+                 PERFORM @+_OBJ_ATR_NAME+@-Exit@!G_MODE!@
+              WHEN @!G_KEYSTATUS96!@
+                 IF Event-Type = Cmd-Close
+                    PERFORM @+_OBJ_ATR_NAME+@-Exit@!G_MODE!@
+                 END-IF
+                 @#GET_MEM#@   @"TAB-CMDCHANGE"@
+                 @#CLEAR_MEM#@ @"TAB-CMDCHANGE"@
+              ;
+              ; for Normal Control
+              ;
+              @#GET_MEM#@   @"CONTROL-EVALUATE"@
+              @#CLEAR_MEM#@ @"CONTROL-EVALUATE"@
+              ;
+              ; for Menu
+              ;
+              @#GET_MEM#@   @"MENU-EVALUATE"@
+              @#CLEAR_MEM#@ @"MENU-EVALUATE"@
+              ;
+              ; for Navigator
+              ;
+              @#GET_MEM#@   @"NAVIGATOR-EVALUATE"@
+              @#CLEAR_MEM#@ @"NAVIGATOR-EVALUATE"@
+              ;
+           END-EVALUATE
+@#DEF_IF#@ @+_OBJ_EVT_LINKTO+@
+      * @+_OBJ_ATR_NAME+@ LINK TO
+           PERFORM @+_OBJ_EVT_LINKTO+@
+@#END_IF#@
+      * avoid changing focus
+           MOVE @+_SYS_ACCEPTCONTROL+@ TO Accept-Control
+           .
+
+       @+_OBJ_ATR_NAME+@-CLEAR@!G_MODE!@.
+           PERFORM @+_OBJ_ATR_NAME+@-INIT-VALUE@!G_MODE!@
+           @#GET_MEM#@   @"FORM-CLEAR"@
+           @#CLEAR_MEM#@ @"FORM-CLEAR"@
+           PERFORM @+_OBJ_ATR_NAME+@-DISPLAY@!G_MODE!@
+           .
+
+       @+_OBJ_ATR_NAME+@-DISPLAY@!G_MODE!@.
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, BeforeDisplay>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"BeforeDisplay"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"FORM-DISPLAY-BEFORE"@
+           @#CLEAR_MEM#@ @"FORM-DISPLAY-BEFORE"@
+           DISPLAY @+_OBJ_ATR_NAME+@ UPON @+_OBJ_ATR_HANDLEVARIABLE+@
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, AfterDisplay>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"AfterDisplay"@
+      * <TOTEM:END>
+           .
+
+;
+; Only 1. The screen is mainscreen &
+;      2. The QuitConfirm is TRUE
+; We will perform situation 1.
+; Else situation 2.
+;
+       @+_OBJ_ATR_NAME+@-Exit@!G_MODE!@.
+      * for main screen
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, BeforeExit>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"BeforeExit"@
+      * <TOTEM:END>
+@#DEF_IF#@ @+_PRG_SYS_QUITCONFIRM+@
+   @#DEF_IF#@ @#EXP: @+_PRG_SYS_MAINSCREENNAME+@ EQUAL @+_OBJ_ATR_NAME+@ #@
+   ;
+   ; situation 1
+   ;
+           MOVE "101" TO TOTEM-MSG-ID
+           PERFORM MESSAGE-BOX-DISPLAY
+           IF TOTEM-MSG-RETURN-VALUE = 1
+              MOVE 27 TO @+_KEYSTATUS_SYS_ITEMNAME+@
+           ELSE
+              INITIALIZE @+_KEYSTATUS_SYS_ITEMNAME+@
+           END-IF
+   @#ELSE#@
+   ;
+   ; situation 2
+   ;
+           MOVE 27 TO @+_KEYSTATUS_SYS_ITEMNAME+@
+   @#END_IF#@
+@#ELSE#@
+   ;
+   ; situation 2
+   ;
+           MOVE 27 TO @+_KEYSTATUS_SYS_ITEMNAME+@
+@#END_IF#@
+           .
+
+       @+_OBJ_ATR_NAME+@-Init-Data@!G_MODE!@.
+   @#DEF_IF#@ @+_OBJ_EVT_BEFOREINITDATA+@
+           PERFORM @+_OBJ_EVT_BEFOREINITDATA+@
+   @#END_IF#@
+           MOVE @!G_SCREENINDEX!@ TO TOTEM-Form-Index
+           MOVE 0 TO TOTEM-Frame-Index
+           @#GET_MEM#@   @"BEFORE_INIT_DATA"@
+           @#CLEAR_MEM#@ @"BEFORE_INIT_DATA"@
+           @#GET_MEM#@   @"PRE_INIT_DATA"@
+           @#CLEAR_MEM#@ @"PRE_INIT_DATA"@
+           @#GET_MEM#@   @"INIT_DATA"@
+           @#CLEAR_MEM#@ @"INIT_DATA"@
+           @#GET_MEM#@   @"INIT_DATA_FRAME"@
+           @#CLEAR_MEM#@ @"INIT_DATA_FRAME"@
+; need this to prevent if no key on form, then push next button would has error msg
+;@<_PUSH_MEM>@
+;@<_SET_EXIST_DATASET>@
+;	@#DEF_IF#@ @+_DATASET_SYS_NAME+@
+;@<_SET_DATASET_MASTERFDSL>@
+;           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-INITSTART
+;	@#END_IF#@
+;@<_POP_MEM>@
+   @#DEF_IF#@ @+_OBJ_EVT_AFTERINITDATA+@
+           PERFORM @+_OBJ_EVT_AFTERINITDATA+@
+   @#END_IF#@
+           .
+
+;
+; ===================================================================
+; Form_IUD may generate some code which should put in INIT-VALUE.
+; ===================================================================
+;
+    @#DEF_IF#@ @+_OBJ_ATR_DATASET+@
+       @%Form_IUD.Skl%@
+    @#END_IF#@
+;
+; Form1-Init-Value.
+;
+       @+_OBJ_ATR_NAME+@-Init-Value@!G_MODE!@.
+   @#DEF_IF#@ @#EXP: @+_PRG_SYS_MAINSCREENNAME+@ EQUAL @+_OBJ_ATR_NAME+@ #@
+      @#DEF_IF#@ @+_OBJ_ATR_TITLEVARIABLE+@
+           MOVE @+_OBJ_ATR_TITLEVARIABLE+@ TO TOTEM-MSG-TITLE
+      @#ELSE_IF#@ @#EXP: NOT (@+_OBJ_ATR_TITLE+@ EQUAL @"\"\""@) #@
+           MOVE @+_OBJ_ATR_TITLE+@ TO TOTEM-MSG-TITLE
+      @#END_IF#@
+   @#END_IF#@
+   @#DEF_IF#@ @!G_EXISTDBCONTROL!@
+           INITIALIZE @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_DATASET+@
+      * FORM : @+_OBJ_ATR_NAME+@
+           ; If init summary first after -init-record. would be last record.
+           ; So Change init summary routine to SMY_INIT_VLAUE
+           @#GET_MEM#@   @"SMY_INIT_VALUE"@
+           @#CLEAR_MEM#@ @"SMY_INIT_VALUE"@
+           PERFORM @+_OBJ_ATR_DATASET+@-INIT-RECORD
+   @#END_IF#@
+           @#GET_MEM#@   @"FRM_INI_RECORD"@
+           @#CLEAR_MEM#@ @"FRM_INI_RECORD"@
+           @#GET_MEM#@   @"INIT_VALUE"@
+           @#CLEAR_MEM#@ @"INIT_VALUE"@
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, SetDefault>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"SetDefault"@
+      * <TOTEM:END>
+; IF IS IMPORT PROGRAM, NO DATA CONTROL, NO FLD-TO-BUF PARAGRAPH
+   @#DEF_IF#@ @#EXP: NOT @+_PRG_SYS_ISIMPORT+@ #@
+           PERFORM @+_OBJ_ATR_NAME+@-FLD-TO-BUF@!G_MODE!@
+   @#END_IF#@
+           .
+
+	@#DEF_IF#@ @!L_ENABLECONDITION!@
+       @+_OBJ_ATR_NAME+@-VERIFY-ENABLECONDITION@!G_MODE!@.
+           @#GET_MEM#@   @"VERIFY-ENABLECONDITION_FRAME"@
+           @#CLEAR_MEM#@ @"VERIFY-ENABLECONDITION_FRAME"@
+           @#GET_MEM#@   @"VERIFY-ENABLECONDITION"@
+           @#CLEAR_MEM#@ @"VERIFY-ENABLECONDITION"@
+           .
+
+    @#END_IF#@
+    @#DEF_IF#@ @!G_EXISTDATAFRAME!@
+       @#GET_MEM#@   @"FRAME_PROCEDURE"@
+       @#CLEAR_MEM#@ @"FRAME_PROCEDURE"@
+    @#END_IF#@
+;
+; ===================================================================
+;  FORM'S I-U-D ( Include Form & DB_Frame )
+; ===================================================================
+;
+@$FRAME-NAVIGATOR-FOR-MASTERGRID$@
+      * DB_FRAME
+    @#GET_MEM#@   @"FORM-ALL-NAVI-CHANGE"@
+    @#CLEAR_MEM#@ @"FORM-ALL-NAVI-CHANGE"@
+      * END OF DB_FRAME
+;
+    @#CLEAR_MEM#@ @"FORM-ALL-NAVI-CHANGE"@
+    @#CLEAR_MEM#@ @"FRAME-NAVIGATOR-FOR-MASTERGRID"@
+@$PROCEDURE$@
+    @#GET_MEM#@   @"FORM-IUD"@
+    @#CLEAR_MEM#@ @"FORM-IUD"@
+    @#GET_MEM#@   @"FORM-DUMY"@
+    @#CLEAR_MEM#@ @"FORM-DUMY"@
+
+; end of @!G_USERSCREEN!@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT @+_PRG_SYS_ISIMPORT+@ #@
+       @+_OBJ_ATR_NAME+@-ALLGRID-RESET@!G_MODE!@.
+           @#GET_MEM#@   @"FORM_RESET_ALLGRID"@
+           @#CLEAR_MEM#@ @"FORM_RESET_ALLGRID"@
+           .
+
+;
+; for Validation
+;
+      * for Form's Validation
+       @!G_SCREENNAME!@-VALIDATION-ROUTINE@!G_MODE!@.
+           SET TOTEM-CHECK-OK TO TRUE
+           @#GET_MEM#@   @"FORM-VALIDATION-HEAD"@
+           @#CLEAR_MEM#@ @"FORM-VALIDATION-HEAD"@
+           .
+
+       @#GET_MEM#@   @"FORM-VALIDATION"@
+       @#CLEAR_MEM#@ @"FORM-VALIDATION"@
+
+;
+; ===================================================================
+;  BUF-TO-FLD  & FLD-TO-BUF
+; ===================================================================
+;
+       @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@.
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, BeforeBufToFld>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"BeforeBufToFld"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"FDSL_BUFTOFLD_FRAME"@
+           @#CLEAR_MEM#@ @"FDSL_BUFTOFLD_FRAME"@
+           @#GET_MEM#@   @"FDSL_BUFTOFLD"@
+           @#CLEAR_MEM#@ @"FDSL_BUFTOFLD"@
+           @#GET_MEM#@   @"FDSL_BUFTOFLD_MGRID"@
+           @#CLEAR_MEM#@ @"FDSL_BUFTOFLD_MGRID"@
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, AfterBufToFld>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"AfterBufToFld"@
+      * <TOTEM:END>
+           .
+
+       @+_OBJ_ATR_NAME+@-Fld-To-Buf@!G_MODE!@.
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, BeforeFldToBuf>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"BeforeFldToBuf"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"FDSL_FLDTOBUF_FRAME"@
+           @#CLEAR_MEM#@ @"FDSL_FLDTOBUF_FRAME"@
+           @#GET_MEM#@   @"FDSL_FLDTOBUF"@
+           @#CLEAR_MEM#@ @"FDSL_FLDTOBUF"@
+      * <TOTEM:EPT. FORM:@+_OBJ_ATR_NAME+@, FORM:@+_OBJ_ATR_NAME+@, AfterFldToBuf>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"FORM"@ @"AfterFldToBuf"@
+      * <TOTEM:END>
+           .
+
+;
+;======================================
+; DARWIN - MODIFICA per CONTROLLO-OLD
+;======================================
+;
+       @+_OBJ_ATR_NAME+@-CONTROLLO-OLD.
+           set SiSalvato to true.
+           if mod = 0 exit paragraph end-if.
+           perform @+_OBJ_ATR_NAME+@-BUF-TO-FLD@!G_MODE!@.
+           move 0 to scelta.
+           @#GET_MEM#@   @"CONTROLLO_OLD_VARS"@
+           @#CLEAR_MEM#@ @"CONTROLLO_OLD_VARS"@
+           .
+;
+@#DEF_IF#@ @!G_GENERA_ELENCO_ID!@
+     @$CONTROLLO_SCREEN$@
+      * Paragrafo per la struttura dei controlli sulla screen @+_OBJ_ATR_NAME+@
+           evaluate control-id
+           @#GET_MEM#@   @"CONTROLLO_WHEN"@
+           @#CLEAR_MEM#@ @"CONTROLLO_WHEN"@
+           end-evaluate.
+
+     @$PROCEDURE$@
+@#END_IF#@
+;
+;======================================
+; DARWIN - FINE MODIFICA
+;======================================
+;
+;
+@#DEF_IF#@ @!G_CHECKKEYFIELD!@     
+       @+_OBJ_ATR_NAME+@-Buf-To-ValueBuf@!G_MODE!@.
+           @#GET_MEM#@   @"FDSL_BUFTOVALUEBUF"@
+           @#CLEAR_MEM#@ @"FDSL_BUFTOVALUEBUF"@
+           .
+           
+   @#END_IF#@
+;
+;
+; ==================== PRD -- FOR MESSAGE PROCESS ===================
+;
+       @+_OBJ_ATR_NAME+@-EXTENDED-FILE-STATUS@!G_MODE!@.
+           CALL "C$RERRNAME" USING TOTEM-MSG-ERR-FILE
+           CALL "C$RERR" USING EXTEND-STAT, TEXT-MESSAGE
+           MOVE PRIMARY-ERROR TO TOTEM-MSG-ID
+           PERFORM @+_OBJ_ATR_NAME+@-SHOW-MSG-ROUTINE@!G_MODE!@
+           .
+
+       @+_OBJ_ATR_NAME+@-SHOW-MSG-ROUTINE@!G_MODE!@.
+           PERFORM SHOW-MSG-ROUTINE
+           PERFORM @+_OBJ_ATR_NAME+@-DISPLAY-MESSAGE@!G_MODE!@
+           .
+
+       @+_OBJ_ATR_NAME+@-DISPLAY-MESSAGE@!G_MODE!@.
+           PERFORM MESSAGE-BOX-ROUTINE
+    @#DEF_IF#@ @!G_ISMESSAGELINE!@
+           PERFORM @+_OBJ_ATR_NAME+@-DISPLAY-STATUS-MSG@!G_MODE!@
+    @#ELSE#@
+           DISPLAY MESSAGE BOX TOTEM-MSG-TEXT
+               TITLE IS TOTEM-MSG-TITLE
+               TYPE  IS TOTEM-MSG-BUTTON-TYPE
+               ICON  IS TOTEM-MSG-DEFAULT-BUTTON
+               RETURNING TOTEM-MSG-RETURN-VALUE
+    @#END_IF#@
+           .
+
+       @+_OBJ_ATR_NAME+@-Save-Status@!G_MODE!@.
+           @#GET_MEM#@ @"BACKUP-KEY"@
+           @#CLEAR_MEM#@ @"BACKUP-KEY"@
+           .		
+
+       @+_OBJ_ATR_NAME+@-Restore-Status@!G_MODE!@.
+           @#GET_MEM#@ @"RESTORE-KEY"@
+           @#CLEAR_MEM#@ @"RESTORE-KEY"@
+           .
+
+@#END_IF#@
+;
+; ======================= PRD -- EVENT PROCESS ======================
+;
+@#DEF_SETANSI#@ @"EVENT"@
+@#DEF_IF#@ @!G_USERSCREEN!@
+@#DEF_SETMEM#@ @!L_DOIT!@ @"HINT"@
+@#DEF_SETPARA#@ @"1"@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+@#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_ISINTERNALFUNCTION+@) AND 
+                  (@!L_DOIT!@ OR @+_OBJ_EVT_BEFOREPROCEDURE+@) #@
+  @#DEF_IF#@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+@$DEFAULTCODE_@+_OBJ_EVT_BEFOREPROCEDURE+@$@
+  @#ELSE#@
+@$EVENT$@
+       @+_OBJ_ATR_NAME+@-BeforeProcedure@!G_MODE!@.
+  @#END_IF#@
+  @#DEF_IF#@ @!L_DOIT!@
+    @#DEF_SETPARA#@ @"1"@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+    @#DEF_IF#@ @#EXP: NOT (@+_SYS_CHECK_DEFAULTCODE+@ EQUAL @"DISABLE"@) #@
+           EVALUATE Control-Id
+           @#GET_MEM#@ @"HINT"@
+           @#CLEAR_MEM#@ @"HINT"@
+           WHEN OTHER MOVE SPACES TO TOTEM-HINT-TEXT
+           END-EVALUATE
+      @#DEF_SETMEM#@ @!L_DOBEFORE!@ @"BEFOREPROCEDURE"@
+  	  @#DEF_IF#@ @!L_DOBEFORE!@
+           EVALUATE Control-Id
+           @#GET_MEM#@ @"BEFOREPROCEDURE"@
+           @#CLEAR_MEM#@ @"BEFOREPROCEDURE"@
+           END-EVALUATE
+	  @#END_IF#@
+      @#DEF_IF#@ @!G_EXITSTATUS!@
+           @#GET_MEM#@ @"SHOW-HINT"@
+           @#CLEAR_MEM#@ @"SHOW-HINT"@
+ 	  @#END_IF#@
+    @#END_IF#@
+  @#END_IF#@
+;
+;===============================================================================
+;DARWIN - MODIFICA PER RICHIAMO AL PRF. DA ME CREATO PER LA BEFORE DELLA SCREEN
+;===============================================================================
+;                                    
+  @#DEF_IF#@ @#EXP: @!G_GENERA_BEFORE!@ AND @!L_EXIST_BEFORE!@ #@
+           perform @+_OBJ_ATR_NAME+@-BEFORE-SCREEN
+  @#END_IF#@
+;
+;================
+;FINE MODIFICA 
+;================
+;
+   @#DEF_IF#@ @#EXP: NOT (@+_OBJ_EVT_BEFOREPROCEDURE+@) #@
+           .
+
+   @#END_IF#@
+@#END_IF#@
+@#DEF_SETPARA#@ @"1"@ @+_OBJ_EVT_AFTERPROCEDURE+@
+@#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_ISINTERNALFUNCTION+@) AND 
+                  (@!L_DOAFTER!@ OR @!L_ENABLECONDITION!@ OR @+_OBJ_EVT_AFTERPROCEDURE+@) #@
+  @#DEF_IF#@ @+_OBJ_EVT_AFTERPROCEDURE+@
+@$DEFAULTCODE_@+_OBJ_EVT_AFTERPROCEDURE+@$@
+  @#ELSE#@
+@$EVENT$@
+       @+_OBJ_ATR_NAME+@-AfterProcedure@!G_MODE!@.
+  @#END_IF#@
+;    @#DEF_SETPARA#@ @"1"@ @+_OBJ_EVT_AFTERPROCEDURE+@
+;    @#DEF_IF#@ @+_SYS_CHECK_DEFAULTCODE+@
+  	  @#DEF_IF#@ @!L_DOAFTER!@
+           EVALUATE Control-Id
+           @#GET_MEM#@ @"AFTERPROCEDURE"@
+           @#CLEAR_MEM#@ @"AFTERPROCEDURE"@
+           END-EVALUATE
+	  @#END_IF#@
+	  @#DEF_IF#@ @!L_ENABLECONDITION!@
+           PERFORM @+_OBJ_ATR_NAME+@-VERIFY-ENABLECONDITION@!G_MODE!@
+          @#END_IF#@
+;    @#END_IF#@
+;
+;===============================================================================
+;DARWIN - MODIFICA PER RICHIAMO AL PRF. DA ME CREATO PER L'AFTER DELLA SCREEN
+;===============================================================================
+;
+  @#DEF_IF#@ @#EXP: @!G_GENERA_AFTER!@ AND @!L_EXIST_AFTER!@ #@
+           perform @+_OBJ_ATR_NAME+@-AFTER-SCREEN
+  @#END_IF#@
+;
+;===============
+;FINE MODIFICA
+;===============
+;
+   @#DEF_IF#@ @#EXP: NOT (@+_OBJ_EVT_AFTERPROCEDURE+@) #@
+           .
+
+   @#END_IF#@
+@#END_IF#@
+@$EVENT$@
+@#DEF_IF#@ @!G_NEEDEVMSGCLOSE!@
+       @+_OBJ_ATR_NAME+@-Event-Extra@!G_MODE!@.
+           EVALUATE Event-Type
+           WHEN Msg-Close
+              PERFORM @+_OBJ_ATR_NAME+@-MSG-CLOSE@!G_MODE!@
+           END-EVALUATE.
+
+       @+_OBJ_ATR_NAME+@-MSG-CLOSE@!G_MODE!@.
+           ACCEPT TOTEM-QUIT-MODE-FLAG FROM ENVIRONMENT "QUIT_MODE"
+           IF TOTEM-QUIT-MODE-FLAG = ZEROS OR SPACES
+              PERFORM @+_OBJ_ATR_NAME+@-Exit@!G_MODE!@
+              IF NOT @!G_KEYSTATUS27!@
+                 MOVE Event-Action-Fail TO Event-Action
+              ELSE
+                 PERFORM EXIT-STOP-ROUTINE
+              END-IF
+           END-IF
+           .
+
+@#END_IF#@
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_EVENT+@ OR @+_OBJ_EVT_PROCEDURE+@ OR @!G_NEEDEVMSGCLOSE!@ #@
+   @#DEF_IF#@ @+_OBJ_EVT_PROCEDURE+@
+       @#DEF_SET#@ @!L_EVENT!@ @+_OBJ_EVT_PROCEDURE+@
+   @#ELSE#@
+       @#DEF_SET#@ @!L_EVENT!@ @"@+_OBJ_ATR_NAME+@-Event@!G_MODE!@"@
+   @#END_IF#@
+   ;
+   ; Something you should do before Event Procedure.
+   ;
+   @#DEF_IF#@ @!G_NEEDEVMSGCLOSE!@
+@$EVENT-PRO-HEAD-@!L_EVENT!@$@
+           IF Event-Control-Id = 0 AND
+                 Event-Window-Handle = @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_ATR_NAME+@-Event-Extra@!G_MODE!@
+           END-IF
+   @#END_IF#@
+   ;
+   ; Normal Event Procedure.
+   ;
+   @#DEF_IF#@ @+_OBJ_SYS_EVENT+@
+@$EVENT-PRO-@!L_EVENT!@$@
+      @#DEF_IF#@ @+_OBJ_CMD_ACTIVATE+@
+           WHEN Cmd-Activate ALSO 0 ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_CMD_ACTIVATE+@
+      @#END_IF#@
+      @#DEF_IF#@ @+_OBJ_CMD_CLOSE+@
+           WHEN Cmd-Close ALSO 0 ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_CMD_CLOSE+@
+      @#END_IF#@
+      @#DEF_IF#@ @+_OBJ_MSG_CLOSE+@
+           WHEN Msg-Close ALSO 0 ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_CLOSE+@
+      @#END_IF#@
+      @#DEF_IF#@ @+_OBJ_MSG_ENDMENU+@
+           WHEN Msg-End-Menu ALSO 0 ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_ENDMENU+@
+      @#END_IF#@
+      @#DEF_IF#@ @+_OBJ_MSG_INITMENU+@
+           WHEN Msg-Init-Menu ALSO 0 ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_INITMENU+@
+      @#END_IF#@
+      @#DEF_IF#@ @+_OBJ_MSG_MENUINPUT+@
+           WHEN Msg-Menu-Input ALSO 0 ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_MSG_MENUINPUT+@
+      @#END_IF#@
+      @#DEF_IF#@ @+_OBJ_NTF_RESIZED+@
+           WHEN Ntf-Resized ALSO 0 ALSO
+                    @!G_SCREENHANDLE!@ 
+              PERFORM @+_OBJ_NTF_RESIZED+@
+      @#END_IF#@
+      @#DEF_IF#@ @+_OBJ_EVT_OTHER+@
+@$EVENT-OTHER-@!L_EVENT!@$@
+              WHEN ANY ALSO
+                    @!G_SCREENHANDLE!@ 
+                 PERFORM @+_OBJ_EVT_OTHER+@
+      @#END_IF#@
+   @#END_IF#@
+@#END_IF#@
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_EXPEVENT+@ OR @+_OBJ_EXPEVT_PROCEDURE+@ #@
+   @#DEF_IF#@ @+_OBJ_EXPEVT_PROCEDURE+@
+       @#DEF_SET#@ @!L_EXPEVENT!@ @+_OBJ_EXPEVT_PROCEDURE+@
+   @#ELSE#@
+       @#DEF_SET#@ @!L_EXPEVENT!@ @"@+_OBJ_ATR_NAME+@-Exception@!G_MODE!@"@
+   @#END_IF#@
+@$EXPEVENT-PRO-@!L_EXPEVENT!@$@
+   @#DEF_IF#@ @+_OBJ_EXPCMD_ACTIVATE+@
+              WHEN Cmd-Activate ALSO 0 ALSO
+                    @!G_SCREENHANDLE!@ 
+                 PERFORM @+_OBJ_EXPCMD_ACTIVATE+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_EXPCMD_CLOSE+@
+              WHEN Cmd-Close ALSO 0 ALSO
+                    @!G_SCREENHANDLE!@ 
+                 PERFORM @+_OBJ_EXPCMD_CLOSE+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_EXPNTF_RESIZED+@
+              WHEN Ntf-Resized ALSO 0 ALSO
+                    @!G_SCREENHANDLE!@ 
+                 PERFORM @+_OBJ_EXPNTF_RESIZED+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_EXPEVT_OTHER+@
+@$EXPEVENT-OTHER-@!L_EXPEVENT!@$@
+                 WHEN ANY 
+                    PERFORM @+_OBJ_EXPEVT_OTHER+@
+   @#END_IF#@
+@#END_IF#@
+; end of @!G_USERSCREEN!@
+@#END_IF#@
+@#DEF_SETANSI#@ @""@
+;
+;===========================================================
+;DARWIN - MODIFICA PER LA GENERAZIONE DELLA COPY
+;CONTENENTE CODICE PER L'AFTER E LA BEFORE DI TUTTI I CAMPI
+;===========================================================
+;
+;@!G_GENERA_BEFORE!@ mi ritorna valorizzato se DEVO generare la copy
+@#DEF_IF#@ @!G_GENERA_BEFORE!@
+     @$BEFORE_SCREEN$@
+
+      * Paragrafo per la struttura del codice in BEFORE sulla screen @+_OBJ_ATR_NAME+@
+      ***---
+       @+_OBJ_ATR_NAME+@-BEFORE-SCREEN.
+       @#DEF_IF#@ @!G_GENERA_BEFORE_ZOOM!@  
+           evaluate control-id
+           @#GET_MEM#@   @"BEFORE_SCREEN_ZOOM"@
+           @#CLEAR_MEM#@ @"BEFORE_SCREEN_ZOOM"@
+           |99999 è un valore fittizio, che non sarà MAI usato,
+           |ma mi serve per non riscontrare errori di compilazione
+           |in caso non avessi generato nulla nella BEFORE della screen
+           when 99999 continue
+           when other continue
+           end-evaluate.
+       @#END_IF#@
+
+      * Generazione settaggio keyboard "." ---> ","
+       @#DEF_IF#@ @!G_GENERA_BEFORE_VIRGOLA!@  
+           evaluate control-id
+           @#GET_MEM#@   @"BEFORE_SCREEN_VIRGOLA"@
+           @#CLEAR_MEM#@ @"BEFORE_SCREEN_VIRGOLA"@
+           |99999 è un valore fittizio, che non sarà MAI usato,
+           |ma mi serve per non riscontrare errori di compilazione
+           |in caso non avessi generato nulla nella BEFORE della screen
+           when 99999 continue
+           when other continue
+           end-evaluate.
+       @#END_IF#@
+;
+@#END_IF#@
+;
+;@!G_GENERA_AFTER!@ mi ritorna valorizzato se DEVO generare la copy
+@#DEF_IF#@ @!G_GENERA_AFTER!@
+     @$AFTER_SCREEN$@
+
+      * Paragrafo per la struttura del codice in AFTER sulla screen @+_OBJ_ATR_NAME+@
+      ***---
+       @+_OBJ_ATR_NAME+@-AFTER-SCREEN.
+       @#DEF_IF#@ @!G_GENERA_AFTER_ZOOM!@  
+           evaluate control-id
+           @#GET_MEM#@   @"AFTER_SCREEN_ZOOM"@
+           @#CLEAR_MEM#@ @"AFTER_SCREEN_ZOOM"@
+           |99999 è un valore fittizio, che non sarà MAI usato,
+           |ma mi serve per non riscontrare errori di compilazione
+           |in caso non avessi generato nulla nella AFTER della screen
+           when 99999 continue
+           when other continue
+           end-evaluate.
+       @#END_IF#@
+
+      * Generazione risettaggio keyboard "." ---> "."
+       @#DEF_IF#@ @!G_GENERA_AFTER_VIRGOLA!@  
+           evaluate control-id
+           @#GET_MEM#@   @"AFTER_SCREEN_VIRGOLA"@
+           @#CLEAR_MEM#@ @"AFTER_SCREEN_VIRGOLA"@
+           |99999 è un valore fittizio, che non sarà MAI usato,
+           |ma mi serve per non riscontrare errori di compilazione
+           |in caso non avessi generato nulla nella BEFORE della screen
+           when 99999 continue
+           when other continue
+           end-evaluate.
+       @#END_IF#@
+
+      * Generazione stringa perform CONTROLLO
+       @#DEF_IF#@ @!G_GENERA_AFTER_CONTROLLO!@  
+           evaluate control-id
+           @#GET_MEM#@   @"AFTER_SCREEN_CONTROLLO"@
+           @#CLEAR_MEM#@ @"AFTER_SCREEN_CONTROLLO"@      
+           |99999 è un valore fittizio, che non sarà MAI usato,
+           |ma mi serve per non riscontrare errori di compilazione
+           |in caso non avessi generato nulla nella AFTER CONTROLLO della screen
+           when 99999 continue
+           when other continue
+           end-evaluate.
+       @#END_IF#@
+
+     @$PROCEDURE$@               
+     @#DEF_IF#@ @!G_GENERA_BEFORE!@  
+           @#GET_MEM#@   @"BEFORE_SCREEN"@
+           @#CLEAR_MEM#@ @"BEFORE_SCREEN"@
+     @#END_IF#@                      
+     @#DEF_IF#@ @!G_GENERA_AFTER!@  
+           @#GET_MEM#@   @"AFTER_SCREEN"@
+           @#CLEAR_MEM#@ @"AFTER_SCREEN"@ 
+     @#END_IF#@                      
+@#END_IF#@
+;
+;===========================
+;FINE MODIFICA
+;===========================
+;
+;
+; ======================= PRD -- FONT PROCESS =======================
+;
+@$FONT_PROCESS$@
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+   @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_OBJ_ATR_FONTVARIABLE+@
+   @%FontProcess.Skl%@
+@#END_IF#@

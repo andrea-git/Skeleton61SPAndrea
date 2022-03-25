@@ -1,0 +1,165 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report Graphic Report Print Paragraph Generation Rule.  2001/11/22
+;
+;
+; ================== RPT -- REPORT PRINT ROUTINE ====================
+;
+@$REPORT-BODY$@
+       @+_RPT_ATR_NAME+@-PRINT-PARA.
+           MOVE SPACES TO PRINT-FULLNAME
+    @#DEF_IF#@ @+_RPT_ATR_OUTPUTFILEVARIABLE+@
+           CALL "C$FULLNAME" USING @+_RPT_ATR_OUTPUTFILEVARIABLE+@, PRINT-FULLNAME,
+                GIVING TOTEM-STATUS-CODE
+    @#ELSE#@
+           CALL "C$FULLNAME" USING "@+_RPT_ATR_OUTPUTFILENAME+@", PRINT-FULLNAME,
+                GIVING TOTEM-STATUS-CODE
+    @#END_IF#@
+           IF TOTEM-STATUS-CODE = 1
+              MOVE 0 TO TOTEM-SETUPPRINT
+              EXIT PARAGRAPH
+           END-IF
+           MOVE 0 TO TOTEM-IDX1
+           INSPECT PRINT-FULLNAME TALLYING TOTEM-IDX1 FOR ALL "\"
+           INSPECT PRINT-FULLNAME REPLACING TRAILING SPACE BY "*"
+           IF TOTEM-IDX1 <= 0
+              MOVE SPACES TO DUMY-LINE
+              CALL "C$CHDIR" USING DUMY-LINE
+              INSPECT DUMY-LINE REPLACING TRAILING SPACE BY "*"
+;              
+              MOVE 0 TO TOTEM-STATUS-CODE
+              PERFORM VARYING TOTEM-IDX2 FROM 1 BY 1 UNTIL
+              TOTEM-STATUS-CODE = 1
+                 IF DUMY-LINE(TOTEM-IDX2:1) = "*"
+                    MOVE 1 TO TOTEM-STATUS-CODE
+                 END-IF
+              END-PERFORM
+              IF DUMY-LINE(TOTEM-IDX2 - 2:1) = "\"
+                 STRING DUMY-LINE, PRINT-FULLNAME, X"00"
+                    DELIMITED BY "*" INTO PRT-FULLFILENAME
+              ELSE                            
+                 STRING DUMY-LINE, "\", PRINT-FULLNAME, X"00"
+                     DELIMITED BY "*" INTO PRT-FULLFILENAME
+              END-IF
+;              
+           ELSE
+              STRING PRINT-FULLNAME , X"00" DELIMITED BY "*" INTO PRT-FULLFILENAME
+           END-IF
+
+           STRING "@+_PAPER_SYS_SIZE+@", X"00" DELIMITED BY SIZE INTO TOTEM-PAPER-SIZE
+		   @#DEF_IF#@ @+_PAPER_SYS_HEADER+@
+           STRING "@+_PAPER_SYS_HEADER+@", X"00" DELIMITED BY SIZE INTO TOTEM-PAPER-HEADER
+		   @#ELSE#@
+           MOVE X"00" TO TOTEM-PAPER-HEADER
+		   @#END_IF#@
+		   @#DEF_IF#@ @+_PAPER_SYS_FOOTER+@
+           STRING "@+_PAPER_SYS_FOOTER+@", X"00" DELIMITED BY SIZE INTO TOTEM-PAPER-FOOTER
+		   @#ELSE#@
+           MOVE X"00" TO TOTEM-PAPER-FOOTER
+		   @#END_IF#@
+           MOVE "@+_PAPER_SYS_ORIENTATION+@" TO TOTEM-PAPER-ORIENTATION
+           IF TOTEM-PAPER-ORIENTATION = "LANDSCAPE"
+              MOVE 2 TO TOTEM-PAPER-ORIENTATIONINT
+           ELSE
+              MOVE 1 TO TOTEM-PAPER-ORIENTATIONINT
+           END-IF
+           STRING "@+_PAPER_SYS_ORIENTATION+@", X"00" DELIMITED BY SIZE INTO TOTEM-PAPER-ORIENTATION
+           MOVE "@+_PAPER_SYS_LEFT+@" to TOTEM-MARGIN-LEFT
+           MOVE "@+_PAPER_SYS_RIGHT+@" to TOTEM-MARGIN-RIGHT
+           MOVE "@+_PAPER_SYS_TOP+@" to TOTEM-MARGIN-TOP
+           MOVE "@+_PAPER_SYS_BOTTOM+@" to TOTEM-MARGIN-BOTTOM
+           STRING TOTEM-PAPER-MARGIN, X"00" DELIMITED BY SIZE INTO PRINT-BROWSER-PARA
+           IF TOTEM-PAPER-COPIES = 0 
+              OR TOTEM-PAPER-COPIES(1:) = spaces
+                 MOVE 1 to TOTEM-PAPER-COPIES
+           END-IF
+           MOVE SPACES TO DUMY-LINE
+           .
+
+       @+_RPT_ATR_NAME+@-SETUP-PRINT.
+           MOVE 1 TO TOTEM-SETUPPRINT
+           PERFORM @+_RPT_ATR_NAME+@-PRINT-PARA
+           SET ENVIRONMENT "DLL_CONVENTION" to "1"
+           CALL "TotemPrintDummy"
+              ON EXCEPTION CALL "TotemPrint.dll" END-CALL
+           END-CALL
+           CALL "TotemPrintExecWBPageSetup" USING
+                BY CONTENT PRINT-BROWSER-PARA,
+                BY CONTENT TOTEM-PAPER-SIZE, 
+                BY VALUE   TOTEM-PAPER-ORIENTATIONINT,
+                BY CONTENT TOTEM-PRINTER-NAME
+                GIVING TOTEMPRINTDLL-STATUS
+           END-CALL
+           IF TOTEMPRINTDLL-SUCCESS
+              MOVE 1 TO PRINT-UNIT-TYPE
+              SET PRINT-PTR TO ADDRESS OF TOTEM-PAPER-MARGIN
+              CALL "TotemPrintGetMargins" USING BY VALUE PRINT-UNIT-TYPE, PRINT-PTR
+              SET PRINT-PTR TO ADDRESS OF TOTEM-PAPER-SIZEINT
+              CALL "TotemPrintGetPaperSize" USING BY VALUE PRINT-UNIT-TYPE, PRINT-PTR
+              COMPUTE PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT = TOTEM-PAPER-HEIGHT - TOTEM-MARGIN-TOP - TOTEM-MARGIN-BOTTOM 
+              COMPUTE PAGE-WIDTH OF @!G_REPORTNAME!@-HEIGHT = TOTEM-PAPER-WIDTH - TOTEM-MARGIN-LEFT - TOTEM-MARGIN-RIGHT
+
+              MOVE 2 TO PRINT-UNIT-TYPE
+              SET PRINT-PTR TO ADDRESS OF TOTEM-PAPER-MARGIN
+              CALL "TotemPrintGetMargins" USING BY VALUE PRINT-UNIT-TYPE, PRINT-PTR
+              STRING TOTEM-PAPER-MARGIN, X"00" DELIMITED BY SIZE INTO PRINT-BROWSER-PARA
+
+              SET PRINT-PTR TO ADDRESS OF TOTEM-PAPER-SIZE
+              CALL "TotemPrintGetPaperName" USING BY VALUE PRINT-PTR
+              CALL "TotemPrintGetOrientation" GIVING TOTEM-PAPER-ORIENTATIONINT
+              CALL "TotemPrintGetCopies" GIVING TOTEM-PAPER-COPIES
+              SET PRINT-PTR TO ADDRESS OF TOTEM-PRINTER-NAME
+              CALL "TotemPrintGetPrinterName" USING BY VALUE PRINT-PTR
+
+              PERFORM @+_RPT_ATR_NAME+@-PRINT-TOFILE
+              PERFORM @+_RPT_ATR_NAME+@-DO-PRINT
+           END-IF
+           .
+
+       @+_RPT_ATR_NAME+@-PRINT.
+           MOVE 0 TO TOTEM-SETUPPRINT
+           PERFORM @+_RPT_ATR_NAME+@-PRINT-TOFILE
+           PERFORM @+_RPT_ATR_NAME+@-DO-PRINT
+           .
+
+       @+_RPT_ATR_NAME+@-DO-PRINT.
+           IF TOTEM-SETUPPRINT = 0
+              PERFORM @+_RPT_ATR_NAME+@-PRINT-PARA
+              SET ENVIRONMENT "DLL_CONVENTION" to "1"
+              CALL "TotemPrintDummy"
+                 ON EXCEPTION CALL "TotemPrint.dll" END-CALL
+              END-CALL
+           END-IF
+           CALL "TotemPrintExecWBPrint" USING
+                BY CONTENT PRT-FULLFILENAME,
+                OMITTED,
+                BY CONTENT PRINT-BROWSER-PARA,
+                BY CONTENT TOTEM-PAPER-HEADER, 
+                BY CONTENT TOTEM-PAPER-FOOTER, 
+                BY CONTENT TOTEM-PAPER-SIZE, 
+                BY VALUE TOTEM-PAPER-ORIENTATIONINT,
+                BY VALUE TOTEM-PAPER-COPIES,
+                BY CONTENT TOTEM-PRINTER-NAME
+           END-CALL
+           MOVE 0 TO TOTEM-SETUPPRINT
+           .
+
+       @+_RPT_ATR_NAME+@-PREVIEW.
+           PERFORM @+_RPT_ATR_NAME+@-PRINT-TOFILE
+           PERFORM @+_RPT_ATR_NAME+@-PRINT-PARA
+           SET ENVIRONMENT "DLL_CONVENTION" to "1"
+           CALL "TotemPrintDummy"
+              ON EXCEPTION CALL "TotemPrint.dll" END-CALL
+           END-CALL
+           CALL "TotemPrintExecWBPreview" USING
+                BY CONTENT PRT-FULLFILENAME,
+                BY CONTENT PRINT-BROWSER-PARA,
+                BY CONTENT TOTEM-PAPER-HEADER, 
+                BY CONTENT TOTEM-PAPER-FOOTER, 
+                BY CONTENT TOTEM-PAPER-SIZE, 
+                BY VALUE TOTEM-PAPER-ORIENTATIONINT,
+                BY CONTENT TOTEM-PRINTER-NAME
+           END-CALL
+           .
+
+;

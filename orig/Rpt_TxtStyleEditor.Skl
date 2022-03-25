@@ -1,0 +1,110 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report Entry-Field Control Generation Rule.  2001/04/19
+;
+; Remarks:
+;   The same as RPT.Label.
+;
+; ===================================================================
+;
+; ========================== Pre-Checking ===========================
+;
+@#DEF_IF#@ @#EXP: NOT @+_RPT_ATR_FIELDVARIABLE+@ #@
+   @#SHOW_MSG#@ @"Warning4"@
+@#END_IF#@
+;
+;
+@#DEF_SET#@ @!G_EXISTRPTBUF!@ @"YES"@
+;
+; ================ WRK -- RPT -- Pre Entry-Field Buf ================
+; Remarks:
+;   There's a Entry-Field's property : Print if Repeat. Every time when
+;   you fetch next record and going to print the field out, you should
+;   check if the data value is the same as previous time, then decide
+;   whether to print it or not.
+;
+@$RPT_PRE_DATABUF$@
+      * @+_RPT_SYS_TYPE+@
+     @#DEF_IF#@ @+_RPT_ATR_FIELDEDITEDFORMAT+@
+           03 @+_RPT_ATR_NAME+@-PRE-BUF-T PIC @+_RPT_ATR_FIELDEDITEDFORMAT+@.
+     @#ELSE#@
+           03 @+_RPT_ATR_NAME+@-PRE-BUF-T.
+     @#END_IF#@
+;
+; ==================== WRK -- RPT -- Entry-Field ====================
+;
+@$RPT_DB_WORKING_BUFBODY$@
+      * @+_RPT_SYS_TYPE+@
+     @#DEF_IF#@ @+_RPT_ATR_FIELDEDITEDFORMAT+@
+           03 @+_RPT_ATR_NAME+@-BUF-T PIC @+_RPT_ATR_FIELDEDITEDFORMAT+@.
+     @#ELSE#@
+           03 @+_RPT_ATR_NAME+@-BUF-T.
+     @#END_IF#@
+;
+; ========================= PRT -- BUFTOFLD =========================
+;
+@$RPT_FDSL_FLDTOBUF$@
+      * RPT.ENTRY_FIELD : @+_RPT_ATR_NAME+@
+   @<_SET_OBJ_FIELDEXPRESSION>@
+   @#DEF_IF#@ @+_OBJ_SYS_LINECOUNT+@
+      * FIELD EXPRESSION ( @+_RPT_ATR_NAME+@ )
+      @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+      @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+      @#END_LOOP#@
+      * END OF FIELD EXPRESSION
+   @#END_IF#@
+           MOVE @+_RPT_ATR_FIELDVARIABLE+@ TO @+_RPT_ATR_NAME+@-BUF-T
+;
+;
+   @#DEF_IF#@ @+_RPT_ATR_PRINTWHENNEWPAGE+@
+@$RPT_ISNEWPAGE_BUF$@
+           @#DEF_SET#@ @!G_EXISTISNEWPAGE!@ @"YES"@
+           03 @!G_REPORTNAME!@-@+_RPT_ATR_NAME+@-ISNEW     PIC   9   VALUE 0.
+   @#END_IF#@
+;
+@#DEF_SET#@ @!L_LINE!@ @"1"@
+@#DEF_ADD#@ @!L_LINE!@ @+_RPT_ATR_LINE+@
+;
+@#DEF_SET#@ @!L_COLUMN!@ @"1"@
+@#DEF_ADD#@ @!L_COLUMN!@ @+_RPT_ATR_COLUMN+@
+;
+@#DEF_SET#@ @!L_SIZE!@ @"0"@
+@#DEF_ADD#@ @!L_SIZE!@ @+_RPT_ATR_SIZE+@
+;
+@$RPT-CTRL-PRINT$@
+      * RPT.Entry-Field : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Entry-Field:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Entry-Field"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Detail"@) AND 
+                      (NOT @+_RPT_ATR_PRINTIFREPEAT+@) #@
+      * PRINT IF REPEAT : FALSE
+             IF (@+_RPT_ATR_NAME+@-BUF OF @!G_REPORTNAME!@-BUF-T NOT = @+_RPT_ATR_NAME+@-PRE-BUF OF @!G_REPORTNAME!@-PRE-BUF-T)
+        @#DEF_IF#@ @+_RPT_ATR_PRINTWHENNEWPAGE+@
+      * PRINT WHEN NEW PAGE : TRUE
+                OR (@!G_REPORTNAME!@-@+_RPT_ATR_NAME+@-ISNEW = 0)
+               MOVE 1 TO @!G_REPORTNAME!@-@+_RPT_ATR_NAME+@-ISNEW
+        @#END_IF#@
+   @#END_IF#@
+               MOVE @+_RPT_ATR_NAME+@-BUF-T TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:@!L_SIZE!@)
+   @#DEF_IF#@ @#EXP: (@+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Detail"@) AND
+                      (NOT @+_RPT_ATR_PRINTIFREPEAT+@) #@
+             END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Entry-Field:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Entry-Field"@ @"AfterPrint"@
+      * <TOTEM:END>
+;

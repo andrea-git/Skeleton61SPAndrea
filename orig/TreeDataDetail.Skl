@@ -1,0 +1,54 @@
+; Tree-View Generation Rule
+; 2001/11/02
+;
+; For Tree Data Detail.
+;
+@#DEF_SET#@ @!L_PARENT!@ @!G_PARENT!@
+@#DEF_SET#@ @!L_CURRENTPARENT!@ @!L_PARENT!@
+@<_SET_OBJ_TREEITEM>@
+@#DEF_LOOP#@ @+_TREE_SYS_ITEMNO+@
+   @<_FETCH_NEXT_OBJ_TREEITEM>@
+@$TREE-CONTENT$@
+   @#DEF_IF#@ @#EXP: NOT ( @!L_CURRENTPARENT!@ EQUAL @""@ ) #@
+           PARENT @!L_CURRENTPARENT!@,
+	       @#DEF_SET#@ @!L_CURRENTPARENT!@ @""@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_PLACEMENT+@
+           PLACEMENT = TVPLACE-@+_OBJ_ATR_PLACEMENT+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_LABELVARIABLE+@
+              ITEM-TO-ADD = @+_OBJ_ATR_LABELVARIABLE+@,
+   @#ELSE#@ 
+              ITEM-TO-ADD = @+_OBJ_ATR_LABEL+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_IDENTIFIEDPOINTER+@
+              GIVING @+_OBJ_ATR_IDENTIFIEDPOINTER+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_HIDDENDATAVARIABLE+@
+              HIDDEN-DATA = @+_OBJ_ATR_HIDDENDATAVARIABLE+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_HIDDENDATA+@
+              HIDDEN-DATA = "@+_OBJ_ATR_HIDDENDATA+@",
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_BITMAPNUMBER+@
+              BITMAP-NUMBER = @+_OBJ_ATR_BITMAPNUMBER+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_ENSUREVISIBLE+@
+              ENSURE-VISIBLE @+_OBJ_ATR_IDENTIFIEDPOINTER+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_HASCHILDREN+@
+              HAS-CHILDREN 1,
+   @#END_IF#@
+@$TREEEXPAND$@
+   @#DEF_IF#@ @+_OBJ_ATR_EXPAND+@
+           ITEM = @+_OBJ_ATR_IDENTIFIEDPOINTER+@, EXPAND TVFLAG-EXPAND,
+   @#END_IF#@
+   @#DEF_IF#@ @+_TREE_SYS_SUBTREE+@
+      @<_PUSH_MEM_TREE>@
+      @#DEF_SET#@ @!G_PARENT!@ @+_OBJ_ATR_IDENTIFIEDPOINTER+@
+      @<_SET_OBJ_TREECHILD>@
+      @%TreeDataDetail.Skl%@
+      @<_POP_MEM_TREE>@
+	  @#DEF_SET#@ @!L_CURRENTPARENT!@ @!L_PARENT!@
+   @#END_IF#@
+@#END_LOOP#@
+;

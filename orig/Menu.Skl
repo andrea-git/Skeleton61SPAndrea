@@ -1,0 +1,45 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Menu Generation Rule.  2001/11/02
+;
+; ===================================================================
+@#DEF_IF#@ @!G_USERSCREEN!@
+@<_PUSH_MEM>@
+@$MENU$@
+;
+;Static Menu & Popup Menu
+;
+@<_SET_OBJ_MENUINIT>@
+;
+       @+_OBJ_ATR_NAME+@-Menu@!G_MODE!@.
+           PERFORM @+_MENU_SYS_NAME+@-INIT@!G_MODE!@
+           THRU    @+_MENU_SYS_NAME+@-EXIT@!G_MODE!@.
+
+       @+_MENU_SYS_NAME+@-INIT@!G_MODE!@.
+   @#DEF_IF#@ @#EXP: @+_OBJ_ATR_STYLE+@ EQUAL @"STATIC"@ #@
+           CALL "W$MENU" USING WMENU-NEW GIVING MENU-HANDLE
+   @#ELSE#@
+           CALL "W$MENU" USING WMENU-NEW-POPUP GIVING MENU-HANDLE
+   @#END_IF#@
+           IF MENU-HANDLE = ZERO
+              GO TO @+_MENU_SYS_NAME+@-Exit@!G_MODE!@
+           END-IF
+     @%MenuDetail.Skl%@
+@$MENU$@
+           .
+
+       @+_MENU_SYS_NAME+@-EXIT@!G_MODE!@.
+           MOVE ZERO TO Return-Code.
+
+@<_POP_MEM>@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_STYLE+@ EQUAL @"STATIC"@) #@
+@$POPUP_PROCESS$@
+      * @+_MENU_SYS_NAME+@
+           PERFORM @+_OBJ_ATR_NAME+@-Menu@!G_MODE!@
+           Move MENU-HANDLE TO @+_OBJ_ATR_HANDLEVARIABLE+@
+@#END_IF#@
+@$DESTROY_POPUP_PROCESS$@
+           CALL "W$MENU" USING WMENU-DESTROY-DELAYED @+_OBJ_ATR_HANDLEVARIABLE+@
+;
+; end @!G_USERSCREEN!@
+@#END_IF#@ 

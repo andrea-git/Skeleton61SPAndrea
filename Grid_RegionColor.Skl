@@ -1,0 +1,193 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Grid's RegionColor Generation Rule.  2001/11/02
+;
+; ===================================================================
+@#DEF_SET#@ @!L_NUMROWS!@ @+_OBJ_ATR_NUMROWS+@
+@#DEF_IF#@ @+_OBJ_ATR_NUMROWSVARIABLE+@
+    @#DEF_SET#@ @!L_NUMROWS!@ @+_OBJ_ATR_NUMROWSVARIABLE+@
+@#END_IF#@
+;
+; Inquery
+;
+@#DEF_SET#@ @!L_INQUIREX!@ @""@
+@#DEF_IF#@ @+_REGION_SYS_STARTX+@
+    @#DEF_SET#@ @!L_INQUIREX!@ @+_REGION_SYS_STARTX+@
+@#ELSE_IF#@ @+_REGION_SYS_X+@
+    @#DEF_SET#@ @!L_INQUIREX!@ @+_REGION_SYS_X+@
+@#END_IF#@
+@#DEF_SET#@ @!L_INQUIREY!@ @""@
+@#DEF_IF#@ @+_REGION_SYS_STARTY+@
+    @#DEF_SET#@ @!L_INQUIREY!@ @+_REGION_SYS_STARTY+@
+@#ELSE_IF#@ @+_REGION_SYS_Y+@
+    @#DEF_SET#@ @!L_INQUIREY!@ @+_REGION_SYS_Y+@
+@#END_IF#@
+;
+; Modify 
+;
+@#DEF_SET#@ @!L_MODIFYSTARTX!@ @""@
+@#DEF_IF#@ @+_REGION_SYS_STARTX+@
+    @#DEF_SET#@ @!L_MODIFYSTARTX!@ @+_REGION_SYS_STARTX+@
+@#ELSE_IF#@ @+_REGION_SYS_X+@
+    @#DEF_SET#@ @!L_MODIFYSTARTX!@ @+_REGION_SYS_X+@
+@#ELSE#@
+    @#DEF_SET#@ @!L_MODIFYSTARTX!@ @"Event-Data-1"@
+@#END_IF#@
+@#DEF_SET#@ @!L_MODIFYSTARTY!@ @""@
+@#DEF_IF#@ @+_REGION_SYS_STARTY+@
+    @#DEF_SET#@ @!L_MODIFYSTARTY!@ @+_REGION_SYS_STARTY+@
+@#ELSE_IF#@ @+_REGION_SYS_Y+@
+    @#DEF_SET#@ @!L_MODIFYSTARTY!@ @+_REGION_SYS_Y+@
+@#ELSE#@
+    @#DEF_SET#@ @!L_MODIFYSTARTY!@ @"Event-Data-2"@
+@#END_IF#@
+@#DEF_SET#@ @!L_MODIFYX!@ @""@
+@#DEF_IF#@ @+_REGION_SYS_X+@
+    @#DEF_SET#@ @!L_MODIFYX!@ @+_REGION_SYS_X+@
+@#ELSE#@
+    @#DEF_SET#@ @!L_MODIFYX!@ @"Event-Data-1"@
+@#END_IF#@
+@#DEF_SET#@ @!L_MODIFYY!@ @""@
+@#DEF_IF#@ @+_REGION_SYS_Y+@
+    @#DEF_SET#@ @!L_MODIFYY!@ @+_REGION_SYS_Y+@
+@#ELSE#@
+    @#DEF_SET#@ @!L_MODIFYY!@ @"Event-Data-2"@
+@#END_IF#@
+@#DEF_IF#@ @+_REGION_SYS_COLORVARIABLE+@
+    @#DEF_SET#@ @!L_COLOR!@ @+_REGION_SYS_COLORVARIABLE+@
+@#ELSE#@
+    @#DEF_SET#@ @!L_COLOR!@ @+_REGION_SYS_COLOR+@
+@#END_IF#@
+;
+;
+@$EVENT$@
+@#DEF_IF#@ @!G_USERSCREEN!@
+  @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+  @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+       @+_OBJ_ATR_NAME+@-REGION-COLOR@!G_MODE!@.
+           EVALUATE Event-Type
+   @#DEF_IF#@ @+_REGION_SYS_DRAGCELL+@
+      * Drag between grid control cells to mark the cells.
+           WHEN Msg-Begin-Drag
+       @#DEF_IF#@ @#EXP: @!L_INQUIREX!@ OR @!L_INQUIREY!@ #@ 
+              INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+          @#DEF_IF#@ @!L_INQUIREX!@
+                  X IN @!L_INQUIREX!@,
+          @#END_IF#@
+          @#DEF_IF#@ @!L_INQUIREY!@
+                  Y IN @!L_INQUIREY!@,
+          @#END_IF#@
+       @#END_IF#@
+       @#DEF_IF#@ @#EXP: @+_REGION_SYS_STARTX+@ AND @+_REGION_SYS_X+@ #@
+              MOVE @+_REGION_SYS_STARTX+@ TO @+_REGION_SYS_X+@
+       @#END_IF#@
+       @#DEF_IF#@ @#EXP: @+_REGION_SYS_STARTY+@ AND @+_REGION_SYS_Y+@ #@
+              MOVE @+_REGION_SYS_STARTY+@ TO @+_REGION_SYS_Y+@
+       @#END_IF#@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, START-X = @!L_MODIFYSTARTX!@, START-Y = @!L_MODIFYSTARTY!@,
+                 X = @!L_MODIFYX!@, Y = @!L_MODIFYY!@, REGION-COLOR = @!L_COLOR!@
+      * Released the mouse button.
+           WHEN Msg-End-Drag
+      * Moves the mouse while holding the left-button down.
+           WHEN Msg-Goto-Cell-Drag
+      @#DEF_IF#@ @#EXP: @!L_MODIFYX!@ OR @!L_MODIFYY!@ #@
+              INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, X IN @!L_MODIFYX!@, Y IN @!L_MODIFYY!@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, X = @!L_MODIFYX!@, Y = @!L_MODIFYY!@, REGION-COLOR = @!L_COLOR!@
+      @#END_IF#@
+   @#END_IF#@
+   ;
+   ; Cause DblClickHeading & ClickHeading & DragHeading have the same souce,
+   ; So we put it in the same Condition.
+   ;
+   @#DEF_IF#@ @#EXP: (@+_OBJ_ATR_COLUMNHEADINGS+@ OR @+_OBJ_ATR_ROWHEADINGS+@) AND
+                     (@+_REGION_SYS_DBLCLICKHEADING+@ OR @+_REGION_SYS_CLICKHEADING+@ OR @+_REGION_SYS_DRAGHEADING+@) #@
+      @#DEF_IF#@ @+_REGION_SYS_DBLCLICKHEADING+@
+      * Double-click heading to mark whole row or column.
+           WHEN Msg-Heading-Dblclick
+      @#END_IF#@
+      @#DEF_IF#@ @+_REGION_SYS_CLICKHEADING+@
+      * Left-click heading to mark whole row or column.
+           WHEN Msg-Heading-Clicked
+      @#END_IF#@
+      @#DEF_IF#@ @+_REGION_SYS_DRAGHEADING+@
+      * Drag between headings to mark rows or columns.
+           WHEN Msg-Begin-Heading-Drag
+      @#END_IF#@
+      @#DEF_IF#@ @#EXP: @!L_INQUIREX!@ OR @!L_INQUIREY!@ #@ 
+              INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+          @#DEF_IF#@ @!L_INQUIREX!@
+                  X IN @!L_INQUIREX!@,
+          @#END_IF#@
+          @#DEF_IF#@ @!L_INQUIREY!@
+                  Y IN @!L_INQUIREY!@,
+          @#END_IF#@
+      @#END_IF#@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, START-X = @!L_MODIFYSTARTX!@, START-Y = @!L_MODIFYSTARTY!@
+      @#DEF_IF#@ @#EXP: @+_OBJ_ATR_COLUMNHEADINGS+@ AND @+_OBJ_ATR_ROWHEADINGS+@ #@
+         @#DEF_IF#@ @+_REGION_SYS_MARKWHOLE+@
+      * Click (1,1) to mark the whole grid.
+              IF @!L_MODIFYSTARTX!@ = 1 AND @!L_MODIFYSTARTY!@ = 1
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                    START-X = 1, START-Y = 1, X = @+_OBJ_ATR_NUMCOLUMNS+@, Y = @!L_NUMROWS!@
+              ELSE
+         @#END_IF#@
+                 IF @!L_MODIFYSTARTX!@ = 1
+                    MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, X = @+_OBJ_ATR_NUMCOLUMNS+@, Y = @!L_MODIFYSTARTY!@
+                 END-IF
+                 IF @!L_MODIFYSTARTY!@ = 1
+                    MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, X = @!L_MODIFYSTARTX!@, Y = @!L_NUMROWS!@
+                 END-IF
+         @#DEF_IF#@ @+_REGION_SYS_MARKWHOLE+@
+              END-IF
+         @#END_IF#@
+      @#ELSE_IF#@ @+_OBJ_ATR_COLUMNHEADINGS+@
+              X = @!L_MODIFYSTARTX!@, Y = @!L_NUMROWS!@
+      @#ELSE_IF#@ @+_OBJ_ATR_ROWHEADINGS+@
+              X = @+_OBJ_ATR_NUMCOLUMNS+@, Y = @!L_MODIFYSTARTY!@
+      @#END_IF#@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, REGION-COLOR = @!L_COLOR!@
+      *
+           WHEN Msg-Heading-Dragged
+           WHEN Msg-End-Heading-Drag
+      @#DEF_IF#@ @#EXP: @!L_MODIFYX@ OR @!L_MODIFYY!@ #@ 
+              INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+          @#DEF_IF#@ @!L_MODIFYX!@
+                  X IN @!L_MODIFYX!@,
+          @#END_IF#@
+          @#DEF_IF#@ @!L_MODIFYY!@
+                  Y IN @!L_MODIFYY!@,
+          @#END_IF#@
+      @#END_IF#@
+      @#DEF_IF#@ @#EXP: @+_OBJ_ATR_COLUMNHEADINGS+@ AND @+_OBJ_ATR_ROWHEADINGS+@ #@
+              IF @!L_MODIFYX!@ = 1 AND @!L_MODIFYY!@ = 1
+                 CONTINUE
+              ELSE
+                 IF @!L_MODIFYX!@ = 1
+                    MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, X = @+_OBJ_ATR_NUMCOLUMNS+@, Y = @!L_MODIFYY!@
+                 END-IF
+                 IF @!L_MODIFYY!@ = 1
+                    MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, X = @!L_MODIFYX!@, Y = @!L_NUMROWS!@
+                 END-IF
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, REGION-COLOR = @!L_COLOR!@
+              END-IF
+      @#ELSE#@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+         @#DEF_IF#@ @+_OBJ_ATR_COLUMNHEADINGS+@
+                 X = @!L_MODIFYX!@, Y = @!L_NUMROWS!@
+         @#ELSE_IF#@ @+_OBJ_ATR_ROWHEADINGS+@
+                 X = @+_OBJ_ATR_NUMCOLUMNS+@, Y = @!L_MODIFYY!@
+         @#END_IF#@
+                 REGION-COLOR = @!L_COLOR!@
+      @#END_IF#@
+   @#END_IF#@
+   @#DEF_IF#@ @+_REGION_SYS_CLEARMARK+@
+      * Clear the marked area if any other events occur.
+   @#END_IF#@
+           WHEN OTHER
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, REGION-COLOR = 0
+           END-EVALUATE
+           .
+
+; end of @!G_USERSCREEN!@
+@#END_IF#@
+;

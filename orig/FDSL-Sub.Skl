@@ -1,0 +1,1317 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; FD/SL Multiple Keys Generation Rule.   2001/11/02
+; ===================================================================
+;
+@%Relations_SplitKey.Skl%@
+;
+@#DEF_SET#@ @!L_DATASETNAME!@ @+_DATASET_SYS_NAME+@
+;
+@$WORKING$@
+       77 @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK-FLAG   PIC X VALUE SPACE.
+           88 @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK  VALUE "Y".
+;
+@#CLEAR_MEM#@ @"ALL-EVALUATE"@
+@#CLEAR_MEM#@ @"ALL-END-EVALUATE"@
+;
+@#DEF_SET#@ @!L_MULTIKEY!@ @""@
+@#DEF_IF#@ @#EXP: @+_FDSL_SYS_ISPRIMARY+@ AND 
+                  (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@) #@
+   @#DEF_SET#@ @!L_MULTIKEY!@ @"YES"@
+@#END_IF#@
+;
+;
+; ===================================================================
+; SINGLE KEY (SLAVE FD / PRIMARY FD BUT NOT INDEXED)
+; ===================================================================
+@#DEF_IF#@ @#EXP: NOT @!L_MULTIKEY!@ #@
+@$WORKING$@
+     @#DEF_IF#@ @#EXP: @+_FDSL_SYS_KEYORDER+@ EQUAL @"Asc"@ #@
+       77 @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-ORDER  PIC X VALUE "A".
+	 @#ELSE_IF#@ @#EXP: @+_FDSL_SYS_KEYORDER+@ EQUAL @"Desc"@ #@
+       77 @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-ORDER  PIC X VALUE "D".
+     @#END_IF#@
+          88 @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc  VALUE "A".
+          88 @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Desc VALUE "D".
+ @#DEF_SET#@ @!L_STARTENDVALUE!@ @""@
+ @#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_STARTVALUE+@ AND @+_FDSL_SYS_ENDVALUE+@ #@
+       @#DEF_SET#@ @!L_STARTENDVALUE!@ @"@+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_FDKEY+@-SPLITBUF >= @+_FDSL_SYS_STARTVALUE+@ AND @+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_FDKEY+@-SPLITBUF <= @+_FDSL_SYS_ENDVALUE+@"@
+       @#DEF_SET#@ @!L_PREVSTRVAL!@ @"@+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_FDKEY+@-SPLITBUF < @+_FDSL_SYS_STARTVALUE+@"@
+       @#DEF_SET#@ @!L_NEXTENDVAL!@ @"@+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_FDKEY+@-SPLITBUF > @+_FDSL_SYS_ENDVALUE+@"@
+   @#ELSE_IF#@ @+_FDSL_SYS_STARTVALUE+@
+       @#DEF_SET#@ @!L_STARTENDVALUE!@ @"@+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_FDKEY+@-SPLITBUF >= @+_FDSL_SYS_STARTVALUE+@"@
+       @#DEF_SET#@ @!L_PREVSTRVAL!@ @"@+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_FDKEY+@-SPLITBUF < @+_FDSL_SYS_STARTVALUE+@"@
+   @#ELSE_IF#@ @+_FDSL_SYS_ENDVALUE+@
+       @#DEF_SET#@ @!L_STARTENDVALUE!@ @"@+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_FDKEY+@-SPLITBUF <= @+_FDSL_SYS_ENDVALUE+@"@
+       @#DEF_SET#@ @!L_NEXTENDVAL!@ @"@+_FDSL_SYS_FDNAME+@-@+_FDSL_SYS_FDKEY+@-SPLITBUF > @+_FDSL_SYS_ENDVALUE+@"@
+   @#END_IF#@
+ @#ELSE#@
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_STARTVALUE+@ AND @+_FDSL_SYS_ENDVALUE+@ #@
+       @#DEF_SET#@ @!L_STARTENDVALUE!@ @"@+_FDSL_SYS_FDKEY+@ >= @+_FDSL_SYS_STARTVALUE+@ AND @+_FDSL_SYS_FDKEY+@ <= @+_FDSL_SYS_ENDVALUE+@"@
+       @#DEF_SET#@ @!L_PREVSTRVAL!@ @"@+_FDSL_SYS_FDKEY+@ < @+_FDSL_SYS_STARTVALUE+@"@
+       @#DEF_SET#@ @!L_NEXTENDVAL!@ @"@+_FDSL_SYS_FDKEY+@ > @+_FDSL_SYS_ENDVALUE+@"@
+   @#ELSE_IF#@ @+_FDSL_SYS_STARTVALUE+@
+       @#DEF_SET#@ @!L_STARTENDVALUE!@ @"@+_FDSL_SYS_FDKEY+@ >= @+_FDSL_SYS_STARTVALUE+@"@
+       @#DEF_SET#@ @!L_PREVSTRVAL!@ @"@+_FDSL_SYS_FDKEY+@ < @+_FDSL_SYS_STARTVALUE+@"@
+   @#ELSE_IF#@ @+_FDSL_SYS_ENDVALUE+@
+       @#DEF_SET#@ @!L_STARTENDVALUE!@ @"@+_FDSL_SYS_FDKEY+@ <= @+_FDSL_SYS_ENDVALUE+@"@
+       @#DEF_SET#@ @!L_NEXTENDVAL!@ @"@+_FDSL_SYS_FDKEY+@ > @+_FDSL_SYS_ENDVALUE+@"@
+   @#END_IF#@
+ @#END_IF#@
+;
+;
+ @#DEF_SET#@ @!L_ISINDEX!@ @""@
+ @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) OR
+                     (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@)  #@
+       @#DEF_SET#@ @!L_ISINDEX!@ @"YES"@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@
+;
+@$START$@
+           IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+              START @+_FDSL_SYS_FDNAME+@ KEY >= @+_FDSL_SYS_FDKEY+@
+           ELSE
+              START @+_FDSL_SYS_FDNAME+@ KEY <= @+_FDSL_SYS_FDKEY+@
+           END-IF
+@$START-NOTGREATER$@
+           IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+              START @+_FDSL_SYS_FDNAME+@ KEY <= @+_FDSL_SYS_FDKEY+@
+           ELSE
+              START @+_FDSL_SYS_FDNAME+@ KEY >= @+_FDSL_SYS_FDKEY+@
+           END-IF
+@$START-GREATER$@
+           IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+              START @+_FDSL_SYS_FDNAME+@ KEY > @+_FDSL_SYS_FDKEY+@
+           ELSE
+              START @+_FDSL_SYS_FDNAME+@ KEY < @+_FDSL_SYS_FDKEY+@
+           END-IF
+@$START-LESS$@
+           IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+              START @+_FDSL_SYS_FDNAME+@ KEY < @+_FDSL_SYS_FDKEY+@
+           ELSE
+              START @+_FDSL_SYS_FDNAME+@ KEY > @+_FDSL_SYS_FDKEY+@
+           END-IF
+;
+; ===================================================================
+; The Greater & Less Start Paragraph only be used in Form_IUD when
+; the FD is Dynamic (Indexed & Relative) and KeyIs Key is Duplicate 
+; type.
+; ===================================================================
+;
+     @#DEF_IF#@ @#EXP: @+_FDSL_SYS_FDKEYTYPE+@  EQUAL @"DUPLICATE"@ #@
+@$START-EQUAL$@
+           START @+_FDSL_SYS_FDNAME+@ KEY = @+_FDSL_SYS_FDKEY+@
+;
+     @#END_IF#@
+   @#END_IF#@
+;
+; ===================================================================
+; DATASET-FDNAME-READ.
+; ===================================================================
+@$FD-READ$@
+ @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"SORT"@) #@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@) OR
+                     (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"I-O"@) #@
+      @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ AND
+                        ((@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"DYNAMIC"@) OR
+                         (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"RANDOM"@)) #@
+           IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+              READ @+_FDSL_SYS_FDNAME+@ WITH LOCK 
+              KEY @+_FDSL_SYS_FDKEY+@
+           ELSE
+              READ @+_FDSL_SYS_FDNAME+@ WITH NO LOCK 
+              KEY @+_FDSL_SYS_FDKEY+@
+           END-IF
+      @#ELSE#@
+           IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+              READ @+_FDSL_SYS_FDNAME+@ WITH LOCK 
+           ELSE
+              READ @+_FDSL_SYS_FDNAME+@ WITH NO LOCK 
+           END-IF
+      @#END_IF#@
+       ;
+       ; for Condition
+       ;
+      @#DEF_IF#@ @+_FDSL_SYS_CONDITION+@
+      * Check Condition
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+         @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+           IF @+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND 
+                     NOT (@+_FDSL_SYS_CONDITION+@)
+                MOVE 23 TO @+_FDSL_SYS_FILESTATUS+@
+           END-IF
+      @#END_IF#@
+       ;
+       ; for Start Value & End Value
+       ;
+      @#DEF_IF#@ @!L_STARTENDVALUE!@
+        @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * Check Start/End Value
+           IF @+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND
+                     NOT (@!L_STARTENDVALUE!@)
+                MOVE 23 TO @+_FDSL_SYS_FILESTATUS+@
+           END-IF
+      @#END_IF#@
+   @#END_IF#@
+ @#END_IF#@
+;
+; ===================================================================
+; DATASET-FDNAME-READ-NEXT.
+; ===================================================================
+@$FD-READNEXT$@
+ @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"SORT"@) #@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@) OR
+                     (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"I-O"@)    #@
+      @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"RANDOM"@) #@
+           IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                 READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+              ELSE
+                 READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+              END-IF
+         @#DEF_IF#@ @#EXP: @+_FDSL_SYS_CONDITION+@ OR @!L_STARTENDVALUE!@ #@
+              PERFORM @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-CHECK-VALUES-NEXT
+         @#END_IF#@
+         @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"DYNAMIC"@) #@
+           ELSE
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                 READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+              ELSE
+                 READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+              END-IF
+            @#DEF_IF#@ @#EXP: @+_FDSL_SYS_CONDITION+@ OR @!L_STARTENDVALUE!@ #@
+              PERFORM @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-CHECK-VALUES-PREV
+            @#END_IF#@
+         @#END_IF#@
+           END-IF
+; LK6B0508
+@$FD-CHECKVALUE-NEXT$@
+       ;
+       ; Both Condition & Start/End Value
+       ;
+         @#DEF_IF#@ @#EXP: @+_FDSL_SYS_CONDITION+@ AND @!L_STARTENDVALUE!@ #@
+            @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * Check both Condition & Start/End Value 
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+            @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+           PERFORM UNTIL @+_FDSL_SYS_FILESTATUS+@(1:1) NOT = "0" OR
+                   (@+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND 
+                       ((@+_FDSL_SYS_CONDITION+@)   AND
+                        (@!L_STARTENDVALUE!@)))
+           @#DEF_IF#@ @!L_NEXTENDVAL!@
+              IF @!L_NEXTENDVAL!@
+                 MOVE "10" TO @+_FDSL_SYS_FILESTATUS+@
+              ELSE
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                    END-IF
+              @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"DYNAMIC"@) #@
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                    END-IF
+              @#END_IF#@
+                 END-IF
+              END-IF
+           @#ELSE#@
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                 END-IF
+              @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"DYNAMIC"@) #@
+              ELSE
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                 END-IF
+			  @#END_IF#@	  
+              END-IF
+           @#END_IF#@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+           END-PERFORM
+       ;
+       ; Only with Condition
+       ;
+         @#ELSE_IF#@ @+_FDSL_SYS_CONDITION+@
+      * Check Condition
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+            @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+           PERFORM UNTIL @+_FDSL_SYS_FILESTATUS+@(1:1) NOT = "0" OR
+                   (@+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND (@+_FDSL_SYS_CONDITION+@))
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                 END-IF
+              @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"DYNAMIC"@) #@
+              ELSE
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                 END-IF
+              @#END_IF#@
+              END-IF
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+            @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+           END-PERFORM
+       ;
+       ; Only with Start/End Value
+       ;
+         @#ELSE_IF#@ @!L_STARTENDVALUE!@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * Check Start/End Value 
+           PERFORM UNTIL @+_FDSL_SYS_FILESTATUS+@(1:1) NOT = "0" OR
+                   (@+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND (@!L_STARTENDVALUE!@))
+           @#DEF_IF#@ @!L_NEXTENDVAL!@
+              IF @!L_NEXTENDVAL!@
+                 MOVE "10" TO @+_FDSL_SYS_FILESTATUS+@
+              ELSE
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                    END-IF
+              @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"DYNAMIC"@) #@
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                    END-IF
+              @#END_IF#@
+                 END-IF
+              END-IF
+           @#ELSE#@
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                 END-IF
+              @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"DYNAMIC"@) #@
+              ELSE
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                 END-IF
+              @#END_IF#@
+              END-IF
+           @#END_IF#@
+           ;
+           ; LK6B0357
+           ;
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+           END-PERFORM
+         @#END_IF#@      
+      @#END_IF#@
+   @#END_IF#@
+ @#END_IF#@
+;
+; ===================================================================
+; DATASET-FDNAME-PREV.
+; ===================================================================
+@$FD-READPREV$@
+ @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"SORT"@) #@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@) OR
+                     (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"I-O"@)    #@
+      @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"DYNAMIC"@) #@
+           IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                 READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+              ELSE
+                 READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+              END-IF
+         @#DEF_IF#@ @#EXP: @+_FDSL_SYS_CONDITION+@ OR @!L_STARTENDVALUE!@ #@
+              PERFORM @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-CHECK-VALUES-PREV
+         @#END_IF#@
+           ELSE
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                 READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+              ELSE
+                 READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+              END-IF
+         @#DEF_IF#@ @#EXP: @+_FDSL_SYS_CONDITION+@ OR @!L_STARTENDVALUE!@ #@
+              PERFORM @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-CHECK-VALUES-NEXT
+         @#END_IF#@
+           END-IF
+; LK6B0508
+@$FD-CHECKVALUE-PREV$@
+       ;
+       ; Both Condition & Start/End Value
+       ;
+         @#DEF_IF#@ @#EXP: @+_FDSL_SYS_CONDITION+@ AND @!L_STARTENDVALUE!@ #@
+            @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * Check both Condition & Start/End Value
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+            @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+           PERFORM UNTIL @+_FDSL_SYS_FILESTATUS+@(1:1) NOT = "0" OR
+                   (@+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND 
+                       ((@+_FDSL_SYS_CONDITION+@)   AND
+                        (@!L_STARTENDVALUE!@)))
+           @#DEF_IF#@ @!L_PREVSTRVAL!@
+              IF @!L_PREVSTRVAL!@
+                 MOVE "10" TO @+_FDSL_SYS_FILESTATUS+@
+              ELSE
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                    END-IF
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                    END-IF
+                 END-IF
+              END-IF
+           @#ELSE#@
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                 END-IF
+              ELSE
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                 END-IF
+              END-IF
+           @#END_IF#@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+            @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+           END-PERFORM
+       ;
+       ; Only with Condition
+       ;
+         @#ELSE_IF#@ @+_FDSL_SYS_CONDITION+@
+      * Check Condition
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+            @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+           PERFORM UNTIL @+_FDSL_SYS_FILESTATUS+@(1:1) NOT = "0" OR
+                   (@+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND (@+_FDSL_SYS_CONDITION+@))
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                 END-IF
+              ELSE
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                 END-IF
+              END-IF
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+            @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+           END-PERFORM
+       ;
+       ; Only with Start/End Value
+       ;
+         @#ELSE_IF#@ @!L_STARTENDVALUE!@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * Check Start/End Value
+           PERFORM UNTIL @+_FDSL_SYS_FILESTATUS+@(1:1) NOT = "0" OR
+                   (@+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND (@!L_STARTENDVALUE!@))
+           @#DEF_IF#@ @!L_PREVSTRVAL!@
+              IF @!L_PREVSTRVAL!@
+                 MOVE "10" TO @+_FDSL_SYS_FILESTATUS+@
+              ELSE
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                    END-IF
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                    END-IF
+                 END-IF
+              END-IF
+           @#ELSE#@
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-Asc
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                 END-IF
+              ELSE
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                 END-IF
+              END-IF
+           @#END_IF#@
+           ;
+           ; LK6B0357 
+           ;
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+           END-PERFORM
+         @#END_IF#@
+      @#END_IF#@
+   @#END_IF#@
+ @#END_IF#@
+; ===================================================================
+; MULTIPLE KEY (PRIMARY INDEXED FD WITH MULTIPLE KEYS)
+; ===================================================================
+@#ELSE#@
+; ===================================================================
+@$WORKING$@
+       77 @!L_DATASETNAME!@-KEYIS   PIC 9(3) VALUE 1.
+@$ALL-EVALUATE$@
+           EVALUATE @!L_DATASETNAME!@-KEYIS
+@$ALL-END-EVALUATE$@
+           END-EVALUATE
+@#DEF_SET#@ @!L_KEYINDEX!@ @"0"@
+@<_PUSH_MEM>@
+@<_SET_FDSL_MULTIPLEKEY>@
+ @#DEF_LOOP#@ @+_FDSL_SYS_MULTIPLEKEYNO+@
+   @<_FETCH_NEXT_FDSL_MULTIPLEKEY>@
+   @#DEF_ADD#@ @!L_KEYINDEX!@ @"1"@
+   ;
+   @<_PUSH_MEM>@
+      @<_SET_MULTIPLEKEY_KEYIS>@
+      @#DEF_SET#@ @!L_ISSPLITKEY!@ @+_FDSL_SYS_ISSPLITKEY+@
+      @#DEF_SET#@ @!L_FDKEYTYPE!@  @+_FDSL_SYS_FDKEYTYPE+@
+   @<_POP_MEM>@
+   @#DEF_SET#@ @!L_STARTENDVALUE!@ @""@
+   @#DEF_IF#@ @!L_ISSPLITKEY!@
+     @#DEF_IF#@ @#EXP: @+_MULTIPLEKEY_SYS_STARTVALUE+@ AND @+_MULTIPLEKEY_SYS_ENDVALUE+@ #@
+       @#DEF_SET#@ @!L_STARTENDVALUE!@ @"@+_FDSL_SYS_FDNAME+@-@+_MULTIPLEKEY_SYS_KEYNAME+@-SPLITBUF >= @+_MULTIPLEKEY_SYS_STARTVALUE+@ AND @+_FDSL_SYS_FDNAME+@-@+_MULTIPLEKEY_SYS_KEYNAME+@-SPLITBUF <= @+_MULTIPLEKEY_SYS_ENDVALUE+@"@
+       @#DEF_SET#@ @!L_PREVSTRVAL!@ @"@+_FDSL_SYS_FDNAME+@-@+_MULTIPLEKEY_SYS_KEYNAME+@-SPLITBUF < @+_MULTIPLEKEY_SYS_STARTVALUE+@"@
+       @#DEF_SET#@ @!L_NEXTENDVAL!@ @"@+_FDSL_SYS_FDNAME+@-@+_MULTIPLEKEY_SYS_KEYNAME+@-SPLITBUF > @+_MULTIPLEKEY_SYS_ENDVALUE+@"@
+     @#ELSE_IF#@ @+_MULTIPLEKEY_SYS_STARTVALUE+@
+       @#DEF_SET#@ @!L_STARTENDVALUE!@ @"@+_FDSL_SYS_FDNAME+@-@+_MULTIPLEKEY_SYS_KEYNAME+@-SPLITBUF >= @+_MULTIPLEKEY_SYS_STARTVALUE+@"@
+       @#DEF_SET#@ @!L_PREVSTRVAL!@ @"@+_FDSL_SYS_FDNAME+@-@+_MULTIPLEKEY_SYS_KEYNAME+@-SPLITBUF < @+_MULTIPLEKEY_SYS_STARTVALUE+@"@
+     @#ELSE_IF#@ @+_MULTIPLEKEY_SYS_ENDVALUE+@
+       @#DEF_SET#@ @!L_STARTENDVALUE!@ @"@+_FDSL_SYS_FDNAME+@-@+_MULTIPLEKEY_SYS_KEYNAME+@-SPLITBUF <= @+_MULTIPLEKEY_SYS_ENDVALUE+@"@
+       @#DEF_SET#@ @!L_NEXTENDVAL!@ @"@+_FDSL_SYS_FDNAME+@-@+_MULTIPLEKEY_SYS_KEYNAME+@-SPLITBUF > @+_MULTIPLEKEY_SYS_ENDVALUE+@"@
+     @#END_IF#@
+   @#ELSE#@
+     @#DEF_IF#@ @#EXP: @+_MULTIPLEKEY_SYS_STARTVALUE+@ AND @+_MULTIPLEKEY_SYS_ENDVALUE+@ #@
+       @#DEF_SET#@ @!L_STARTENDVALUE!@ @"@+_MULTIPLEKEY_SYS_KEYNAME+@ >= @+_MULTIPLEKEY_SYS_STARTVALUE+@ AND @+_MULTIPLEKEY_SYS_KEYNAME+@ <= @+_MULTIPLEKEY_SYS_ENDVALUE+@"@
+       @#DEF_SET#@ @!L_PREVSTRVAL!@ @"@+_MULTIPLEKEY_SYS_KEYNAME+@ < @+_MULTIPLEKEY_SYS_STARTVALUE+@"@
+       @#DEF_SET#@ @!L_NEXTENDVAL!@ @"@+_MULTIPLEKEY_SYS_KEYNAME+@ > @+_MULTIPLEKEY_SYS_ENDVALUE+@"@
+     @#ELSE_IF#@ @+_MULTIPLEKEY_SYS_STARTVALUE+@
+       @#DEF_SET#@ @!L_STARTENDVALUE!@ @"@+_MULTIPLEKEY_SYS_KEYNAME+@ >= @+_MULTIPLEKEY_SYS_STARTVALUE+@"@
+       @#DEF_SET#@ @!L_PREVSTRVAL!@ @"@+_MULTIPLEKEY_SYS_KEYNAME+@ < @+_MULTIPLEKEY_SYS_STARTVALUE+@"@
+     @#ELSE_IF#@ @+_MULTIPLEKEY_SYS_ENDVALUE+@
+       @#DEF_SET#@ @!L_STARTENDVALUE!@ @"@+_MULTIPLEKEY_SYS_KEYNAME+@ <= @+_MULTIPLEKEY_SYS_ENDVALUE+@"@
+       @#DEF_SET#@ @!L_NEXTENDVAL!@ @"@+_MULTIPLEKEY_SYS_KEYNAME+@ > @+_MULTIPLEKEY_SYS_ENDVALUE+@"@
+     @#END_IF#@
+   @#END_IF#@
+;
+;
+ @#DEF_SET#@ @!L_ISINDEX!@ @""@
+ @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) OR
+                     (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@)  #@
+       @#DEF_SET#@ @!L_ISINDEX!@ @"YES"@
+ @#END_IF#@
+@$WORKING$@
+     @#DEF_IF#@ @#EXP: @+_MULTIPLEKEY_SYS_KEYORDER+@ EQUAL @"Asc"@ #@
+       77 @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER  PIC X VALUE "A".
+	 @#ELSE_IF#@ @#EXP: @+_MULTIPLEKEY_SYS_KEYORDER+@ EQUAL @"Desc"@ #@
+       77 @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER  PIC X VALUE "D".
+     @#END_IF#@
+          88 @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc  VALUE "A".
+          88 @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Desc VALUE "D".
+;
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@
+;
+@$START$@
+           WHEN @!L_KEYINDEX!@
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                 START @+_FDSL_SYS_FDNAME+@ KEY >= @+_MULTIPLEKEY_SYS_NAME+@
+              ELSE
+                 START @+_FDSL_SYS_FDNAME+@ KEY <= @+_MULTIPLEKEY_SYS_NAME+@
+              END-IF
+@$START-NOTGREATER$@
+           WHEN @!L_KEYINDEX!@
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                 START @+_FDSL_SYS_FDNAME+@ KEY <= @+_MULTIPLEKEY_SYS_NAME+@
+              ELSE
+                 START @+_FDSL_SYS_FDNAME+@ KEY >= @+_MULTIPLEKEY_SYS_NAME+@
+              END-IF
+@$START-GREATER$@
+           WHEN @!L_KEYINDEX!@
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                 START @+_FDSL_SYS_FDNAME+@ KEY > @+_MULTIPLEKEY_SYS_NAME+@
+              ELSE
+                 START @+_FDSL_SYS_FDNAME+@ KEY < @+_MULTIPLEKEY_SYS_NAME+@
+              END-IF
+@$START-LESS$@
+           WHEN @!L_KEYINDEX!@
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                 START @+_FDSL_SYS_FDNAME+@ KEY < @+_MULTIPLEKEY_SYS_NAME+@
+              ELSE
+                 START @+_FDSL_SYS_FDNAME+@ KEY > @+_MULTIPLEKEY_SYS_NAME+@
+              END-IF
+;
+; ===================================================================
+; The Greater & Less Start Paragraph only be used in Form_IUD when
+; the FD is Dynamic (Indexed & Relative) and KeyIs Key is Duplicate 
+; type.
+; ===================================================================
+;
+     @#DEF_IF#@ @#EXP: @!L_FDKEYTYPE!@ EQUAL @"DUPLICATE"@ #@
+@$START-EQUAL$@
+           WHEN @!L_KEYINDEX!@
+              START @+_FDSL_SYS_FDNAME+@ KEY = @+_MULTIPLEKEY_SYS_NAME+@
+;
+     @#END_IF#@
+   @#END_IF#@
+;
+; ===================================================================
+; DATASET-FDNAME-READ.
+; ===================================================================
+@$FD-READ$@
+   @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"SORT"@) #@
+     @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@) OR
+                     (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"I-O"@) #@
+           WHEN @!L_KEYINDEX!@
+       @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ AND
+                        ((@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"DYNAMIC"@) OR
+                         (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"RANDOM"@)) #@
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                 READ @+_FDSL_SYS_FDNAME+@ WITH LOCK 
+                 KEY @+_MULTIPLEKEY_SYS_NAME+@
+              ELSE
+                 READ @+_FDSL_SYS_FDNAME+@ WITH NO LOCK 
+                 KEY @+_MULTIPLEKEY_SYS_NAME+@
+              END-IF
+       @#ELSE#@
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                 READ @+_FDSL_SYS_FDNAME+@ WITH LOCK 
+              ELSE
+                 READ @+_FDSL_SYS_FDNAME+@ WITH NO LOCK 
+              END-IF
+       @#END_IF#@
+       ;
+       ; for Condition
+       ;
+       @#DEF_IF#@ @+_MULTIPLEKEY_SYS_CONDITION+@
+      * Check Condition
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+          @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+              IF @+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND 
+                        NOT (@+_MULTIPLEKEY_SYS_CONDITION+@)
+                   MOVE 23 TO @+_FDSL_SYS_FILESTATUS+@
+              END-IF
+       @#END_IF#@
+       ;
+       ; for Start Value & End Value
+       ;
+       @#DEF_IF#@ @!L_STARTENDVALUE!@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * Check Start/End Value
+              IF @+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND
+                        NOT (@!L_STARTENDVALUE!@)
+                   MOVE 23 TO @+_FDSL_SYS_FILESTATUS+@
+              END-IF
+       @#END_IF#@
+     @#END_IF#@
+   @#END_IF#@
+;
+; ===================================================================
+; DATASET-FDNAME-READ-NEXT.
+; ===================================================================
+@$FD-READNEXT$@
+   @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"SORT"@) #@
+     @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@) OR
+                     (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"I-O"@)    #@
+       @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"RANDOM"@) #@
+           WHEN @!L_KEYINDEX!@
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                 END-IF
+          @#DEF_IF#@ @#EXP: @+_MULTIPLEKEY_SYS_CONDITION+@ OR @!L_STARTENDVALUE!@ #@
+                 PERFORM @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-CHECK-VALUES-NEXT
+          @#END_IF#@                 
+              ELSE
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                 END-IF
+          @#DEF_IF#@ @#EXP: @+_MULTIPLEKEY_SYS_CONDITION+@ OR @!L_STARTENDVALUE!@ #@
+                 PERFORM @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-CHECK-VALUES-PREV
+          @#END_IF#@ 
+              END-IF
+; LK6B0508
+@$FD-CHECKVALUE-NEXT$@
+       ;
+       ; Both Condition & Start/End Value
+       ;
+         @#DEF_IF#@ @#EXP: @+_MULTIPLEKEY_SYS_CONDITION+@ AND @!L_STARTENDVALUE!@ #@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * Check both Condition & Start/End Value 
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+          @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+              PERFORM UNTIL @+_FDSL_SYS_FILESTATUS+@(1:1) NOT = "0" OR
+                      (@+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND 
+                          ((@+_MULTIPLEKEY_SYS_CONDITION+@)   AND
+                           (@!L_STARTENDVALUE!@)))
+           @#DEF_IF#@ @!L_NEXTENDVAL!@
+                 IF @!L_NEXTENDVAL!@
+                    MOVE "10" TO @+_FDSL_SYS_FILESTATUS+@
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                       IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                          READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                       ELSE
+                          READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                       END-IF
+                    ELSE
+                       IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                          READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                       ELSE
+                          READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                       END-IF
+                    END-IF
+                 END-IF
+           @#ELSE#@
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                    END-IF
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                    END-IF
+                 END-IF
+           @#END_IF#@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+              END-PERFORM
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+          @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+       ;
+       ; Only with Condition
+       ;
+         @#ELSE_IF#@ @+_MULTIPLEKEY_SYS_CONDITION+@
+      * Check Condition
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+            @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+              PERFORM UNTIL @+_FDSL_SYS_FILESTATUS+@(1:1) NOT = "0" OR
+                      (@+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND (@+_MULTIPLEKEY_SYS_CONDITION+@))
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                    END-IF
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                    END-IF
+                 END-IF
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+            @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+              END-PERFORM
+       ;
+       ; Only with Start/End Value
+       ;
+         @#ELSE_IF#@ @!L_STARTENDVALUE!@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * Check Start/End Value
+              PERFORM UNTIL @+_FDSL_SYS_FILESTATUS+@(1:1) NOT = "0" OR
+                      (@+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND (@!L_STARTENDVALUE!@))
+           @#DEF_IF#@ @!L_NEXTENDVAL!@
+                 IF @!L_NEXTENDVAL!@
+                    MOVE "10" TO @+_FDSL_SYS_FILESTATUS+@
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                       IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                          READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                       ELSE
+                          READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                       END-IF
+                    ELSE
+                       IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                          READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                       ELSE
+                          READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                       END-IF
+                    END-IF
+                 END-IF
+           @#ELSE#@
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                    END-IF
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                    END-IF
+                 END-IF
+           @#END_IF#@
+           ;
+           ; LK6B0357 
+           ;
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+              END-PERFORM
+         @#END_IF#@
+       @#END_IF#@
+     @#END_IF#@
+   @#END_IF#@
+;
+; ===================================================================
+; DATASET-FDNAME-PREV.
+; ===================================================================
+@$FD-READPREV$@
+   @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"SORT"@) #@
+     @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"INPUT"@) OR
+                     (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"I-O"@)    #@
+       @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLACCESSMODE+@ EQUAL @"DYNAMIC"@) #@
+           WHEN @!L_KEYINDEX!@
+              IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                 END-IF
+          @#DEF_IF#@ @#EXP: @+_MULTIPLEKEY_SYS_CONDITION+@ OR @!L_STARTENDVALUE!@ #@
+                 PERFORM @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-CHECK-VALUES-PREV
+          @#END_IF#@
+              ELSE
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                 ELSE
+                    READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                 END-IF
+          @#DEF_IF#@ @#EXP: @+_MULTIPLEKEY_SYS_CONDITION+@ OR @!L_STARTENDVALUE!@ #@
+                 PERFORM @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-CHECK-VALUES-NEXT
+          @#END_IF#@
+              END-IF
+; LK6B0508
+@$FD-CHECKVALUE-PREV$@      
+       ;
+       ; Both Condition & Start/End Value
+       ;
+         @#DEF_IF#@ @#EXP: @+_MULTIPLEKEY_SYS_CONDITION+@ AND @!L_STARTENDVALUE!@ #@
+            @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * Check both Condition & Start/End Value
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+          @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+              PERFORM UNTIL @+_FDSL_SYS_FILESTATUS+@(1:1) NOT = "0" OR
+                      (@+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND 
+                          ((@+_MULTIPLEKEY_SYS_CONDITION+@)   AND
+                           (@!L_STARTENDVALUE!@)))
+           @#DEF_IF#@ @!L_PREVSTRVAL!@
+                 IF @!L_PREVSTRVAL!@
+                    MOVE "10" TO @+_FDSL_SYS_FILESTATUS+@
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                       IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                          READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                       ELSE
+                          READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                       END-IF
+                    ELSE
+                       IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                          READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                       ELSE
+                          READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                       END-IF
+                    END-IF
+                 END-IF
+           @#ELSE#@
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                    END-IF
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                    END-IF
+                 END-IF
+           @#END_IF#@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+          @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+              END-PERFORM
+       ;
+       ; Only with Condition
+       ;
+         @#ELSE_IF#@ @+_MULTIPLEKEY_SYS_CONDITION+@
+      * Check Condition
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+            @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+              PERFORM UNTIL @+_FDSL_SYS_FILESTATUS+@(1:1) NOT = "0" OR
+                      (@+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND (@+_MULTIPLEKEY_SYS_CONDITION+@))
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                    END-IF
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                    END-IF
+                 END-IF
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeCheckCondition>
+            @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeCheckCondition"@ @"Noperiod"@
+      * <TOTEM:END>
+              END-PERFORM
+       ;
+       ; Only with Start/End Value
+       ;
+         @#ELSE_IF#@ @!L_STARTENDVALUE!@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+      * Check Start/End Value
+              PERFORM UNTIL @+_FDSL_SYS_FILESTATUS+@(1:1) NOT = "0" OR
+                      (@+_FDSL_SYS_FILESTATUS+@(1:1) = "0" AND (@!L_STARTENDVALUE!@))
+           @#DEF_IF#@ @!L_PREVSTRVAL!@
+                 IF @!L_PREVSTRVAL!@
+                    MOVE "10" TO @+_FDSL_SYS_FILESTATUS+@
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                       IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                          READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                       ELSE
+                          READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                       END-IF
+                    ELSE
+                       IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                          READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                       ELSE
+                          READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                       END-IF
+                    END-IF
+                 END-IF
+           @#ELSE#@
+                 IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-Asc
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ PREVIOUS WITH NO LOCK
+                    END-IF
+                 ELSE
+                    IF @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-LOCK
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH LOCK
+                    ELSE
+                       READ @+_FDSL_SYS_FDNAME+@ NEXT WITH NO LOCK
+                    END-IF
+                 END-IF
+           @#END_IF#@
+           ;
+           ; LK6B0357 
+           ;
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+              END-PERFORM
+         @#END_IF#@
+       @#END_IF#@
+     @#END_IF#@
+   @#END_IF#@
+; ======================================================================   
+; Change Current Key Order                           LK6B0335, Jimmy add
+; ======================================================================
+@$Change-Key-Order-Asc$@
+           WHEN @!L_KEYINDEX!@
+              MOVE "A" TO @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER
+@$Change-Key-Order-Desc$@
+           WHEN @!L_KEYINDEX!@
+              MOVE "D" TO @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER
+@$FDIO_PARAGRAPH$@
+       @!L_DATASETNAME!@-CHANGETO-KEY@!L_KEYINDEX!@@!G_MODE!@.
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+           MOVE @!L_KEYINDEX!@ TO @!L_DATASETNAME!@-KEYIS
+   @#END_IF#@
+           .   
+
+;
+@#DEF_SET#@ @!L_BUFFLD!@ @!G_SCREENNAME!@
+@#DEF_IF#@ @!G_FRAMENAME!@
+    @#DEF_SET#@ @!L_BUFFLD!@ @!G_FRAMENAME!@
+@#END_IF#@
+;
+ @#END_LOOP#@
+@<_POP_MEM>@
+@#END_IF#@
+;
+; ===================================================================
+; DATASET-FDNAME-REC-WRITE.
+; ===================================================================
+@$FD-WRITE$@
+   @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"SORT"@) #@
+     @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"OUTPUT"@) OR
+                     (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"I-O"@)   OR
+                     (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"EXTEND"@) #@
+           WRITE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@.
+     @#END_IF#@
+   @#END_IF#@
+;
+; ===================================================================
+; DATASET-FDNAME-REC-REWRITE.
+; ===================================================================
+@$FD-REWRITE$@
+   @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"SORT"@) #@
+     @#DEF_IF#@ @#EXP: @!L_ISINDEX!@ AND (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"I-O"@) #@
+           REWRITE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@.
+     @#END_IF#@
+   @#END_IF#@
+;
+; ===================================================================
+; DATASET-FDNAME-REC-DELETE.
+; ===================================================================
+@$FD-DELETE$@
+   @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"SORT"@) #@
+     @#DEF_IF#@ @#EXP: @!L_ISINDEX!@ AND (@+_FDSL_SYS_FDIOMODE+@ EQUAL @"I-O"@) #@
+           DELETE @+_FDSL_SYS_FDNAME+@.
+     @#END_IF#@
+   @#END_IF#@
+@#DEF_IF#@ @#EXP: @+_FDSL_SYS_RECORDDEPEND+@ AND @+_FDSL_SYS_RECORDMIN+@ #@
+  @#DEF_SET#@ @!L_MIN!@ @+_FDSL_SYS_RECORDMIN+@
+  @#DEF_IF#@ @+_FDSL_SYS_RECORDMAX+@
+	 @#DEF_SET#@ @!L_MAX!@ @+_FDSL_SYS_RECORDMAX+@
+  @#ELSE#@
+	 @#DEF_SET#@ @!L_MAX!@ @+_FDSL_SYS_FDSIZE+@
+  @#END_IF#@
+  @#DEF_SET#@ @!L_LEN!@ @!L_MAX!@
+  @#DEF_SUB#@ @!L_LEN!@ @!L_MIN!@
+@$CLEAR_RECORD$@
+;
+; ===================================================================
+; LK6B0357 
+; ===================================================================
+; Original code
+;          MOVE SPACES TO @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@(@!L_MIN!@:@!L_LEN!@)
+;
+  @#DEF_ADD#@ @!L_MIN!@ @"1"@
+           SET TotemFdSlRecordLength TO SIZE OF @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+           MOVE @!L_MIN!@ TO TotemFdSlRecordClearOffset
+           IF TotemFdSlRecordLength >= TotemFdSlRecordClearOffset
+              MOVE SPACES TO @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@(TotemFdSlRecordClearOffset:)
+           END-IF
+;
+@#ELSE_IF#@ @+_FDSL_SYS_ISVARIABLEOCCURS+@
+@$CLEAR_RECORD$@
+@<_PUSH_MEM>@
+   @#DEF_SET#@ @!L_FDNAME!@ @"@+_FDSL_SYS_FDNAME+@"@
+   @<_SET_CURRENT_FDSLITEM>@
+   @#DEF_LOOP#@ @+_ITEM_SYS_NO+@
+   @<_FETCH_NEXT_ITEM>@
+     @#DEF_IF#@ @+_ITEM_SYS_OCCURSDEPEND+@
+	    @#DEF_SET#@ @!L_CNT!@ @"1"@
+	    @#DEF_LOOP#@ @+_ITEM_SYS_OCCURS+@
+           MOVE SPACES TO @+_ITEM_SYS_FIELDNAME+@ OF @!L_FDNAME!@(@!L_CNT!@)
+		   @#DEF_ADD#@ @!L_CNT!@ @"1"@
+        @#END_LOOP#@
+     @#END_IF#@
+   @#END_LOOP#@
+@<_POP_MEM>@
+@#END_IF#@
+;
+; ===================================================================
+; From here, we begin generate Read/Rewrite ... paragraph.
+; ===================================================================
+;
+@$FDIO_PARAGRAPH$@
+;
+@#DEF_IF#@ @#EXP: @+_FDSL_SYS_ISPRIMARY+@ #@ 
+       @!L_DATASETNAME!@-Change-CurrentKey-Asc@!G_MODE!@.
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@    
+           EVALUATE @!L_DATASETNAME!@-KEYIS
+		      @#GET_MEM#@ @"Change-Key-Order-Asc"@
+		      @#CLEAR_MEM#@ @"Change-Key-Order-Asc"@
+           END-EVALUATE
+   @#ELSE#@
+           MOVE "A" TO @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-ORDER
+   @#END_IF#@
+           .
+
+       @!L_DATASETNAME!@-Change-CurrentKey-Desc@!G_MODE!@.
+      @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@           
+           EVALUATE @!L_DATASETNAME!@-KEYIS
+		      @#GET_MEM#@ @"Change-Key-Order-Desc"@
+		      @#CLEAR_MEM#@ @"Change-Key-Order-Desc"@
+           END-EVALUATE
+   @#ELSE#@
+           MOVE "D" TO @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-KEY-ORDER
+   @#END_IF#@           
+           .
+
+@#END_IF#@
+; ===================================================================
+; Start paragraph
+; ===================================================================
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@
+      * @+_FDSL_SYS_FDNAME+@
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-START.
+           @#GET_MEM#@   @"ALL-EVALUATE"@
+           @#GET_MEM#@   @"START"@
+           @#CLEAR_MEM#@ @"START"@
+           @#GET_MEM#@   @"ALL-END-EVALUATE"@
+           .
+
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-START-NOTGREATER.
+           @#GET_MEM#@   @"ALL-EVALUATE"@
+           @#GET_MEM#@   @"START-NOTGREATER"@
+           @#CLEAR_MEM#@ @"START-NOTGREATER"@
+           @#GET_MEM#@   @"ALL-END-EVALUATE"@
+           .
+
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-START-GREATER.
+           @#GET_MEM#@   @"ALL-EVALUATE"@
+           @#GET_MEM#@   @"START-GREATER"@
+           @#CLEAR_MEM#@ @"START-GREATER"@
+           @#GET_MEM#@   @"ALL-END-EVALUATE"@
+           .
+
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-START-LESS.
+           @#GET_MEM#@   @"ALL-EVALUATE"@
+           @#GET_MEM#@   @"START-LESS"@
+           @#CLEAR_MEM#@ @"START-LESS"@
+           @#GET_MEM#@   @"ALL-END-EVALUATE"@
+           .
+
+;
+; ===================================================================
+; The Greater & Less Start Paragraph only be used in Form_IUD when
+; the FD is Dynamic (Indexed & Relative) and KeyIs Key is Duplicate 
+; type.
+; ===================================================================
+;
+     @#DEF_SETMEM#@ @!L_DUPLICATEKEY!@ @"START-EQUAL"@
+     @#DEF_IF#@ @!L_DUPLICATEKEY!@
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-START-EQUAL.
+           @#GET_MEM#@   @"ALL-EVALUATE"@
+           @#GET_MEM#@   @"START-EQUAL"@
+           @#CLEAR_MEM#@ @"START-EQUAL"@
+           @#GET_MEM#@   @"ALL-END-EVALUATE"@
+           .
+
+     @#END_IF#@
+   @#END_IF#@
+; ===================================================================
+; Form-IUD paragraph
+; ===================================================================
+;
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-Read.
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeRead>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeRead"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeReadRecord>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeReadRecord"@
+      * <TOTEM:END>
+        @#DEF_SETMEM#@ @!L_DO!@ @"FD-READ"@
+        @#DEF_IF#@ @!L_DO!@
+		   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_RECORDDEPEND+@ OR @+_FDSL_SYS_ISVARIABLEOCCURS+@ #@
+		      @#GET_MEM#@ @"CLEAR_RECORD"@
+		   @#END_IF#@
+           @#GET_MEM#@   @"ALL-EVALUATE"@
+              @#GET_MEM#@   @"FD-READ"@
+              @#CLEAR_MEM#@ @"FD-READ"@
+           @#GET_MEM#@   @"ALL-END-EVALUATE"@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+           MOVE @+_FDSL_SYS_FILESTATUS+@ TO TOTEM-ERR-STAT 
+           MOVE "@+_FDSL_SYS_FDNAME+@" TO TOTEM-ERR-FILE
+           MOVE "READ" TO TOTEM-ERR-MODE
+        @#END_IF#@
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, AfterRead>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"AfterRead"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, AfterReadRecord>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"AfterReadRecord"@
+      * <TOTEM:END>
+           .
+
+;
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-Read-Next.
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeRead>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeRead"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeReadNext>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeReadNext"@
+      * <TOTEM:END>
+        @#DEF_SETMEM#@ @!L_DO!@ @"FD-READNEXT"@
+        @#DEF_IF#@ @!L_DO!@
+		   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_RECORDDEPEND+@ OR @+_FDSL_SYS_ISVARIABLEOCCURS+@ #@
+		      @#GET_MEM#@ @"CLEAR_RECORD"@
+		   @#END_IF#@
+           @#GET_MEM#@   @"ALL-EVALUATE"@
+              @#GET_MEM#@   @"FD-READNEXT"@
+              @#CLEAR_MEM#@ @"FD-READNEXT"@
+           @#GET_MEM#@   @"ALL-END-EVALUATE"@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+           MOVE @+_FDSL_SYS_FILESTATUS+@ TO TOTEM-ERR-STAT
+           MOVE "@+_FDSL_SYS_FDNAME+@" TO TOTEM-ERR-FILE
+           MOVE "READ NEXT" TO TOTEM-ERR-MODE
+        @#END_IF#@
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, AfterRead>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"AfterRead"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, AfterReadNext>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"AfterReadNext"@
+      * <TOTEM:END>
+           .
+
+;
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-Read-Prev.
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeRead>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeRead"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeReadPrev>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeReadPrev"@
+      * <TOTEM:END>
+        @#DEF_SETMEM#@ @!L_DO!@ @"FD-READPREV"@
+        @#DEF_IF#@ @!L_DO!@
+		   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_RECORDDEPEND+@ OR @+_FDSL_SYS_ISVARIABLEOCCURS+@ #@
+		      @#GET_MEM#@ @"CLEAR_RECORD"@
+		      @#CLEAR_MEM#@ @"CLEAR_RECORD"@
+		   @#END_IF#@
+           @#GET_MEM#@   @"ALL-EVALUATE"@
+              @#GET_MEM#@   @"FD-READPREV"@
+              @#CLEAR_MEM#@ @"FD-READPREV"@
+           @#GET_MEM#@   @"ALL-END-EVALUATE"@
+           @#GET_MEM#@ @"FD-SPLIT-@+_FDSL_SYS_FDNAME+@"@
+           MOVE @+_FDSL_SYS_FILESTATUS+@ TO TOTEM-ERR-STAT
+           MOVE "@+_FDSL_SYS_FDNAME+@" TO TOTEM-ERR-FILE
+           MOVE "READ PREVIOUS" TO TOTEM-ERR-MODE
+        @#END_IF#@
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, AfterRead>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"AfterRead"@
+      * <TOTEM:END>
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, AfterReadPrev>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"AfterReadPrev"@
+      * <TOTEM:END>
+           .
+
+;
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-Rec-Write.
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeWrite>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeWrite"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"FD-WRITE"@
+           @#CLEAR_MEM#@ @"FD-WRITE"@
+           MOVE @+_FDSL_SYS_FILESTATUS+@ TO TOTEM-ERR-STAT
+           MOVE "@+_FDSL_SYS_FDNAME+@" TO TOTEM-ERR-FILE
+           MOVE "WRITE" TO TOTEM-ERR-MODE
+   @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+               MOVE "@+_FDSL_SYS_FDNAME+@" TO TOTEM-TRANSACTION-FLAG
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, AfterWrite>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"AfterWrite"@
+      * <TOTEM:END>
+           .
+
+;
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-Rec-Rewrite.
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeRewrite>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeRewrite"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"FD-REWRITE"@
+           @#CLEAR_MEM#@ @"FD-REWRITE"@
+           MOVE @+_FDSL_SYS_FILESTATUS+@ TO TOTEM-ERR-STAT
+           MOVE "@+_FDSL_SYS_FDNAME+@" TO TOTEM-ERR-FILE
+           MOVE "REWRITE" TO TOTEM-ERR-MODE
+   @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+               MOVE "@+_FDSL_SYS_FDNAME+@" TO TOTEM-TRANSACTION-FLAG
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, AfterRewrite>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"AfterRewrite"@
+      * <TOTEM:END>
+           .
+
+;
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-Rec-Delete.
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeDelete>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"BeforeDelete"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"FD-DELETE"@
+           @#CLEAR_MEM#@ @"FD-DELETE"@
+           MOVE @+_FDSL_SYS_FILESTATUS+@ TO TOTEM-ERR-STAT
+           MOVE "@+_FDSL_SYS_FDNAME+@" TO TOTEM-ERR-FILE
+           MOVE "DELETE" TO TOTEM-ERR-MODE
+   @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+               MOVE "@+_FDSL_SYS_FDNAME+@" TO TOTEM-TRANSACTION-FLAG
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. FD:@+_DATASET_SYS_NAME+@, FD:@+_FDSL_SYS_FDNAME+@, AfterDelete>
+           @#GET_ENTRYPOINT#@ @"FD"@ @"FD"@ @"AfterDelete"@
+      * <TOTEM:END>
+           .
+
+;
+   @#DEF_SETMEM#@ @!L_DOIT!@ @"FD-CHECKVALUE-NEXT"@
+   @#DEF_IF#@ @!L_DOIT!@
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-CHECK-VALUES-NEXT.
+           @#GET_MEM#@   @"FD-CHECKVALUE-NEXT"@
+           @#CLEAR_MEM#@ @"FD-CHECKVALUE-NEXT"@
+           .
+           
+   @#END_IF#@
+   @#DEF_SETMEM#@ @!L_DOIT!@ @"FD-CHECKVALUE-PREV"@
+   @#DEF_IF#@ @!L_DOIT!@
+       @!L_DATASETNAME!@-@+_FDSL_SYS_FDNAME+@-CHECK-VALUES-PREV.
+           @#GET_MEM#@   @"FD-CHECKVALUE-PREV"@
+           @#CLEAR_MEM#@ @"FD-CHECKVALUE-PREV"@
+           .
+           
+   @#END_IF#@
+;

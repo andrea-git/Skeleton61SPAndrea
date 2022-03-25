@@ -1,0 +1,223 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report DateTime Generation Rule.  2001/11/02
+;
+; Remarks:
+;   The same as RPT.Label.
+;
+; HTML :
+;        <DIV STYLE="POSITION:ABSOLUTE; TOP:999; LEFT:999; WIDTH:999; HEIGHT:999; 
+;                    BORDER-STYLE:solid; BORDER-WIDTH:999; BORDER-COLOR: RGB(99, 99, 99);
+;                    TEXT-ALIGN:CENTER; ">
+;            <STRONG><EM> ..... </EM></STROGN>
+;        </DIV> 
+;
+; ===================================================================
+;
+@%Rpt_DateTimeFormat.Skl%@
+;
+; ========================== Pre-Checking ===========================
+;
+; If this Control didn't contain FIELDVARIABLE, it would get the
+; system Data & Time as the result of displaying. So we don't check
+; if there's fieldvariable in it.
+;
+; ====================== Initial Local Variable =====================
+;
+@#DEF_SET#@ @!L_TDATTR!@     @""@
+@#DEF_SET#@ @!L_BEFOREATTR!@ @""@
+@#DEF_SET#@ @!L_AFTERATTR!@  @""@
+@#DEF_SET#@ @!L_DIV!@        @""@
+@#DEF_SET#@ @!L_ENDDIV!@     @""@
+;
+; ==================== RPT -- CSS STYLE'S SETTING ===================
+;
+  @#DEF_IF#@ @#EXP: NOT ((@+_CELL_SYS_COLSPAN+@ EQUAL @"0"@) OR (@+_CELL_SYS_COLSPAN+@ EQUAL @"1"@)) #@
+     @#DEF_APPEND#@ @!L_TDATTR!@ @" COLSPAN=\"@+_CELL_SYS_COLSPAN+@\" "@
+  @#END_IF#@
+  @#DEF_IF#@ @#EXP: NOT ((@+_CELL_SYS_ROWSPAN+@ EQUAL @"0"@) OR (@+_CELL_SYS_ROWSPAN+@ EQUAL @"1"@)) #@
+     @#DEF_APPEND#@ @!L_TDATTR!@ @" ROWSPAN=\"@+_CELL_SYS_ROWSPAN+@\" "@
+  @#END_IF#@
+  @#DEF_APPEND#@ @!L_TDATTR!@ @" WIDTH=\"@+_CELL_SYS_WIDTH+@\" "@
+  @#DEF_APPEND#@ @!L_TDATTR!@ @" HEIGHT=\"@+_CELL_SYS_HEIGHT+@\" "@
+  @#DEF_APPEND#@ @!L_TDATTR!@ @" VALIGN=TOP "@
+  @#DEF_IF#@ @+_RPT_ATR_JUSTIFICATION+@
+     @#DEF_APPEND#@ @!L_TDATTR!@ @"ALIGN=@+_RPT_ATR_JUSTIFICATION+@ "@
+  @#END_IF#@
+  @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISCOLORDEFAULT+@ OR @+_RPT_ATR_COLORVARIABLE+@ #@
+    @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISCOLORDEFAULT+@ #@
+     @#DEF_APPEND#@ @!L_TDATTR!@ @"BGCOLOR=@+_RPT_SYS_BACKGROUNDRGBCOLOR+@ "@
+     @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<FONT COLOR=@+_RPT_SYS_FOREGROUNDRGBCOLOR+@>"@
+    @#END_IF#@
+     @#DEF_SET#@ @!L_TMPBUF!@ @"</FONT>"@
+     @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+     @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+  @#END_IF#@
+  @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISFONTDEFAULT+@ #@
+     @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<FONT FACE=\"@+_RPT_SYS_FONTNAME+@\">"@
+     @#DEF_SET#@ @!L_TMPBUF!@ @"</FONT>"@
+     @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+     @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+  @#END_IF#@
+  @#DEF_IF#@ @+_RPT_SYS_FONTBOLD+@
+     @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRONG>"@
+     @#DEF_SET#@ @!L_TMPBUF!@ @"</STRONG>"@
+     @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+     @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+  @#END_IF#@
+  @#DEF_IF#@ @+_RPT_SYS_FONTITALIC+@
+     @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<EM>"@
+     @#DEF_SET#@ @!L_TMPBUF!@ @"</EM>"@
+     @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+     @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+  @#END_IF#@
+  @#DEF_IF#@ @+_RPT_SYS_FONTUNDERLINE+@
+      @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<U>"@
+      @#DEF_SET#@ @!L_TMPBUF!@ @"</U>"@
+      @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+      @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+  @#END_IF#@
+  @#DEF_IF#@ @+_RPT_SYS_FONTSTRIKEOUT+@
+      @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRIKE>"@
+      @#DEF_SET#@ @!L_TMPBUF!@ @"</STRIKE>"@
+      @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+      @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+  @#END_IF#@
+  @#DEF_SET#@    @!L_DIV!@ @"<DIV STYLE=\" "@
+  @#DEF_APPEND#@ @!L_DIV!@ @"FONT-FAMILY:@+_RPT_SYS_FONTNAME+@; "@ 
+  @#DEF_APPEND#@ @!L_DIV!@ @"FONT-SIZE:@+_RPT_SYS_FONTSIZE+@pt;\"> "@
+  @#DEF_SET#@    @!L_ENDDIV!@ @"</DIV>"@
+;
+;
+   @#DEF_IF#@ @+_RPT_ATR_FIELDVARIABLE+@
+           @#DEF_SET#@ @!G_EXISTRPTBUF!@ @"YES"@
+;
+; ================ WRK -- RPT -- Pre DateTime Buf ===================
+; Remarks:
+;   There's a Entry-Field's property : Print if Repeat. Every time when
+;   you fetch next record and going to print the field out, you should
+;   check if the data value is the same as previous time, then decide
+;   whether to print it or not.
+;
+@$RPT_PRE_DATABUF$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-PRE-BUF PIC @+_RPT_ATR_FIELDPICTURE+@.
+;
+; ====================== WRK -- RPT -- DateTime =====================
+;
+@$RPT_DB_WORKING_BUFBODY$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-BUF PIC @+_RPT_ATR_FIELDPICTURE+@.
+;
+; ========================= PRT -- BUFTOFLD =========================
+;
+@$RPT_FDSL_FLDTOBUF$@
+      * RPT.Date-Time : @+_RPT_ATR_NAME+@
+           MOVE @+_RPT_ATR_FIELDVARIABLE+@ TO @+_RPT_ATR_NAME+@-BUF
+   @#END_IF#@
+;
+@$SECTION-PRINT-PROCEDURE$@
+      * RPT.Date-Time : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Data-Time:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Date-Time"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Detail"@) AND 
+                      (NOT @+_RPT_ATR_PRINTIFREPEAT+@) #@
+      * PRINT IF REPEAT : FALSE
+             IF (@+_RPT_ATR_NAME+@-BUF NOT = @+_RPT_ATR_NAME+@-PRE-BUF)
+   @#END_IF#@
+               MOVE '      <!-- Date-Time (@+_RPT_ATR_NAME+@) -->' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+   @#DEF_IF#@ @+_RPT_ATR_COLORVARIABLE+@
+       @#DEF_SET#@ @!G_EXISTCOLVAR!@ @"YES"@
+               MOVE @+_RPT_ATR_COLORVARIABLE+@ TO TMP-COLOR-BUF
+               PERFORM Trans-ACUCOLOR-HTMLCOLOR
+               STRING '           <TD @!L_TDATTR!@ BGCOLOR=',
+                      TMP-HTML-BG-BUF, '>' 
+                    DELIMITED BY SIZE INTO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               STRING '         <FONT COLOR=',
+                      TMP-HTML-FG-BUF, '>@!L_BEFOREATTR!@@!L_DIV!@'
+                     DELIMITED BY SIZE INTO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+   @#ELSE#@
+               MOVE '           <TD @!L_TDATTR!@ >' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               MOVE '         @!L_BEFOREATTR!@@!L_DIV!@' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_HYPERLINKVARIABLE+@
+               IF NOT (@+_RPT_ATR_HYPERLINKVARIABLE+@ = ZEROS OR SPACES)
+                   IF (@+_RPT_ATR_HYPERLINKVARIABLE+@(2:1) = ":") | Full path name
+	    			   STRING '           <A HREF="file:\',
+                              @+_RPT_ATR_HYPERLINKVARIABLE+@, '">'
+                              DELIMITED BY SIZE INTO PRINT-BUF
+                   ELSE
+	    			   STRING '           <A HREF="',
+                              @+_RPT_ATR_HYPERLINKVARIABLE+@, '">'
+                              DELIMITED BY SIZE INTO PRINT-BUF
+                   END-IF
+               END-IF
+   @#ELSE_IF#@ @+_RPT_ATR_HYPERLINK+@
+               MOVE "@+_RPT_ATR_HYPERLINK+@" TO PRINT-BUF
+               IF (PRINT-BUF(2:1) = ":") | Full path name
+				   STRING '           <A HREF="file:\@+_RPT_ATR_HYPERLINK+@">'
+					  DELIMITED BY SIZE INTO PRINT-BUF
+               ELSE
+				   STRING '           <A HREF="@+_RPT_ATR_HYPERLINK+@">'
+					  DELIMITED BY SIZE INTO PRINT-BUF
+               END-IF
+   @#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               PERFORM @+_RPT_ATR_NAME+@-FORMAT-CONVERT
+        @#DEF_IF#@ @#EXP: (NOT @+_RPT_ATR_DATEFORMAT+@ EQUAL @"NONE"@) AND
+                          (NOT @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"NONE"@) #@
+               STRING WRK-DATE-REF OF @+_RPT_ATR_NAME+@-DATEBUF,
+                      " ",
+                      WRK-TIME-REF OF @+_RPT_ATR_NAME+@-DATEBUF
+                   DELIMITED BY SIZE INTO PRINT-BUF
+        @#ELSE_IF#@ @#EXP: NOT @+_RPT_ATR_DATEFORMAT+@ EQUAL @"NONE"@ #@
+               MOVE WRK-DATE-REF OF @+_RPT_ATR_NAME+@-DATEBUF TO PRINT-BUF
+        @#ELSE_IF#@ @#EXP: NOT @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"NONE"@ #@
+               MOVE WRK-TIME-REF OF @+_RPT_ATR_NAME+@-DATEBUF TO PRINT-BUF
+        @#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+		@#DEF_IF#@ @+_RPT_ATR_HYPERLINKVARIABLE+@
+               IF @+_RPT_ATR_HYPERLINKVARIABLE+@ = ZEROS OR SPACES
+                   STRING '            @!L_ENDDIV!@@!L_AFTERATTR!@</TD>' DELIMITED BY SIZE INTO PRINT-BUF
+               ELSE
+                   STRING '            </A>@!L_ENDDIV!@@!L_AFTERATTR!@</TD>' DELIMITED BY SIZE INTO PRINT-BUF
+               END-IF
+		@#ELSE_IF#@ @+_RPT_ATR_HYPERLINK+@ #@
+               STRING '            </A>@!L_ENDDIV!@@!L_AFTERATTR!@</TD>' DELIMITED BY SIZE INTO PRINT-BUF
+		@#ELSE#@
+               STRING '            @!L_ENDDIV!@@!L_AFTERATTR!@</TD>' DELIMITED BY SIZE INTO PRINT-BUF
+		@#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+   @#DEF_IF#@ @#EXP: (@+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Detail"@) AND
+                      (NOT @+_RPT_ATR_PRINTIFREPEAT+@) #@
+             END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Data-Time:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Date-Time"@ @"AfterPrint"@
+      * <TOTEM:END>
+;

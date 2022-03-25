@@ -1,0 +1,39 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Page Generation Rule.  2001/11/02
+;
+; ===================================================================
+;
+; ================== SCR -- DB -- SCREEN  SECTION ===================
+;
+@$SCREEN$@
+      * PAGE
+       @+_OBJ_SYS_LEVEL+@
+           @+_OBJ_ATR_NAME+@, 
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEVARIABLE+@
+           VISIBLE @+_OBJ_ATR_VISIBLEVARIABLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_COLUMN+@
+           COL @+_OBJ_ATR_COLUMN+@, 
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_LINE+@
+           LINE @+_OBJ_ATR_LINE+@,
+@#END_IF#@
+           .
+
+; << ============ WRK -- DB -- WORKING STORAGE (CONTROL) ========= >>
+@$DB_WORKING_BUFBODY$@
+@#DEF_IF#@ @+_OBJ_SYS_HASDATACHILD+@
+      * @+_OBJ_SYS_TYPE+@
+              @+_OBJ_SYS_LEVEL+@ @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@.
+@#END_IF#@
+@<_PUSH_MEM>@
+@<_SET_OBJ_CTRLCHILD>@
+;   @#DEF_SET#@ @!G_ITEMLEVEL!@ @"05"@
+   @#DEF_LOOP#@ @+_OBJ_SYS_CTRLNO+@
+      @<_FETCH_NEXT_OBJ_CTRL>@
+      @%DispatchCtrl.Skl%@
+   @#END_LOOP#@
+;   @#DEF_SET#@ @!G_ITEMLEVEL!@ @"03"@
+@<_POP_MEM>@
+;

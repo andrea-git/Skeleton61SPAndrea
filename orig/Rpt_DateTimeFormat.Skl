@@ -1,0 +1,411 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report DateTime Format Generation Rule.  2001/11/02
+;
+; Remarks:
+;   The same as RPT.Label.
+;
+; HTML :
+;        <DIV STYLE="POSITION:ABSOLUTE; TOP:999; LEFT:999; WIDTH:999; HEIGHT:999; 
+;                    BORDER-STYLE:solid; BORDER-WIDTH:999; BORDER-COLOR: RGB(99, 99, 99);
+;                    TEXT-ALIGN:CENTER; ">
+;            <STRONG><EM> ..... </EM></STROGN>
+;        </DIV> 
+;
+; ===================================================================
+;
+; ================= WRK -- RPT -- DateTime (DATE) ===================
+; ===================================================================
+;
+@$WORKING$@
+      * @+_RPT_ATR_NAME+@
+       01 @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@.
+@#DEF_IF#@ @#EXP: NOT @+_RPT_ATR_FIELDVARIABLE+@ #@
+           ;
+           ; System Date
+           ;
+           05 WRK-DATE      PIC 9(8).
+           05 WRK-DATE-DETAIL REDEFINES WRK-DATE.
+               10 WRK-YEAR        PIC 9(4).
+               10 WRK-MONTH       PIC 9(2).
+               10 WRK-DAY         PIC 9(2).
+; ===================================================================
+;   If it didn't contain FieldVariable means the Date&time was came
+;   form System, and we should call system date&time when it was
+;   performed in Convert paragraph.
+; ===================================================================
+@$DATE-TIME-CONVERT$@
+           ACCEPT WRK-DATE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ FROM CENTURY-DATE
+; ===================================================================
+; ===================================================================
+@$WORKING$@
+@#ELSE#@
+    @#DEF_IF#@ @#EXP: NOT (@+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"NONE"@) #@
+           ;
+           ; Date from FD field
+           ;
+           05 WRK-DATE      PIC @+_RPT_ATR_FIELDPICTURE+@.
+           05 WRK-DATE-DETAIL REDEFINES WRK-DATE.
+; ===================================================================
+;   If the Date or Time was came from FD, we follow the normal rule,
+;   get the data from FLD-TO-BUF, and when CONVERT paragraph was 
+;   performed, we move BUF to this DATE&TIME buf.
+; ===================================================================
+@$DATE-TIME-CONVERT$@
+           MOVE @+_RPT_ATR_NAME+@-BUF@!G_MODE!@ TO WRK-DATE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+; ===================================================================
+; ===================================================================
+@$WORKING$@
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"YYYYMMDD"@ #@
+               10 WRK-YEAR        PIC 9(4).
+               10 WRK-MONTH       PIC 9(2).
+               10 WRK-DAY         PIC 9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"YYYYDDMM"@ #@
+               10 WRK-YEAR        PIC 9(4).
+               10 WRK-DAY         PIC 9(2).
+               10 WRK-MONTH       PIC 9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"MMDDYYYY"@ #@
+               10 WRK-MONTH       PIC 9(2).
+               10 WRK-DAY         PIC 9(2).
+               10 WRK-YEAR        PIC 9(4).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"DDMMYYYY"@ #@
+               10 WRK-DAY         PIC 9(2).
+               10 WRK-MONTH       PIC 9(2).
+               10 WRK-YEAR        PIC 9(4).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"YYMMDD"@ #@
+               10 WRK-YEAR        PIC 9(2).
+               10 WRK-MONTH       PIC 9(2).
+               10 WRK-DAY         PIC 9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"YYDDMM"@ #@
+               10 WRK-YEAR        PIC 9(2).
+               10 WRK-DAY         PIC 9(2).
+               10 WRK-MONTH       PIC 9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"MMDDYY"@ #@
+               10 WRK-MONTH       PIC 9(2).
+               10 WRK-DAY         PIC 9(2).
+               10 WRK-YEAR        PIC 9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"DDMMYY"@ #@
+               10 WRK-DAY         PIC 9(2).
+               10 WRK-MONTH       PIC 9(2).
+               10 WRK-YEAR        PIC 9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"YYYYMM"@ #@
+               10 WRK-YEAR        PIC 9(4).
+               10 WRK-MONTH       PIC 9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"MMYYYY"@ #@
+               10 WRK-MONTH       PIC 9(2).
+               10 WRK-YEAR        PIC 9(4).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"YYMM"@ #@
+               10 WRK-YEAR        PIC 9(2).
+               10 WRK-MONTH       PIC 9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"MMYY"@ #@
+               10 WRK-MONTH       PIC 9(2).
+               10 WRK-YEAR        PIC 9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"MMDD"@ #@
+               10 WRK-MONTH       PIC 9(2).
+               10 WRK-DAY         PIC 9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEPICTUREFORMAT+@ EQUAL @"DDMM"@ #@
+               10 WRK-DAY         PIC 9(2).
+               10 WRK-MONTH       PIC 9(2).
+    @#END_IF#@
+@#END_IF#@
+;
+@#DEF_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"YYYY/MM/DD"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-YEAR        PIC 9(4).
+               10 WRK-SEPERATOR-1     PIC  X   VALUE IS "/".
+               10 WRK-REF-MONTH       PIC 9(2).
+               10 WRK-SEPERATOR-2     PIC  X   VALUE IS "/".
+               10 WRK-REF-DAY         PIC 9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"MM/DD/YYYY"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-MONTH       PIC 9(2).
+               10 WRK-SEPERATOR-1     PIC  X   VALUE IS "/".
+               10 WRK-REF-DAY         PIC 9(2).
+               10 WRK-SEPERATOR-2     PIC  X   VALUE IS "/".
+               10 WRK-REF-YEAR        PIC 9(4).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"DD/MM/YYYY"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-DAY         PIC 9(2).
+               10 WRK-SEPERATOR-1     PIC  X   VALUE IS "/".
+               10 WRK-REF-MONTH       PIC 9(2).
+               10 WRK-SEPERATOR-2     PIC  X   VALUE IS "/".
+               10 WRK-REF-YEAR        PIC 9(4).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"YY/MM/DD"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-YEAR        PIC 9(2).
+               10 WRK-SEPERATOR-1     PIC  X   VALUE IS "/".
+               10 WRK-REF-MONTH       PIC 9(2).
+               10 WRK-SEPERATOR-2     PIC  X   VALUE IS "/".
+               10 WRK-REF-DAY         PIC 9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"YY/DD/MM"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-YEAR        PIC 9(2).
+               10 WRK-SEPERATOR-1     PIC  X   VALUE IS "/".
+               10 WRK-REF-DAY         PIC 9(2).
+               10 WRK-SEPERATOR-2     PIC  X   VALUE IS "/".
+               10 WRK-REF-MONTH       PIC 9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"MM/DD/YY"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-MONTH       PIC 9(2).
+               10 WRK-SEPERATOR-1     PIC  X   VALUE IS "/".
+               10 WRK-REF-DAY         PIC 9(2).
+               10 WRK-SEPERATOR-2     PIC  X   VALUE IS "/".
+               10 WRK-REF-YEAR        PIC 9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"DD/MM/YY"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-DAY         PIC 9(2).
+               10 WRK-SEPERATOR-1     PIC  X   VALUE IS "/".
+               10 WRK-REF-MONTH       PIC 9(2).
+               10 WRK-SEPERATOR-2     PIC  X   VALUE IS "/".
+               10 WRK-REF-YEAR        PIC 9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"YYYY/MM"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-YEAR        PIC 9(4).
+               10 WRK-SEPERATOR-2     PIC  X   VALUE IS "/".
+               10 WRK-REF-MONTH       PIC 9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"MM/YYYY"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-MONTH       PIC 9(2).
+               10 WRK-SEPERATOR-2     PIC  X   VALUE IS "/".
+               10 WRK-REF-YEAR        PIC 9(4).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"YY/MM"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-YEAR        PIC 9(2).
+               10 WRK-SEPERATOR-1     PIC  X   VALUE IS "/".
+               10 WRK-REF-MONTH       PIC 9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"MM/YY"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-MONTH       PIC 9(2).
+               10 WRK-SEPERATOR-1     PIC  X   VALUE IS "/".
+               10 WRK-REF-YEAR        PIC 9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-YEAR  OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"MM/DD"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-MONTH       PIC 9(2).
+               10 WRK-SEPERATOR-1     PIC  X   VALUE IS "/".
+               10 WRK-REF-DAY         PIC 9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_DATEFORMAT+@ EQUAL @"DD/MM"@ #@
+@$WORKING$@
+           05 WRK-DATE-REF.
+               10 WRK-REF-DAY         PIC 9(2).
+               10 WRK-SEPERATOR-1     PIC  X   VALUE IS "/".
+               10 WRK-REF-MONTH       PIC 9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MONTH OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-DAY   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#END_IF#@
+;
+; ================= WRK -- RPT -- DateTime (TIME) ===================
+; ===================================================================
+;
+@$WORKING$@
+@#DEF_IF#@ @#EXP: NOT @+_RPT_ATR_FIELDVARIABLE+@ #@
+           ;
+           ; System Date
+           ;
+           05 WRK-TIME      PIC 9(8).
+           05 WRK-TIME-DETAIL REDEFINES WRK-TIME.
+               10 WRK-HOUR         PIC  9(2).
+               10 WRK-MINUTE       PIC  9(2).
+               10 WRK-SECOND       PIC  9(2).
+               10 WRK-HS           PIC  9(2).
+@$DATE-TIME-CONVERT$@
+           ACCEPT WRK-TIME OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ FROM TIME
+@$WORKING$@
+@#ELSE#@
+    @#DEF_IF#@ @#EXP: NOT (@+_RPT_ATR_TIMEPICTUREFORMAT+@ EQUAL @"NONE"@) #@
+           ;
+           ; Time from FD field
+           ;
+           05 WRK-TIME      PIC @+_RPT_ATR_FIELDPICTURE+@.
+           05 WRK-TIME-DETAIL REDEFINES WRK-TIME.
+@$DATE-TIME-CONVERT$@
+           MOVE @+_RPT_ATR_NAME+@-BUF@!G_MODE!@ TO WRK-TIME OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@$WORKING$@
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: @+_RPT_ATR_TIMEPICTUREFORMAT+@ EQUAL @"HHMMSS"@ #@
+               10 WRK-HOUR         PIC  9(2).
+               10 WRK-MINUTE       PIC  9(2).
+               10 WRK-SECOND       PIC  9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEPICTUREFORMAT+@ EQUAL @"HHMM"@ #@
+               10 WRK-HOUR         PIC  9(2).
+               10 WRK-MINUTE       PIC  9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEPICTUREFORMAT+@ EQUAL @"HH"@ #@
+               10 WRK-HOUR         PIC  9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEPICTUREFORMAT+@ EQUAL @"MMSS"@ #@
+               10 WRK-MINUTE       PIC  9(2).
+               10 WRK-SECOND       PIC  9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEPICTUREFORMAT+@ EQUAL @"MM"@ #@
+               10 WRK-MINUTE       PIC  9(2).
+    @#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEPICTUREFORMAT+@ EQUAL @"SS"@ #@
+               10 WRK-SECOND       PIC  9(2).
+    @#END_IF#@
+@#END_IF#@
+;
+@#DEF_IF#@ @#EXP: @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"HH:MM:SS"@ #@
+@$WORKING$@
+           05 WRK-TIME-REF.
+               10 WRK-REF-HOUR         PIC  9(2).
+               10 WRK-SEPERATOR-1      PIC  X   VALUE IS ":".
+               10 WRK-REF-MINUTE       PIC  9(2).
+               10 WRK-SEPERATOR-2      PIC  X   VALUE IS ":".
+               10 WRK-REF-SECOND       PIC  9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-HOUR   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-HOUR   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MINUTE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MINUTE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-SECOND OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-SECOND OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"HH:MM"@ #@
+@$WORKING$@
+           05 WRK-TIME-REF.
+               10 WRK-REF-HOUR         PIC  9(2).
+               10 WRK-SEPERATOR-1      PIC  X   VALUE IS ":".
+               10 WRK-REF-MINUTE       PIC  9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-HOUR   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-HOUR   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-MINUTE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MINUTE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"HH"@ #@
+@$WORKING$@
+           05 WRK-TIME-REF.
+               10 WRK-REF-HOUR         PIC  9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-HOUR   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-HOUR   OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"MM:SS"@ #@
+@$WORKING$@
+           05 WRK-TIME-REF.
+               10 WRK-REF-MINUTE       PIC  9(2).
+               10 WRK-SEPERATOR-1      PIC  X   VALUE IS ":".
+               10 WRK-REF-SECOND       PIC  9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-MINUTE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MINUTE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-SECOND OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-SECOND OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"MM"@ #@
+@$WORKING$@
+           05 WRK-TIME-REF.
+               10 WRK-REF-MINUTE       PIC  9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-MINUTE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MINUTE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"SS"@ #@
+@$WORKING$@
+           05 WRK-TIME-REF.
+               10 WRK-REF-SECOND       PIC  9(2).
+@$DATE-TIME-CONVERT$@
+           MOVE WRK-SECOND OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-SECOND OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"TT HH:MM:SS"@ #@
+@$WORKING$@
+           05 WRK-TIME-REF.
+               10 WRK-REF-AMPM         PIC  X(2).
+               10 WRK-SEPERATOR-1      PIC  X   VALUE IS " ".
+               10 WRK-REF-HOUR         PIC  9(2).
+               10 WRK-SEPERATOR-2      PIC  X   VALUE IS ":".
+               10 WRK-REF-MINUTE       PIC  9(2).
+               10 WRK-SEPERATOR-3      PIC  X   VALUE IS ":".
+               10 WRK-REF-SECOND       PIC  9(2).
+@$DATE-TIME-CONVERT$@
+           IF WRK-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ > 12
+               COMPUTE WRK-REF-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ = WRK-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ - 12
+               MOVE "PM" TO WRK-REF-AMPM OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           ELSE
+               MOVE WRK-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+               MOVE "AM" TO WRK-REF-AMPM OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           END-IF
+           MOVE WRK-MINUTE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MINUTE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           MOVE WRK-SECOND OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-SECOND OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"TT HH:MM"@ #@
+@$WORKING$@
+           05 WRK-TIME-REF.
+               10 WRK-REF-AMPM         PIC  X(2).
+               10 WRK-SEPERATOR-1      PIC  X   VALUE IS " ".
+               10 WRK-REF-HOUR         PIC  9(2).
+               10 WRK-SEPERATOR-2      PIC  X   VALUE IS ":".
+               10 WRK-REF-MINUTE       PIC  9(2).
+@$DATE-TIME-CONVERT$@
+           IF WRK-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ > 12
+               COMPUTE WRK-REF-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ = WRK-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ - 12
+               MOVE "PM" TO WRK-REF-AMPM OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           ELSE
+               MOVE WRK-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+               MOVE "AM" TO WRK-REF-AMPM OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           END-IF
+           MOVE WRK-MINUTE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-MINUTE OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+@#ELSE_IF#@ @#EXP: @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"TT HH"@ #@
+@$WORKING$@
+           05 WRK-TIME-REF.
+               10 WRK-REF-AMPM         PIC  X(2).
+               10 WRK-SEPERATOR-1      PIC  X   VALUE IS " ".
+               10 WRK-REF-HOUR         PIC  9(2).
+@$DATE-TIME-CONVERT$@
+           IF WRK-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ > 12
+               COMPUTE WRK-REF-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ = WRK-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ - 12
+               MOVE "PM" TO WRK-REF-AMPM OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           ELSE
+               MOVE WRK-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@ TO WRK-REF-HOUR OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+               MOVE "AM" TO WRK-REF-AMPM OF @+_RPT_ATR_NAME+@-DATEBUF@!G_MODE!@
+           END-IF
+@#END_IF#@
+;
+; ============== PRT -- CONVERT BUF TO DATE/TIME FORMAT =============
+; ===================================================================
+;
+@$RPT-OTHER-PARAGRAPH$@
+      * Date/Time Format Convert
+       @+_RPT_ATR_NAME+@-FORMAT-CONVERT@!G_MODE!@.
+           @#GET_MEM#@   @"DATE-TIME-CONVERT"@
+           @#CLEAR_MEM#@ @"DATE-TIME-CONVERT"@
+           .
+
+;

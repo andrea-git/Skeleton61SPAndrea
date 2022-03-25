@@ -1,0 +1,135 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Validation File Checking Generation Rule.   2001/11/02
+;
+; Remarks :
+;
+;    1. Indexed / Relative File with Dynamic
+;       a. If Field == KeyIs < In DataSet >
+;          move field to KeyIs
+;          read
+;
+;       b. If Field != KeyIs
+;          start FD Key >= KeyIs
+;          perform until not valid
+;             :
+;          end-perform          
+;
+;    2. Sequencial File or Other File with Sequencial Access Mode.
+;          close FD
+;          open  FD
+;          perform until not valid
+;             :
+;          end-perform
+;
+;    3. Random access mode.
+;       a. If Field == KeyIs
+;          move field to KeyIs
+;          read
+;       b. If Field != KeyIs
+;          <Skip it, It's Error !>
+;
+; ===================================================================
+;
+; ====================== PRD -- File Checking =======================
+;
+@$FILE-CHECKING$@
+@#DEF_SET#@ @!L_IDX!@ @"0"@
+@<_SET_VALIDATE_FILE>@
+   @#DEF_SET#@ @!L_FIELD!@ @!G_VALIDFIELD!@
+   @#DEF_LOOP#@ @+_VALIDATE_SYS_FILECHECKINGNO+@
+      @<_FETCH_NEXT_VALIDATE_FILE>@
+      @#DEF_ADD#@ @!L_IDX!@ @"1"@
+      @<_PUSH_MEM>@
+      @<_SET_VALIDATE_FILEFDSL>@
+; ===================================================================
+; To check which type of FD this is.
+; ===================================================================
+      @#DEF_SET#@ @!L_SEQFILE!@ @""@
+      @#DEF_SET#@ @!L_SEQFILE!@ @+_FDSL_SYS_SLREADTYPE+@
+;
+; ===================================================================
+; ===================================================================
+;
+@$FILE-CHECKING$@
+;
+      * FILE CHECKING ( FILE : @+_VALIDATE_ATR_FILE+@ )
+   @#DEF_IF#@ @#EXP: @!L_SEQFILE!@ EQUAL @"DYNAMIC"@ #@
+      @#DEF_IF#@ @+_VALIDATE_SYS_ISFDKEY+@
+; 1-a
+           MOVE @!L_FIELD!@ TO @+_VALIDATE_ATR_FIELD+@
+           PERFORM @+_VALIDATE_ATR_DATASET+@-@+_VALIDATE_ATR_FILE+@-Read
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              MOVE 1 TO VALID-FILE-TMPVAL
+           END-IF
+      @#ELSE#@
+; 1-b
+@$WORKING$@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+       77 TMP-@+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@@!G_VALIDX!@@!L_IDX!@-VALIDRSTBUF@!G_MODE!@  PIC 9(16).
+   @#ELSE#@
+       77 TMP-@+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@@!G_VALIDX!@@!L_IDX!@-VALIDRSTBUF@!G_MODE!@  PIC X(@+_FDSL_SYS_FDSIZE+@).
+   @#END_IF#@
+@$FILE-CHECKING$@
+      * BACKUP VALIDATION FILE RECORD
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+           MOVE @+_FDSL_SYS_FDKEY+@ TO TMP-@+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@@!G_VALIDX!@@!L_IDX!@-VALIDRSTBUF@!G_MODE!@
+   @#ELSE#@
+           MOVE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@ TO
+              TMP-@+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@@!G_VALIDX!@@!L_IDX!@-VALIDRSTBUF@!G_MODE!@
+   @#END_IF#@
+      * VALIDATING
+           PERFORM @+_VALIDATE_ATR_DATASET+@-@+_VALIDATE_ATR_FILE+@-INITSTART
+           PERFORM @+_VALIDATE_ATR_DATASET+@-@+_VALIDATE_ATR_FILE+@-START
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @+_VALIDATE_ATR_DATASET+@-@+_VALIDATE_ATR_FILE+@-Read-Next
+           END-IF
+           MOVE 0 TO TOTEM-TMP-VAR
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@ OR TOTEM-TMP-VAR NOT = 0
+              IF @!L_FIELD!@ = @+_VALIDATE_ATR_FIELD+@
+                 MOVE 1 TO TOTEM-TMP-VAR
+              END-IF
+              PERFORM @+_VALIDATE_ATR_DATASET+@-@+_VALIDATE_ATR_FILE+@-Read-Next
+           END-PERFORM
+      * RESTORE VALIDATION FILE RECORD
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+           MOVE TMP-@+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@@!G_VALIDX!@@!L_IDX!@-VALIDRSTBUF@!G_MODE!@ TO @+_FDSL_SYS_FDKEY+@
+   @#ELSE#@
+           MOVE TMP-@+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@@!G_VALIDX!@@!L_IDX!@-VALIDRSTBUF@!G_MODE!@ TO
+              @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+   @#END_IF#@
+           PERFORM @+_VALIDATE_ATR_DATASET+@-@+_VALIDATE_ATR_FILE+@-START
+           IF TOTEM-TMP-VAR = 0
+              MOVE 1 TO VALID-FILE-TMPVAL
+           END-IF
+      @#END_IF#@
+   @#ELSE_IF#@ @#EXP: @!L_SEQFILE!@ EQUAL @"SEQUENTIAL"@ #@
+; 2
+           CLOSE @+_VALIDATE_ATR_FILE+@
+           PERFORM OPEN-@+_VALIDATE_ATR_FILE+@
+           PERFORM @+_VALIDATE_ATR_DATASET+@-@+_VALIDATE_ATR_FILE+@-Read-Next
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@ OR TOTEM-TMP-VAR NOT = 0
+              IF @!L_FIELD!@ = @+_VALIDATE_ATR_FIELD+@
+                 MOVE 1 TO TOTEM-TMP-VAR
+              END-IF
+              PERFORM @+_VALIDATE_ATR_DATASET+@-@+_VALIDATE_ATR_FILE+@-Read-Next
+           END-PERFORM
+           IF TOTEM-TMP-VAR = 0
+              MOVE 1 TO VALID-FILE-TMPVAL
+           END-IF
+   @#ELSE_IF#@ @#EXP: @!L_SEQFILE!@ EQUAL @"RANDOM"@ #@
+      @#DEF_IF#@ @#EXP: @!L_FIELD!@ EQUAL @+_FDSL_SYS_FDKEY+@ #@
+; 3-a
+           MOVE @!L_FIELD!@ TO @+_VALIDATE_ATR_FIELD+@
+           PERFORM @+_VALIDATE_ATR_DATASET+@-@+_VALIDATE_ATR_FILE+@-Read
+           IF NOT @!L_FILESTATUS88!@
+              MOVE 1 TO VALID-FILE-TMPVAL
+           END-IF
+      @#END_IF#@
+   @#END_IF#@
+      @<_POP_MEM>@
+   @#END_LOOP#@
+;
+;
+@$VALIDATION-PROCEDURE$@
+;

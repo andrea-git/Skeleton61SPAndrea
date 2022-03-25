@@ -1,0 +1,284 @@
+;
+;Procedure Copy
+;
+; ===================================================================
+; For Custom-Color
+; ===================================================================
+;
+   @#DEF_IF#@ @+_PRG_SYS_CUSTOMCOLOR+@
+@$WORKING$@
+      * For Custom-Color
+      @#DEF_SET#@ @!G_EXISTCUSTOMCOLOR!@ @"YES"@
+      @#DEF_SET#@ @!L_COLORIDX!@ @"0"@
+      @<_SET_COLOR_PALETTE>@
+      @#DEF_LOOP#@ @"16"@
+         @<_FETCH_NEXT_COLOR_PALETTE>@
+         @#DEF_ADD#@ @!L_COLORIDX!@ @"1"@
+         @#DEF_IF#@ @+_PALETTE_SYS_ISCUSTOMCOLOR+@
+@$PROCEDURE-SET-COLOR$@
+           MOVE @!L_COLORIDX!@ TO WPAL-COLOR-ID OF WPALETTE-DATA-@!L_COLORIDX!@
+           CALL "W$PALETTE" USING WPALETTE-GET-COLOR, WPALETTE-DATA-@!L_COLORIDX!@
+           MOVE @!L_COLORIDX!@ TO WPAL-COLOR-ID OF WPALETTE-DATA
+           MOVE @+_PALETTE_SYS_RED+@ TO WPAL-RED OF WPALETTE-DATA
+           MOVE @+_PALETTE_SYS_GREEN+@ TO WPAL-GREEN OF WPALETTE-DATA
+           MOVE @+_PALETTE_SYS_BLUE+@ TO WPAL-BLUE OF WPALETTE-DATA
+           CALL "W$PALETTE" USING WPALETTE-SET-COLOR, WPALETTE-DATA
+@$RESET-COLOR-PALETTE$@
+           CALL "W$PALETTE" USING WPALETTE-SET-COLOR, WPALETTE-DATA-@!L_COLORIDX!@
+@$WORKING$@
+       01  WPALETTE-DATA-@!L_COLORIDX!@.
+           03  WPAL-COLOR-ID                   PIC X COMP-X.
+           03  WPAL-FLAGS REDEFINES 
+               WPAL-COLOR-ID                   PIC X COMP-X.
+           03  WPAL-RED                        PIC X COMP-X.
+           03  WPAL-USER-COLOR-ID REDEFINES
+               WPAL-RED                        PIC X COMP-X.
+           03  WPAL-GREEN                      PIC X COMP-X.
+           03  WPAL-BLUE                       PIC X COMP-X.
+         @#END_IF#@
+      @#END_LOOP#@
+   @#END_IF#@
+@$WORKING$@
+   @#DEF_IF#@ @!G_EXISTEXTERNALVAR!@
+      * For External variable initialize
+       77  TOTEM-CalledByBuffer          pic x(30).
+       77  TOTEM-CalledByStatus          pic s9.
+   @#END_IF#@
+;
+@$PROCEDURE-HEAD$@
+@#DEF_IF#@ @+_PRG_SYS_ISIMPORT+@
+@#GET_MEM#@   @"PARAGRAPH_IMPORT"@
+@#CLEAR_MEM#@ @"PARAGRAPH_IMPORT"@
+  @#DEF_IF#@ @!G_EXITUSERSCREEN!@
+     @#DEF_SETPARA#@ @"1"@ @"EXIT-STOP-ROUTINE"@
+     @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDEPARAGRAPH+@) AND (NOT @+_SYS_CHECK_EXISTPARAGRAPH+@) #@
+       EXIT-STOP-ROUTINE.
+         @#DEF_IF#@ @!G_EXISTFDSL!@
+           @#GET_MEM#@ @"FDSL_CLOSEPARAGRAPH"@
+         @#END_IF#@
+         @#DEF_IF#@ @!G_EXISTCUSTOMCOLOR!@
+           @#GET_MEM#@   @"RESET-COLOR-PALETTE"@
+         @#END_IF#@
+      * <TOTEM:EPT. INIT:@+_PRG_ATR_ID+@, INIT:@+_PRG_ATR_ID+@, BeforeDestroyResource>
+       @#GET_ENTRYPOINT#@ @"INIT"@ @"INIT"@ @"BeforeDestroyResource"@ @"Noperiod"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"DESTROY_FONT_PROCESS"@
+           @#GET_MEM#@   @"DESTROY_BITMAP_PROCESS"@
+           @#GET_MEM#@   @"DESTROY_POPUP_PROCESS"@
+         @#DEF_IF#@ @!G_EXISTACTIVEX!@
+           CALL "C$RESOURCE" USING CRESOURCE-DESTROY, ActiveX-Res
+         @#END_IF#@
+      *    After-Program
+         @#DEF_IF#@ @+_PRG_SYS_AFTERPROGRAM+@
+           PERFORM @+_PRG_SYS_AFTERPROGRAM+@
+         @#END_IF#@
+           @#GET_MEM#@   @"ALL-TERMIATE-DATETIME-THREAD"@
+           @#CLEAR_MEM#@ @"ALL-TERMIATE-DATETIME-THREAD"@
+;
+;=========================================
+;DARWIN - MODIFICA PER SETTARE KEYBOARD
+;==========================================
+;            
+           @#DEF_IF#@ @!G_GENERA_BEFORE_VIRGOLA!@
+           if KeyboardSaved
+              set KeyboardReleased to true
+              set environment "KEYSTROKE" to "DATA=44   44"
+              set environment "KEYSTROKE" to "DATA=46   46"
+           end-if.
+           @#END_IF#@
+;
+;==========================================
+;DARWIN - FINE MODIFICA PER SETTARE KEYBOARD
+;==========================================
+;
+           EXIT PROGRAM TOTEM-PgmStatus
+           STOP RUN.
+
+     @#END_IF#@
+      @#GET_MEM#@   @"INITDATA-PROCEDURE"@
+      @#CLEAR_MEM#@ @"INITDATA-PROCEDURE"@
+  @#END_IF#@
+@#ELSE#@
+       EXIT-STOP-ROUTINE.
+;      *{TOTEM}CLOSEFILE
+         @#DEF_IF#@ @!G_EXISTFDSL!@
+           PERFORM CLOSE-FILE-RTN
+         @#END_IF#@
+         @#DEF_IF#@ @!G_EXISTCUSTOMCOLOR!@
+           PERFORM RESET-COLOR-PALETTE
+         @#END_IF#@
+      * <TOTEM:EPT. INIT:@+_PRG_ATR_ID+@, INIT:@+_PRG_ATR_ID+@, BeforeDestroyResource>
+       @#GET_ENTRYPOINT#@ @"INIT"@ @"INIT"@ @"BeforeDestroyResource"@ @"Noperiod"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"DESTROY_FONT_PROCESS"@
+           @#GET_MEM#@   @"DESTROY_BITMAP_PROCESS"@
+           @#GET_MEM#@   @"DESTROY_POPUP_PROCESS"@
+         @#DEF_IF#@ @!G_EXISTACTIVEX!@
+           CALL "C$RESOURCE" USING CRESOURCE-DESTROY, ActiveX-Res
+         @#END_IF#@
+      *    After-Program
+         @#DEF_IF#@ @+_PRG_SYS_AFTERPROGRAM+@
+           PERFORM @+_PRG_SYS_AFTERPROGRAM+@
+         @#END_IF#@
+           @#GET_MEM#@   @"ALL-TERMIATE-DATETIME-THREAD"@
+           @#CLEAR_MEM#@ @"ALL-TERMIATE-DATETIME-THREAD"@;
+;
+;=========================================
+;DARWIN - MODIFICA PER SETTARE KEYBOARD
+;==========================================
+;            
+           @#DEF_IF#@ @!G_GENERA_BEFORE_VIRGOLA!@
+           set environment "KEYSTROKE" to "DATA=46   46".
+           set environment "KEYSTROKE" to "DATA=44   44".
+           @#END_IF#@
+;
+;==========================================
+;DARWIN - FINE MODIFICA PER SETTARE KEYBOARD
+;==========================================
+;
+           EXIT PROGRAM TOTEM-PgmStatus
+           STOP RUN.
+
+       INITIALIZE-ROUTINE.
+   @#DEF_IF#@ @+_PRG_SYS_BEFOREINIT+@
+           PERFORM @+_PRG_SYS_BEFOREINIT+@
+   @#ELSE#@
+      *    Before Init
+   @#END_IF#@
+      * initialize program status variable
+           Initialize TOTEM-PgmStatus.
+      * get system information
+           ACCEPT SYSTEM-INFORMATION FROM SYSTEM-INFO.
+      * get terminal information
+           ACCEPT TERMINAL-ABILITIES FROM TERMINAL-INFO.
+   @#DEF_IF#@ @!G_EXISTCUSTOMCOLOR!@
+      * set custom color
+           @#GET_MEM#@   @"PROCEDURE-SET-COLOR"@
+           @#CLEAR_MEM#@ @"PROCEDURE-SET-COLOR"@
+   @#END_IF#@
+   @#DEF_IF#@ @!G_EXISTEXTERNALVAR!@
+      * initialize external variable
+           CALL "C$CALLEDBY" USING  TOTEM-CalledByBuffer
+                             GIVING TOTEM-CalledByStatus
+           IF TOTEM-CalledByStatus = 0
+		      @#GET_MEM#@ @"INIT_EXTERNALVAR"@
+		      @#CLEAR_MEM#@ @"INIT_EXTERNALVAR"@
+           END-IF
+   @#END_IF#@
+      * set font
+           PERFORM INIT-FONT.
+      * load bitmap
+           PERFORM INIT-BMP.
+      * load resource
+           PERFORM INIT-RES.
+      * create pop-up menu
+           PERFORM INIT-POPUP.
+   @#DEF_IF#@ @+_PRG_SYS_ICONFILE+@
+           SET ENVIRONMENT "ICON" TO "@+_PRG_SYS_ICONFILE+@"
+   @#END_IF#@
+   @#DEF_IF#@ @!G_EXISTFDSL!@
+      * open files
+           PERFORM OPEN-FILE-RTN.
+   @#END_IF#@
+   @#DEF_IF#@ @!G_EXISTLOGO!@
+      * logo
+           PERFORM DISPLAY-LOGO.
+   @#END_IF#@
+   @#DEF_IF#@ @+_PRG_SYS_AFTERINIT+@
+           PERFORM @+_PRG_SYS_AFTERINIT+@
+   @#ELSE#@
+      *    After Init
+   @#END_IF#@
+           .
+    
+       INIT-FONT.
+           @#GET_MEM#@ @"FONT_PROCESS"@
+           .
+
+       INIT-BMP.
+           @#GET_MEM#@ @"BITMAP_PROCESS"@
+           .
+
+       INIT-RES.
+           @#GET_MEM#@ @"ACTIVE_RES"@
+           .
+
+       INIT-POPUP.
+           @#GET_MEM#@ @"POPUP_PROCESS"@
+           .
+
+@#DEF_IF#@ @!G_EXISTFDSL!@
+       OPEN-FILE-RTN.
+   @#DEF_IF#@ @+_PRG_SYS_BEFOREOPEN+@
+           PERFORM @+_PRG_SYS_BEFOREOPEN+@
+   @#ELSE#@
+      *    Before Open
+   @#END_IF#@
+           @#GET_MEM#@ @"FDSL_OPENPARAGRAPH"@
+   @#DEF_IF#@ @+_PRG_SYS_AFTEROPEN+@
+           PERFORM @+_PRG_SYS_AFTEROPEN+@
+   @#ELSE#@
+      *    After Open
+   @#END_IF#@
+           .
+
+       @#GET_MEM#@ @"FDSL_OPEN"@
+       ;
+       CLOSE-FILE-RTN.
+   @#DEF_IF#@ @+_PRG_SYS_BEFORECLOSE+@
+           PERFORM @+_PRG_SYS_BEFORECLOSE+@
+   @#ELSE#@
+      *    Before Close
+   @#END_IF#@
+           @#GET_MEM#@ @"FDSL_CLOSEPARAGRAPH"@
+   @#DEF_IF#@ @+_PRG_SYS_AFTERCLOSE+@
+           PERFORM @+_PRG_SYS_AFTERCLOSE+@
+   @#ELSE#@
+      *    After Close
+   @#END_IF#@
+           .
+
+       @#GET_MEM#@ @"FDSL_CLOSE"@
+   ;
+   ; Get the default paragraph which contain Read / Write / Next ...
+   ;
+   @#GET_MEM#@   @"FDIO_PARAGRAPH"@
+   @#CLEAR_MEM#@ @"FDIO_PARAGRAPH"@
+   ;
+@#END_IF#@
+;
+@#DEF_IF#@ @!G_EXISTCUSTOMCOLOR!@
+       RESET-COLOR-PALETTE.
+           @#GET_MEM#@   @"RESET-COLOR-PALETTE"@
+           @#CLEAR_MEM#@ @"RESET-COLOR-PALETTE"@
+           .
+
+@#END_IF#@
+;
+@#DEF_IF#@ @!G_EXISTLOGO!@
+       DISPLAY-LOGO.
+           @#GET_MEM#@   @"LOGO_PROCESS"@
+           @#CLEAR_MEM#@ @"LOGO_PROCESS"@
+
+@#END_IF#@
+;
+
+      @#GET_MEM#@   @"INITDATA-PROCEDURE"@
+      @#CLEAR_MEM#@ @"INITDATA-PROCEDURE"@
+;
+      @#GET_MEM#@   @"RELATION"@
+      @#CLEAR_MEM#@ @"RELATION"@
+;
+      @#GET_MEM#@   @"RELATION-CLEAR"@
+      @#CLEAR_MEM#@ @"RELATION-CLEAR"@
+;
+      @#GET_MEM#@   @"RELATION-IU-DISP"@
+      @#CLEAR_MEM#@ @"RELATION-IU-DISP"@
+;
+      @#GET_MEM#@   @"RELATION-EXPRESSION"@
+      @#CLEAR_MEM#@ @"RELATION-EXPRESSION"@
+;
+      @#GET_MEM#@   @"OTHER-OBJ-PARAGRAPH"@
+      @#CLEAR_MEM#@ @"OTHER-OBJ-PARAGRAPH"@
+;
+@#END_IF#@

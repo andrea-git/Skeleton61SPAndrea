@@ -1,0 +1,378 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; FD/SL Generation Rule.   2001/11/02
+;
+; Structure :
+;      PRG
+;       |-- SCREEN  ( @<_SET_OBJ_SCREEN>@  )
+;       |   (@<_FETCH_NEXT_OBJ_SCREEN>@)
+;       |      |
+;       |      |----- CTRL (SCREEN'S  CHILD)
+;       |
+;       |-- DATASET ( @<_SET_PRG_DATASET>@ )
+;       |    (@<_FETCH_NEXT_OBJ_DATASET>@)
+;       |      |
+;       |      |----- FDSL (DATASET'S CHILD)
+;       |
+;       |-- LINKAGE ( @<_SET_PRG_LINKAGE>@ )
+;
+; Remarks:
+;
+;  Local Variables Listing :
+;
+;  Entry Points Listing :
+;
+;    1.  INIT, FD = BeforeOpen
+;    2.  INIT, FD = AfterOpen
+;    3.  INIT, FD = BeforeClose
+;    4.  FD,   FD = BeforeDelete
+;    5.  FD,   FD = AfterDelete
+;    6.  FD,   FD = BeforeRead
+;    7.  FD,   FD = AfterRead
+;    8.  FD,   FD = BeforeRewrite
+;    9.  FD,   FD = AfterRewrite
+;    10. FD,   FD = BeforeWrite
+;    11. FD,   FD = AfterWrite
+;
+; ===================================================================
+;
+; ===================================================================
+; Before this, you should make sure there's at least one Screen
+; in this Program.
+; ===================================================================
+@#DEF_IF#@ @+_PRG_SYS_SRNNO+@
+@$TMP-MAIN-MODE$@
+   @<_PUSH_MEM>@
+      @<_SET_OBJ_MAINSCREEN>@
+         @#DEF_IF#@ @+_OBJ_SYS_EXISTSCREENMATCH+@
+           IF Has-Graphical-Interface
+              PERFORM  @+_PRG_SYS_MAINSCREENNAME+@-EXTENDED-FILE-STATUS
+           ELSE
+              PERFORM  @+_PRG_SYS_MAINSCREENNAME+@-EXTENDED-FILE-STATUS-T
+           END-IF
+         @#ELSE#@
+            @#DEF_SET#@ @!L_MODE!@ @""@
+            @#DEF_IF#@ @+_OBJ_SYS_ISTEXTMODE+@
+               @#DEF_SET#@ @!L_MODE!@ @"-T"@
+            @#END_IF#@
+              PERFORM  @+_PRG_SYS_MAINSCREENNAME+@-EXTENDED-FILE-STATUS@!L_MODE!@
+         @#END_IF#@
+   @<_POP_MEM>@
+;
+@#END_IF#@
+;
+; ===================================================================
+; End of @+_PRG_SYS_SRNNO+@
+; ===================================================================
+;
+@<_SET_PRG_DATASET>@
+@#DEF_IF#@ @+_PRG_SYS_DATASETNO+@
+@#DEF_SET#@ @!G_EXISTDATASET!@ @"YES"@
+;
+; ================== WRK -- DB -- WORKING STORAGE ===================
+;
+@$WORKING$@
+   ; 
+   ; LK6B0357
+   ;
+   @#DEF_IF#@ @!G_EXISTFDSL!@
+   @#ELSE#@
+      * VARIABLES FOR RECORD LENGTH.
+       77  TotemFdSlRecordClearOffset   PIC 9(5) COMP-4.
+       77  TotemFdSlRecordLength        PIC 9(5) COMP-4.
+   @#END_IF#@
+      * FILE'S LOCK MODE FLAG
+@#END_IF#@
+@#DEF_LOOP#@ @+_PRG_SYS_DATASETNO+@
+   @<_FETCH_NEXT_PRG_DATASET>@
+   @#DEF_SET#@ @!L_DATASETNAME!@ @+_DATASET_SYS_NAME+@
+   @<_SET_DATASET_FDSLCHILD>@
+   @#DEF_IF#@ @#EXP: NOT @+_DATASET_SYS_FDSLNO+@ #@
+       @#SHOW_MSG#@ @"Warning5"@
+   @#END_IF#@
+   @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+;
+;
+      @#DEF_SET#@ @!G_EXISTFDSL!@ @"YES"@
+;
+      @<_FETCH_NEXT_DATASET_FDSL>@
+;
+         @#DEF_SET#@	@!L_DOTFD!@ @"."@
+         @#DEF_APPEND#@ @!L_DOTFD!@ @+_FDSL_SYS_FDNAME+@
+         @#DEF_APPEND#@ @!L_DOTFD!@ @"."@
+         @#DEF_FIND#@ @!L_FIND!@ @!L_ALLFDSLS!@ @!L_DOTFD!@
+         @#DEF_IF#@ @#EXP: NOT @!L_FIND!@ #@
+             @#DEF_APPEND#@ @!L_ALLFDSLS!@ @"."@
+             @#DEF_APPEND#@ @!L_ALLFDSLS!@ @+_FDSL_SYS_FDNAME+@
+             @#DEF_APPEND#@ @!L_ALLFDSLS!@ @"."@
+;
+; =================== CBL -- SPECIAL NAME -- SL =====================
+;
+; NO-CASE is Itally's requirement. I think @+_FDSL_SYS_FDCODESET+@ should follow the same rule.
+@#DEF_IF#@ @+_FDSL_SYS_SLALPHABETNAME+@
+@$SPECIAL_SUMMARY$@
+   @#DEF_FIND#@ @!L_FIND!@ @!G_ALREADYALPHABET!@ @".@+_FDSL_SYS_SLALPHABETNAME+@."@
+   @#DEF_IF#@ @#EXP: NOT @!L_FIND!@ #@
+     @#DEF_APPEND#@ @!G_ALREADYALPHABET!@ @".@+_FDSL_SYS_SLALPHABETNAME+@."@
+     @#DEF_CASE#@ @+_FDSL_SYS_SLALPHABETNAME+@
+     @#CASE#@ @"NO-CASE"@
+           ALPHABET @+_FDSL_SYS_SLALPHABETNAME+@ IS
+                                 1  thru  65,
+                                "A" also "a",
+                                "B" also "b",
+                                "C" also "c",
+                                "D" also "d",
+                                "E" also "e",
+                                "F" also "f",
+                                "G" also "g",
+                                "H" also "h",
+                                "I" also "i",
+                                "J" also "j",
+                                "K" also "k",
+                                "L" also "l",
+                                "M" also "m",
+                                "N" also "n",
+                                "O" also "o",
+                                "P" also "p",
+                                "Q" also "q",
+                                "R" also "r",
+                                "S" also "s",
+                                "T" also "t",
+                                "U" also "u",
+                                "V" also "v",
+                                "W" also "w",
+                                "X" also "x",
+                                "Y" also "y",
+                                "Z" also "z"
+     @#CASE_DEFAULT#@
+           ALPHABET @+_FDSL_SYS_SLALPHABETNAME+@ IS STANDARD-1
+     @#END_CASE#@
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_FDSL_SYS_FDCODESET+@
+@$SPECIAL_SUMMARY$@
+   @#DEF_FIND#@ @!L_FIND!@ @!G_ALREADYALPHABET!@ @".@+_FDSL_SYS_FDCODESET+@."@
+   @#DEF_IF#@ @#EXP: NOT @!L_FIND!@ #@
+     @#DEF_APPEND#@ @!G_ALREADYALPHABET!@ @".@+_FDSL_SYS_FDCODESET+@."@
+     @#DEF_CASE#@ @+_FDSL_SYS_SLALPHABETNAME+@
+     @#CASE#@ @"NO-CASE"@
+           ALPHABET @+_FDSL_SYS_SLALPHABETNAME+@ IS
+                                 1  thru  65,
+                                "A" also "a",
+                                "B" also "b",
+                                "C" also "c",
+                                "D" also "d",
+                                "E" also "e",
+                                "F" also "f",
+                                "G" also "g",
+                                "H" also "h",
+                                "I" also "i",
+                                "J" also "j",
+                                "K" also "k",
+                                "L" also "l",
+                                "M" also "m",
+                                "N" also "n",
+                                "O" also "o",
+                                "P" also "p",
+                                "Q" also "q",
+                                "R" also "r",
+                                "S" also "s",
+                                "T" also "t",
+                                "U" also "u",
+                                "V" also "v",
+                                "W" also "w",
+                                "X" also "x",
+                                "Y" also "y",
+                                "Z" also "z"
+     @#CASE_DEFAULT#@
+           ALPHABET @+_FDSL_SYS_FDCODESET+@ IS STANDARD-1
+     @#END_CASE#@
+   @#END_IF#@
+@#END_IF#@
+;
+; ================= CBL -- FILE CONTROL -- FD/SL ====================
+;
+; ========================= LOGICAL FD ==============================
+@#DEF_IF#@ @+_FDSL_SYS_ISLOGICALFD+@
+@$FILE_SL$@
+           COPY "@+_FDSL_SYS_SLFILENAME+@"
+                REPLACING ==@+_FDSL_SYS_LOGICALFDORIGINALNAME+@== BY ==@+_FDSL_SYS_FDNAME+@==,
+      @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+                          ==@+_FDSL_SYS_ORIGINALRELATIVEKEY+@== BY ==@+_FDSL_SYS_LOGICALFDRELATIVEKEY+@==,
+      @#END_IF#@
+                          ==@+_FDSL_SYS_ORIGINALFILESTATUS+@== BY ==@+_FDSL_SYS_LOGICALFDFILESTATUS+@==
+      @<_SET_FDSL_SLREPLACINGBY>@
+      @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+         @<_FETCH_NEXT_OBJ_LINEINDEX>@
+                          @+_OBJ_SYS_LINEINDEX+@
+      @#END_LOOP#@
+                .
+;
+@$FILE_FD$@
+           COPY "@+_FDSL_SYS_FDFILENAME+@"
+                REPLACING ==@+_FDSL_SYS_LOGICALFDORIGINALNAME+@== BY ==@+_FDSL_SYS_FDNAME+@==,
+      @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+                          ==@+_FDSL_SYS_ORIGINALRELATIVEKEY+@== BY ==@+_FDSL_SYS_LOGICALFDRELATIVEKEY+@==,
+      @#END_IF#@
+                          ==@+_FDSL_SYS_ORIGINALFILESTATUS+@== BY ==@+_FDSL_SYS_LOGICALFDFILESTATUS+@==
+      @<_SET_FDSL_FDREPLACINGBY>@
+      @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+         @<_FETCH_NEXT_OBJ_LINEINDEX>@
+                          @+_OBJ_SYS_LINEINDEX+@
+      @#END_LOOP#@
+                .
+;
+; ========================= NORMAL FD ===============================
+@#ELSE#@
+@$FILE_SL$@
+         @#DEF_SETPARA#@ @"1"@ @+_FDSL_SYS_SLFULLFILE+@
+         @#DEF_SETPARA#@ @"2"@ @+_FDSL_SYS_SLFULLFILE+@
+		 @#DEF_FIND#@ @!L_FIND!@ @!G_ALREADYFDSL!@ @".@+_FDSL_SYS_SLFULLFILE+@."@
+		 @#DEF_IF#@ @#EXP: (NOT @!L_FIND!@) AND (NOT @+_SYS_CHECK_EXCLUDECOPYFILE+@) AND (NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@) #@
+			@#DEF_APPEND#@ @!G_ALREADYFDSL!@ @".@+_FDSL_SYS_SLFULLFILE+@."@
+           COPY "@+_FDSL_SYS_SLFILENAME+@".
+         @#END_IF#@
+;
+@$FILE_FD$@
+         @#DEF_SETPARA#@ @"1"@ @+_FDSL_SYS_FDFULLFILE+@		 
+         @#DEF_SETPARA#@ @"2"@ @+_FDSL_SYS_FDFULLFILE+@
+		 @#DEF_FIND#@ @!L_FIND!@ @!G_ALREADYFDSL!@ @".@+_FDSL_SYS_FDFULLFILE+@."@
+		 @#DEF_IF#@ @#EXP: (NOT @!L_FIND!@) AND (NOT @+_SYS_CHECK_EXCLUDECOPYFILE+@) AND (NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@) #@
+			@#DEF_APPEND#@ @!G_ALREADYFDSL!@ @".@+_FDSL_SYS_FDFULLFILE+@."@
+           COPY "@+_FDSL_SYS_FDFILENAME+@".
+         @#END_IF#@
+@#END_IF#@
+; 
+; ======================= PRD -- OPEN-FILES. ========================
+;
+@$FDSL_OPENPARAGRAPH$@
+    @#DEF_IF#@ @+_FDSL_SYS_FDOPEN+@
+           PERFORM OPEN-@+_FDSL_SYS_FDNAME+@
+      @#DEF_IF#@ @+_FDSL_SYS_ISVARIABLEOCCURS+@
+;           MOVE @+_FDSL_SYS_VARIABLEOCCURSMAXVALUE+@ TO @+_FDSL_SYS_ISVARIABLEOCCURS+@
+           MOVE 0 TO @+_FDSL_SYS_ISVARIABLEOCCURS+@
+      @#END_IF#@
+    @#ELSE#@
+      *    @+_FDSL_SYS_FDNAME+@ OPEN MODE IS FALSE
+      *    PERFORM OPEN-@+_FDSL_SYS_FDNAME+@
+    @#END_IF#@
+;
+; ======================= PRD -- CLOSE-FILES. =======================
+;
+@$FDSL_CLOSEPARAGRAPH$@
+@#DEF_IF#@ @+_FDSL_SYS_FDCLOSE+@
+           PERFORM CLOSE-@+_FDSL_SYS_FDNAME+@
+@#ELSE#@
+      *    @+_FDSL_SYS_FDNAME+@ CLOSE MODE IS FALSE
+      *    PERFORM CLOSE-@+_FDSL_SYS_FDNAME+@
+@#END_IF#@
+;
+; ======================= PRD -- OPEN-FDNAME. =======================
+;
+@$FDSL_OPEN$@
+       OPEN-@+_FDSL_SYS_FDNAME+@.
+      * <TOTEM:EPT. INIT:@+_PRG_ATR_ID+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeOpen>
+           @#GET_ENTRYPOINT#@ @"INIT"@ @"FD"@ @"BeforeOpen"@
+      * <TOTEM:END>
+ @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"SORT"@) #@
+           OPEN @+_FDSL_SYS_FDEXCLUSIVE+@ @+_FDSL_SYS_FDIOMODE+@ @+_FDSL_SYS_FDNAME+@
+     @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_FDLOCKING+@ EQUAL @"NONE"@) #@
+                 @+_FDSL_SYS_FDLOCKING+@
+     @#END_IF#@ 
+     @#DEF_IF#@ @#EXP: @+_FDSL_SYS_FDIOMODE+@ EQUAL @"I-O"@ #@
+           IF @+_FDSL_SYS_FILESTATUS+@ = "35"
+              OPEN OUTPUT @+_FDSL_SYS_FDNAME+@
+                IF @+_FDSL_SYS_FILESTATUS88+@
+                   CLOSE @+_FDSL_SYS_FDNAME+@
+                   OPEN @+_FDSL_SYS_FDIOMODE+@ @+_FDSL_SYS_FDNAME+@
+        @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_FDLOCKING+@ EQUAL @"NONE"@) #@
+                        @+_FDSL_SYS_FDLOCKING+@
+        @#END_IF#@ 
+                END-IF
+           END-IF
+     @#END_IF#@
+           IF NOT @+_FDSL_SYS_FILESTATUS88+@
+              @#GET_MEM#@   @"TMP-MAIN-MODE"@
+              GO TO EXIT-STOP-ROUTINE
+           END-IF
+ @#END_IF#@
+      * <TOTEM:EPT. INIT:@+_PRG_ATR_ID+@, FD:@+_FDSL_SYS_FDNAME+@, AfterOpen>
+           @#GET_ENTRYPOINT#@ @"INIT"@ @"FD"@ @"AfterOpen"@
+      * <TOTEM:END>
+           .
+
+;
+; ======================= PRD -- OPEN-FDNAME. =======================
+;
+@$FDSL_CLOSE$@
+       CLOSE-@+_FDSL_SYS_FDNAME+@.
+      * <TOTEM:EPT. INIT:@+_PRG_ATR_ID+@, FD:@+_FDSL_SYS_FDNAME+@, BeforeClose>
+           @#GET_ENTRYPOINT#@ @"INIT"@ @"FD"@ @"BeforeClose"@
+      * <TOTEM:END>
+ @#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"SORT"@) #@
+    @#DEF_IF#@ @+_FDSL_SYS_FDOPEN+@
+           CLOSE @+_FDSL_SYS_FDNAME+@
+    @#END_IF#@
+ @#END_IF#@
+           .
+
+         ;
+         ;
+         @%Fd_SplitKey.Skl%@
+         ;
+         ; End of @#EXP: NOT @!L_FIND!@ #@
+         ;
+         @#END_IF#@
+;
+;
+     @%FDSL-Sub.Skl%@
+;
+; ================ PRD -- FD'S BASIC I-O PARAGRAPH ==================
+;
+; Prepare StartValue & EndValue.
+;
+@$DATASET-RECORDNAME$@
+     @#DEF_IF#@ @#EXP: NOT @+_FDSL_SYS_ISVARIABLEOCCURS+@ #@
+           INITIALIZE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+;                 REPLACING NUMERIC       DATA BY ZEROS
+;                           ALPHANUMERIC  DATA BY SPACES
+;                           ALPHABETIC    DATA BY SPACES
+      @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) AND 
+                         @+_FDSL_SYS_FDKEY+@ #@
+           MOVE 0 TO @+_FDSL_SYS_FDKEY+@
+      @#END_IF#@
+     @#ELSE#@
+           MOVE SPACES TO @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+;           MOVE @+_FDSL_SYS_VARIABLEOCCURSMAXVALUE+@ TO @+_FDSL_SYS_ISVARIABLEOCCURS+@
+           MOVE 0 TO @+_FDSL_SYS_ISVARIABLEOCCURS+@
+     @#END_IF#@
+   ;
+   ; End of @+_DATASET_SYS_FDSLNO+@
+   ;
+   @#END_LOOP#@
+;
+@$FDIO_PARAGRAPH$@
+       @!L_DATASETNAME!@-INIT-RECORD.
+           @#GET_MEM#@   @"DATASET-RECORDNAME"@
+           @#CLEAR_MEM#@ @"DATASET-RECORDNAME"@
+           .
+
+;
+; End of @+_PRG_SYS_DATASETNO+@
+;
+@#END_LOOP#@
+@#CLEAR_MEM#@ @"TMP-MAIN-MODE"@
+;
+; If there's Working data, we add a space line at the bottom of
+; the declaration.
+;
+@#DEF_IF#@ @+_PRG_SYS_DATASETNO+@
+@$WORKING$@
+
+    @#GET_MEM#@   @"WORKING-FDSPTBUF"@
+    @#CLEAR_MEM#@ @"WORKING-FDSPTBUF"@
+    @#GET_MEM#@   @"WORKING-SPLIT"@
+    @#CLEAR_MEM#@ @"WORKING-SPLIT"@
+@#END_IF#@
+;
+

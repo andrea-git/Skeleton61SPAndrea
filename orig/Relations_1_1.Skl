@@ -1,0 +1,236 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; 1-1 Relation Generation Rule.   2001/11/02
+;
+; Remarks: ( for each Relation )
+;
+;  We generate a Master-REF-Slave paragraph for each Relation, and
+;  there're something we should take care :
+;
+;    1. If it's a single Key, we just move the master item data to
+;       slave. But if it's a multiple Keys, we should PERFORM 
+;       Master-REF-Slave-KEY paragraph, which prepared by the
+;       Relations_MultiKey.Skl file.
+;
+;    2. for Trigger, after -REF-'s job, we should PERFORM all -REF-
+;       paragraphs which the Relations' Master FDs is the Slave FDs
+;       of current Relation.
+;
+;INSERT (Relation: A to B)
+;    None: Insert A only
+;    CASCADE: Insert A , B insert, too 
+;
+;UPDATE  (Relation:  A to B)
+;     CASCADE: Update A , B update, too 
+;     RESTRICT: Update A only
+;     SET NULL: Update A, B set empty except the Key field
+;     SET DEFAULT:  Update A, B set Default Value except the Key field
+;
+;DELETE  (Relation:  A to B)
+;     CASCADE: Delete A , B deleted, too 
+;     RESTRICT: Delete A only
+;     SET NULL: Delete A, B set empty except the Key field
+;     SET DEFAULT:  Delete A, B set Default Value except the Key field
+;
+; ===================================================================
+;
+         ;
+         ; Except yourself, you should PERFORM all Relations' -REF- paragraphs
+         ; which related to other FDs.
+         ;
+@#DEF_SET#@ @!L_SEQFILE!@    @""@
+@#DEF_SET#@ @!L_EXTERNAKEY!@ @""@
+@<_PUSH_MEM>@
+@<_SET_SLAVEFD_FDSL>@
+   @#DEF_SET#@ @!L_SEQFILE!@     @+_FDSL_SYS_SLREADTYPE+@
+   @#DEF_SET#@ @!L_SLAVESTATUS88!@ @+_FDSL_SYS_FILESTATUS88+@
+   @#DEF_IF#@ @#EXP: (@+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@) #@
+      @#DEF_SET#@ @!L_EXTERNAKEY!@ @+_FDSL_SYS_FDKEY+@
+   @#END_IF#@
+   @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+@$LOCAL_NEXT_QRY$@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_INSERT+@ EQUAL @"RESTRICTED"@) #@
+@$LOCAL_NEXT_INS$@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS
+      @#END_IF#@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_UPDATE+@ EQUAL @"RESTRICTED"@) #@
+@$LOCAL_NEXT_UPD$@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD
+      @#END_IF#@
+      @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+@$LOCAL_NEXT_DEL$@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-DEL
+      @#END_IF#@
+   @#END_LOOP#@
+@<_POP_MEM>@
+;
+; =========== Prepare -REF- Paragraphs for each Relation ============
+;
+@$RELATION$@
+       @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@.
+   @#DEF_IF#@ @#EXP: (@!L_SEQFILE!@ EQUAL @"DYNAMIC"@) OR (@!L_SEQFILE!@ EQUAL @"RANDOM"@) #@
+   ; ===================================================================
+   ; If the SlaveFD is Index/Relative, and AccessMode is "Dynamic", or
+   ; "Random".
+   ; ===================================================================
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INITREC
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-EXPRESSION
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-READ
+           IF NOT @!L_SLAVESTATUS88!@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INITREC
+           END-IF
+     @#DEF_IF#@ @+_RELATION_SYS_CONDITION+@
+           IF NOT (@+_RELATION_SYS_CONDITION+@)
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INITREC
+           END-IF
+     @#END_IF#@
+     @#DEF_SETMEM#@ @!L_SUMMARY!@ @"SUMMARY-SLAVE-@+_FDSL_RELATION_SLAVEFD+@"@
+     @#DEF_IF#@ @!L_SUMMARY!@
+           IF @!L_SLAVESTATUS88!@
+        @#DEF_IF#@ @+_RELATION_SYS_CONDITION+@
+              AND (@+_RELATION_SYS_CONDITION+@)
+        @#END_IF#@
+              @#GET_MEM#@ @"SUMMARY-SLAVE-@+_FDSL_RELATION_SLAVEFD+@"@
+           END-IF
+     @#END_IF#@
+   @#ELSE_IF#@ @#EXP: @!L_SEQFILE!@ EQUAL @"SEQUENTIAL"@ #@
+   ; ===================================================================
+   ; If the SlaveFD is Sequential, or it's AccessMode is Sequential.
+   ; ===================================================================
+           CLOSE @+_FDSL_RELATION_SLAVEFD+@
+           PERFORM OPEN-@+_FDSL_RELATION_SLAVEFD+@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INITREC
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-EXPRESSION
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-READ UNTIL NOT @!L_SLAVESTATUS88!@ 
+      @#DEF_IF#@ @+_RELATION_SYS_CONDITION+@
+              OR (@+_RELATION_SYS_CONDITION+@)
+      @#END_IF#@
+           IF NOT @!L_SLAVESTATUS88!@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INITREC
+           END-IF
+     @#DEF_SETMEM#@ @!L_SUMMARY!@ @"SUMMARY-SLAVE-@+_FDSL_RELATION_SLAVEFD+@"@
+     @#DEF_IF#@ @!L_SUMMARY!@
+           IF @!L_SLAVESTATUS88!@
+              @#GET_MEM#@ @"SUMMARY-SLAVE-@+_FDSL_RELATION_SLAVEFD+@"@
+           END-IF
+     @#END_IF#@
+   @#END_IF#@
+           @#GET_MEM#@   @"LOCAL_NEXT_QRY"@
+           @#CLEAR_MEM#@ @"LOCAL_NEXT_QRY"@
+           .
+
+;
+; ===================================================================
+;   Insert (The same as Update)
+; ===================================================================
+  @<_PUSH_MEM>@
+  @<_SET_SLAVEFD_FDSL>@
+     @#DEF_SET#@ @!L_SLAVESTATUS88!@ @+_FDSL_SYS_FILESTATUS88+@
+  @<_POP_MEM>@
+;
+      * RI TYPE : @+_RELATION_RI_INSERT+@
+       @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS.
+@#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_INSERT+@ EQUAL @"RESTRICTED"@) #@
+   @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           IF TOTEM-TRANSACTION-FLAG NOT = SPACES
+              EXIT PARAGRAPH
+           END-IF
+   @#END_IF#@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-EXPRESSION
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-Read
+           IF NOT @!L_SLAVESTATUS88!@
+               PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INITREC
+               PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY
+           END-IF
+           PERFORM @+_DATASET_SYS_NAME+@-DISPATCH-BUFTOFLD
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, BeforeCascadeInsert>
+           @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"BeforeCascadeInsert"@ @"Noperiod"@
+      * <TOTEM:END>
+           IF NOT @!L_SLAVESTATUS88!@
+               PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Write
+           ELSE
+               PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Rewrite
+           END-IF
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, AfterCascadeInsert>
+           @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"AfterCascadeInsert"@ @"Noperiod"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"LOCAL_NEXT_INS"@
+@#END_IF#@
+           .
+
+;
+; ===================================================================
+;   Update
+;    Remarks : You should check if this record had been existed or not,
+;              if yes rewrite it, or write. So when you read the record
+;              to check if it's existed, you should save the data to
+;              a tmp buffer, then move it back when check finished.
+; ===================================================================
+;
+      * RI TYPE : @+_RELATION_RI_UPDATE+@
+       @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD.
+@#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_UPDATE+@ EQUAL @"RESTRICTED"@) #@
+   @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           IF TOTEM-TRANSACTION-FLAG NOT = SPACES
+              EXIT PARAGRAPH
+           END-IF
+   @#END_IF#@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-EXPRESSION
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-Read
+           IF NOT @!L_SLAVESTATUS88!@
+               PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INITREC
+               PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY
+           END-IF
+           PERFORM @+_DATASET_SYS_NAME+@-DISPATCH-BUFTOFLD
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, BeforeCascadeUpdate>
+           @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"BeforeCascadeUpdate"@ @"Noperiod"@ @"Noperiod"@
+      * <TOTEM:END>
+           IF NOT @!L_SLAVESTATUS88!@
+               PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Write
+           ELSE
+               PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Rewrite
+           END-IF
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, AfterCascadeUpdate>
+           @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"AfterCascadeUpdate"@ @"Noperiod"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"LOCAL_NEXT_UPD"@
+@#END_IF#@
+           .
+
+;
+; ===================================================================
+;   Delete
+; ===================================================================
+;
+      * RI TYPE : @+_RELATION_RI_DELETE+@
+       @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-DEL.
+@#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+   @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+           IF TOTEM-TRANSACTION-FLAG NOT = SPACES
+              EXIT PARAGRAPH
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, BeforeCascadeDelete>
+              @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"BeforeCascadeDelete"@ @"Noperiod"@
+      * <TOTEM:END>
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-EXPRESSION
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Delete
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, AfterCascadeDelete>
+              @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"AfterCascadeDelete"@ @"Noperiod"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"LOCAL_NEXT_DEL"@
+@#END_IF#@
+           .
+
+;
+@#CLEAR_MEM#@ @"LOCAL_NEXT_INS"@
+@#CLEAR_MEM#@ @"LOCAL_NEXT_UPD"@
+@#CLEAR_MEM#@ @"LOCAL_NEXT_DEL"@
+@#CLEAR_MEM#@ @"SUMMARY-SLAVE-@+_FDSL_RELATION_SLAVEFD+@"@
+;

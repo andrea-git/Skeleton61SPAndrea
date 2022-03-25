@@ -1,0 +1,685 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Main Prepare Tag Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+; ===================================================================
+;
+; ===================================================================
+; *{TOTEM}PRGID
+; ===================================================================
+@$PRGID$@
+   @#DEF_IF#@ @+_PRG_SYS_INITIALPROGRAM+@
+       PROGRAM-ID.          @+_PRG_ATR_NAME+@ IS INITIAL PROGRAM.
+   @#ELSE#@
+       PROGRAM-ID.          @+_PRG_ATR_NAME+@.
+   @#END_IF#@
+       AUTHOR.              @+_SYS_AUTHOR+@.
+       DATE-WRITTEN.        @+_SYS_DATE+@.
+       REMARKS.
+   ;
+   ; Description.
+   ;
+   @<_SET_PRG_DESCRIPTIONLINE>@
+      @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+      @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+   @#END_LOOP#@
+;
+; ===================================================================
+; *{TOTEM}DECIMAL-POINT
+; ===================================================================
+@$DECIMAL-POINT$@
+    @#DEF_IF#@ @#EXP: (NOT @+_PRG_SYS_ISIMPORT+@) AND (NOT (@+_PRG_SYS_DECIMALCHAR+@ EQUAL @"."@)) #@
+           DECIMAL-POINT IS COMMA.
+           @#DEF_SET#@ @!G_EXISTSPECIALNAME!@ @"YES"@
+    @#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}ACTIVEX-DEF
+; ===================================================================
+@$ACTIVEX-DEF$@
+    @#DEF_IF#@ @#EXP: (NOT @+_PRG_SYS_ISIMPORT+@) AND @!G_EXISTACTIVEX!@ #@
+       @#GET_MEM#@   @"ACTIVE_DEF"@
+       @#CLEAR_MEM#@ @"ACTIVE_DEF"@
+       COPY "Acuclass.Def".
+       @#DEF_IF#@ @#EXP: NOT @!G_EXISTSPECIALNAME!@ #@
+           .
+       @#END_IF#@
+       @#DEF_SET#@ @!G_EXISTSPECIALNAME!@ @"YES"@
+    @#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}SPECIAL-NAME
+; ===================================================================
+@$SPECIAL-NAME$@
+@#DEF_IF#@ @+_PRG_SYS_ISIMPORT+@
+       @#GET_ENTRYPOINT#@ @"INIT"@ @"INIT"@ @"SpecialName"@ @"Noperiod"@
+@$TO-CHECK-ENTRYMEM$@
+      @#GET_ENTRYPOINT#@ @"INIT"@ @"INIT"@ @"SpecialName"@ @"Noperiod"@
+      @#DEF_SETMEM#@ @!G_EXISTSPECIALNAME!@ @"TO-CHECK-ENTRYMEM"@
+      @#CLEAR_MEM#@ @"TO-CHECK-ENTRYMEM"@
+@$SPECIAL-NAME$@
+       @#DEF_IF#@ @!G_EXISTSPECIALNAME!@
+           .
+       @#END_IF#@
+@#ELSE#@
+      * <TOTEM:EPT. INIT:@+_PRG_ATR_ID+@, INIT:@+_PRG_ATR_ID+@, SpecialName>
+       @#GET_ENTRYPOINT#@ @"INIT"@ @"INIT"@ @"SpecialName"@ @"Noperiod"@
+      * <TOTEM:END>
+       @#GET_MEM#@ @"SPECIAL_SUMMARY"@
+   @#DEF_IF#@ @#EXP: NOT @!G_EXISTSPECIALNAME!@ #@
+@$TO-CHECK-ENTRYMEM$@
+      @#GET_ENTRYPOINT#@ @"INIT"@ @"INIT"@ @"SpecialName"@ @"Noperiod"@
+      @#GET_MEM#@ @"SPECIAL_SUMMARY"@
+      @#DEF_SETMEM#@ @!G_EXISTSPECIALNAME!@ @"TO-CHECK-ENTRYMEM"@
+      @#CLEAR_MEM#@ @"TO-CHECK-ENTRYMEM"@
+@$SPECIAL-NAME$@
+       @#DEF_IF#@ @!G_EXISTSPECIALNAME!@
+           .
+       @#END_IF#@
+   @#END_IF#@
+@#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}I-O-CONTROL
+; ===================================================================
+@$TO-CHECK-IOCONTROL$@
+       @#GET_ENTRYPOINT#@ @"INIT"@ @"INIT"@ @"I-O-CONTROL"@ @"Noperiod"@
+	   @#DEF_SETMEM#@ @!G_IOCONTROL!@ @"TO-CHECK-IOCONTROL"@
+	   @#CLEAR_MEM#@ @"TO-CHECK-IOCONTROL"@
+@$I-O-CONTROL$@
+@#DEF_IF#@ @+_PRG_SYS_ISIMPORT+@
+	   @#DEF_IF#@ @!G_IOCONTROL!@
+      * <TOTEM:EPT. INIT:@+_PRG_ATR_ID+@, INIT:@+_PRG_ATR_ID+@, I-O-CONTROL>
+       @#GET_ENTRYPOINT#@ @"INIT"@ @"INIT"@ @"I-O-CONTROL"@ @"Noperiod"@
+      * <TOTEM:END>
+	   @#END_IF#@
+@#ELSE#@
+	   @#DEF_IF#@ @!G_IOCONTROL!@
+      * <TOTEM:EPT. INIT:@+_PRG_ATR_ID+@, INIT:@+_PRG_ATR_ID+@, I-O-CONTROL>
+       @#GET_ENTRYPOINT#@ @"INIT"@ @"INIT"@ @"I-O-CONTROL"@ @"Noperiod"@
+           .
+      * <TOTEM:END>
+	   @#END_IF#@
+@#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}FILE-CONTROL
+; ===================================================================
+@$FILE-CONTROL$@
+           @#GET_MEM#@   @"FILE_SL"@
+           @#CLEAR_MEM#@ @"FILE_SL"@
+           @#GET_MEM#@   @"FILE_SL_TEMP"@
+           @#CLEAR_MEM#@ @"FILE_SL_TEMP"@
+           @#GET_MEM#@   @"PRINT_FILE_SL"@
+           @#CLEAR_MEM#@ @"PRINT_FILE_SL"@
+;
+; ===================================================================
+; *{TOTEM}FILE
+; ===================================================================
+@$FILE$@
+           @#GET_MEM#@   @"FILE_FD"@
+           @#CLEAR_MEM#@ @"FILE_FD"@
+           @#GET_MEM#@   @"FILE_FD_TEMP"@
+           @#CLEAR_MEM#@ @"FILE_FD_TEMP"@
+           @#GET_MEM#@   @"PRINT_FILE_FD"@
+;
+; ===================================================================
+; *{TOTEM}ACU-DEF
+; ===================================================================
+@$ACU-DEF$@
+   @#DEF_SET#@ @!L_ACUGUI_DEF!@ @"1"@	         
+   @#DEF_SET#@ @!L_ACUCOBOL_DEF!@ @"1"@	         
+   @#DEF_SET#@ @!L_FONTS_DEF!@ @"1"@	         
+   @#DEF_SET#@ @!L_CRTVARS_DEF!@ @"1"@	         
+   @#DEF_SET#@ @!L_SHOWMSG_DEF!@ @"1"@	         
+   @#DEF_SET#@ @!L_TOTEM_DEF!@ @"1"@	         
+   @#DEF_SET#@ @!L_PALETTE_DEF!@ @"1"@	         
+   @#DEF_SET#@ @!L_OPENSAVE_DEF!@ @"1"@	  
+   @#DEF_SET#@ @!L_ACTIVEX_DEF!@ @"1"@	         
+   @<_PUSH_MEM>@
+   @<_SET_OBJ_FILEDEF>@
+      @#DEF_LOOP#@ @+_FILEDEF_SYS_FILEDEFNO+@
+      @<_FETCH_NEXT_OBJ_FILEDEF>@
+	  @#DEF_IF#@ @#EXP: @+_FILEDEF_ATR_FILENAME+@ EQUAL @"ACUGUI.DEF"@ #@
+           @#DEF_SET#@ @!L_ACUGUI_DEF!@ @"0"@	         
+		 @#DEF_SETPARA#@ @"1"@ @"@+_FILEDEF_ATR_FILEPATH+@\\@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_SETPARA#@ @"2"@ @"@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDECOPYFILE+@) AND (NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@) #@
+ 		   @#DEF_IF#@ @#EXP: @+_FILEDEF_SYS_ISFULLPATH+@ EQUAL @"Y"@ #@
+               COPY "@+_FILEDEF_ATR_FILEPATH+@\@+_FILEDEF_ATR_FILENAME+@".
+		   @#ELSE#@
+               COPY "@+_FILEDEF_ATR_FILENAME+@".
+		   @#END_IF#@ 
+         @#END_IF#@
+	  @#ELSE_IF#@ @#EXP: @+_FILEDEF_ATR_FILENAME+@ EQUAL @"ACUCOBOL.DEF"@ #@
+		   @#DEF_SET#@ @!L_ACUCOBOL_DEF!@ @"0"@
+		 @#DEF_SETPARA#@ @"1"@ @"@+_FILEDEF_ATR_FILEPATH+@\\@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_SETPARA#@ @"2"@ @"@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDECOPYFILE+@) AND (NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@) #@
+ 		   @#DEF_IF#@ @#EXP: @+_FILEDEF_SYS_ISFULLPATH+@ EQUAL @"Y"@ #@
+               COPY "@+_FILEDEF_ATR_FILEPATH+@\@+_FILEDEF_ATR_FILENAME+@".
+		   @#ELSE#@
+               COPY "@+_FILEDEF_ATR_FILENAME+@".
+		   @#END_IF#@ 
+         @#END_IF#@
+	  @#ELSE_IF#@ @#EXP: @+_FILEDEF_ATR_FILENAME+@ EQUAL @"FONTS.DEF"@ #@
+		   @#DEF_SET#@ @!L_FONTS_DEF!@ @"0"@
+		 @#DEF_SETPARA#@ @"1"@ @"@+_FILEDEF_ATR_FILEPATH+@\\@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_SETPARA#@ @"2"@ @"@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDECOPYFILE+@) AND (NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@) AND (@!G_INITFONT!@ OR @+_OBJ_SYS_GENFONTS+@) #@
+ 		   @#DEF_IF#@ @#EXP: @+_FILEDEF_SYS_ISFULLPATH+@ EQUAL @"Y"@ #@
+               COPY "@+_FILEDEF_ATR_FILEPATH+@\@+_FILEDEF_ATR_FILENAME+@".
+		   @#ELSE#@
+               COPY "@+_FILEDEF_ATR_FILENAME+@".
+  		   @#END_IF#@ 
+         @#END_IF#@
+	  @#ELSE_IF#@ @#EXP: @+_FILEDEF_ATR_FILENAME+@ EQUAL @"CRTVARS.DEF"@ #@
+		   @#DEF_SET#@ @!L_CRTVARS_DEF!@ @"0"@
+		 @#DEF_SETPARA#@ @"1"@ @"@+_FILEDEF_ATR_FILEPATH+@\\@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_SETPARA#@ @"2"@ @"@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDECOPYFILE+@) AND (NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@) #@
+ 		   @#DEF_IF#@ @#EXP: @+_FILEDEF_SYS_ISFULLPATH+@ EQUAL @"Y"@ #@
+               COPY "@+_FILEDEF_ATR_FILEPATH+@\@+_FILEDEF_ATR_FILENAME+@".
+		   @#ELSE#@
+               COPY "@+_FILEDEF_ATR_FILENAME+@".
+		   @#END_IF#@ 
+         @#END_IF#@
+	  @#ELSE_IF#@ @#EXP: @+_FILEDEF_ATR_FILENAME+@ EQUAL @"SHOWMSG.DEF"@ #@
+		   @#DEF_SET#@ @!L_SHOWMSG_DEF!@ @"0"@ 
+		 @#DEF_SETPARA#@ @"1"@ @"@+_FILEDEF_ATR_FILEPATH+@\\@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_SETPARA#@ @"2"@ @"@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDECOPYFILE+@) AND (NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@) #@
+ 		   @#DEF_IF#@ @#EXP: @+_FILEDEF_SYS_ISFULLPATH+@ EQUAL @"Y"@ #@
+               COPY "@+_FILEDEF_ATR_FILEPATH+@\@+_FILEDEF_ATR_FILENAME+@".
+		   @#ELSE#@
+               COPY "@+_FILEDEF_ATR_FILENAME+@".
+		   @#END_IF#@ 
+         @#END_IF#@
+	  @#ELSE_IF#@ @#EXP: @+_FILEDEF_ATR_FILENAME+@ EQUAL @"TOTEM.DEF"@ #@
+		   @#DEF_SET#@ @!L_TOTEM_DEF!@ @"0"@ 
+		 @#DEF_SETPARA#@ @"1"@ @"@+_FILEDEF_ATR_FILEPATH+@\\@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_SETPARA#@ @"2"@ @"@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDECOPYFILE+@) AND (NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@) #@
+ 		   @#DEF_IF#@ @#EXP: @+_FILEDEF_SYS_ISFULLPATH+@ EQUAL @"Y"@ #@
+               COPY "@+_FILEDEF_ATR_FILEPATH+@\@+_FILEDEF_ATR_FILENAME+@".
+		   @#ELSE#@
+               COPY "@+_FILEDEF_ATR_FILENAME+@".
+		   @#END_IF#@ 
+         @#END_IF#@
+	  @#ELSE_IF#@ @#EXP: @+_FILEDEF_ATR_FILENAME+@ EQUAL @"PALETTE.DEF"@ #@
+		   @#DEF_SET#@ @!L_PALETTE_DEF!@ @"0"@ 
+		 @#DEF_SETPARA#@ @"1"@ @"@+_FILEDEF_ATR_FILEPATH+@\\@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_SETPARA#@ @"2"@ @"@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDECOPYFILE+@) AND (NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@) AND (@!G_EXISTCUSTOMCOLOR!@ OR @+_OBJ_SYS_GENPALLETE+@) #@
+	       @#DEF_IF#@ @#EXP: @+_FILEDEF_SYS_ISFULLPATH+@ EQUAL @"Y"@ #@
+               COPY "@+_FILEDEF_ATR_FILEPATH+@\@+_FILEDEF_ATR_FILENAME+@".
+		   @#ELSE#@
+               COPY "@+_FILEDEF_ATR_FILENAME+@".
+		   @#END_IF#@ 
+         @#END_IF#@
+	  @#ELSE_IF#@ @#EXP: @+_FILEDEF_ATR_FILENAME+@ EQUAL @"OPENSAVE.DEF"@ #@
+		   @#DEF_SET#@ @!L_OPENSAVE_DEF!@ @"0"@ 
+		 @#DEF_SETPARA#@ @"1"@ @"@+_FILEDEF_ATR_FILEPATH+@\\@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_SETPARA#@ @"2"@ @"@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDECOPYFILE+@) AND (NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@) AND (@!G_EXISTOPENFILE!@ OR @+_OBJ_SYS_GENOPENSAVE+@) #@
+ 		   @#DEF_IF#@ @#EXP: @+_FILEDEF_SYS_ISFULLPATH+@ EQUAL @"Y"@ #@
+               COPY "@+_FILEDEF_ATR_FILEPATH+@\@+_FILEDEF_ATR_FILENAME+@".
+		   @#ELSE#@
+               COPY "@+_FILEDEF_ATR_FILENAME+@".
+  		   @#END_IF#@ 
+         @#END_IF#@
+	  @#ELSE_IF#@ @#EXP: @+_FILEDEF_ATR_FILENAME+@ EQUAL @"ACTIVEX.DEF"@ #@
+		   @#DEF_SET#@ @!L_ACTIVEX_DEF!@ @"0"@ 
+		 @#DEF_SETPARA#@ @"1"@ @"@+_FILEDEF_ATR_FILEPATH+@\\@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_SETPARA#@ @"2"@ @"@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDECOPYFILE+@) AND (NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@) AND @!G_EXISTACTIVEX!@ #@
+ 		   @#DEF_IF#@ @#EXP: @+_FILEDEF_SYS_ISFULLPATH+@ EQUAL @"Y"@ #@
+               COPY "@+_FILEDEF_ATR_FILEPATH+@\@+_FILEDEF_ATR_FILENAME+@".
+		   @#ELSE#@
+               COPY "@+_FILEDEF_ATR_FILENAME+@".
+		   @#END_IF#@ 
+         @#END_IF#@
+	  @#ELSE#@
+		 @#DEF_SETPARA#@ @"1"@ @"@+_FILEDEF_ATR_FILEPATH+@\\@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_SETPARA#@ @"2"@ @"@+_FILEDEF_ATR_FILENAME+@"@
+		 @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDECOPYFILE+@) AND (NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@) #@
+ 		   @#DEF_IF#@ @#EXP: @+_FILEDEF_SYS_ISFULLPATH+@ EQUAL @"Y"@ #@
+               COPY "@+_FILEDEF_ATR_FILEPATH+@\@+_FILEDEF_ATR_FILENAME+@".
+		   @#ELSE#@
+               COPY "@+_FILEDEF_ATR_FILENAME+@".
+		   @#END_IF#@ 
+         @#END_IF#@
+	  @#END_IF#@ 
+   @#END_LOOP#@
+   @<_POP_MEM>@
+;
+      @#DEF_IF#@ @!L_ACUGUI_DEF!@
+           COPY "ACUGUI.DEF".
+      @#END_IF#@
+      @#DEF_IF#@ @!L_ACUCOBOL_DEF!@
+           COPY "ACUCOBOL.DEF".
+      @#END_IF#@
+      @#DEF_IF#@ @!L_CRTVARS_DEF!@
+           COPY "CRTVARS.DEF". 
+      @#END_IF#@
+      @#DEF_IF#@ @!L_SHOWMSG_DEF!@
+           COPY "SHOWMSG.DEF".
+      @#END_IF#@
+      @#DEF_IF#@ @!L_TOTEM_DEF!@
+           COPY "TOTEM.DEF".
+      @#END_IF#@
+  @#DEF_IF#@ @#EXP: @!G_INITFONT!@ OR @+_OBJ_SYS_GENFONTS+@ #@
+      @#DEF_IF#@ @!L_FONTS_DEF!@
+           COPY "FONTS.DEF".
+      @#END_IF#@
+  @#END_IF#@
+  @#DEF_IF#@ @#EXP: @!G_EXISTCUSTOMCOLOR!@ OR @+_OBJ_SYS_GENPALLETE+@ #@
+      @#DEF_IF#@ @!L_PALETTE_DEF!@
+           COPY "PALETTE.DEF".
+      @#END_IF#@
+  @#END_IF#@
+  @#DEF_IF#@ @#EXP: @!G_EXISTOPENFILE!@ OR @+_OBJ_SYS_GENOPENSAVE+@ #@
+      @#DEF_IF#@ @!L_OPENSAVE_DEF!@
+           COPY "OPENSAVE.DEF".
+      @#END_IF#@
+  @#END_IF#@
+  @#DEF_IF#@ @!G_EXISTACTIVEX!@
+      @#DEF_IF#@ @!L_ACTIVEX_DEF!@
+           COPY "ACTIVEX.DEF".
+      @#END_IF#@
+  @#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}COPY-WORKING
+; ===================================================================
+@$COPY-WORKING$@
+@#DEF_IF#@ @+_PRG_SYS_ISIMPORT+@
+        @#GET_MEM#@ @"WORKING-HEAD"@
+        @#GET_MEM#@ @"WORKING-NEED"@
+        @#GET_MEM#@ @"WORKING-OTHER"@
+@#ELSE#@
+  @#DEF_IF#@ @+_SYS_ISGENCOPY+@
+           COPY "@+_PRG_ATR_ID+@.wrk".
+  @#ELSE#@
+        @#GET_MEM#@ @"WORKING-HEAD"@
+        @#GET_MEM#@ @"WORKING-NEED"@
+        @#GET_MEM#@ @"WORKING"@
+        @#GET_MEM#@ @"WORKING-OTHER"@
+  @#END_IF#@
+@#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}LINKAGE
+; ===================================================================
+@$LINKAGE$@
+@#DEF_IF#@ @+_PRG_SYS_ISIMPORT+@
+       @#GET_MEM#@ @"LINKAGE-WRK"@
+       @#GET_MEM#@ @"LINKAGE-OTHER"@
+@#ELSE#@
+  @#DEF_IF#@ @+_SYS_ISGENCOPY+@
+       @#DEF_SET#@ @!L_DOIT!@ @""@
+	   @#DEF_SETMEM#@ @!L_DOIT!@ @"LINKAGE-WRK"@
+	   @#DEF_IF#@ @!L_DOIT!@
+           COPY "@+_PRG_ATR_ID+@.lks".
+       @#END_IF#@
+  @#ELSE#@
+       @#GET_MEM#@ @"LINKAGE-WRK"@
+       @#GET_MEM#@ @"LINKAGE-OTHER"@
+  @#END_IF#@
+@#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}COPY-SCREEN
+; ===================================================================
+@$COPY-SCREEN$@
+  @#DEF_IF#@ @+_SYS_ISGENCOPY+@
+           COPY "@+_PRG_ATR_ID+@.scr".
+  @#ELSE#@
+        @#GET_MEM#@ @"FORMSCREEN"@
+  @#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}LINKPARA
+; ===================================================================
+@$LINKPARA$@
+@#DEF_IF#@ @+_PRG_SYS_ISIMPORT+@
+       @#GET_MEM#@   @"COPY_RESOURCE"@
+       @#CLEAR_MEM#@ @"COPY_RESOURCE"@
+;
+       @#DEF_SETMEM#@ @!L_USINGPHRASE!@ @"PROCEDURE_PARAMETER"@
+       @#CLEAR_MEM#@   @"PROCEDURE_PARAMETER"@
+	   @#DEF_IF#@ @!L_USINGPHRASE!@
+       PROCEDURE  DIVISION @!L_USINGPHRASE!@ 
+	   @#ELSE#@
+       PROCEDURE  DIVISION.
+	   @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @!G_EXISTLINKAGESECTION!@
+       PROCEDURE  DIVISION USING @+_PRG_SYS_LINKAGEPARAMETER+@.
+  @#ELSE#@
+       PROCEDURE        DIVISION.
+  @#END_IF#@
+@#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}DECLARATIVE
+; ===================================================================
+@$TO-CHECK-DECLARATIVE$@
+       @#GET_ENTRYPOINT#@ @"INIT"@ @"INIT"@ @"BeforeDeclarative"@ @"Noperiod"@
+	   @#DEF_SETMEM#@ @!L_DECLARATIVE!@ @"TO-CHECK-DECLARATIVE"@
+	   @#CLEAR_MEM#@ @"TO-CHECK-DECLARATIVE"@
+@$DECLARATIVE$@
+@#DEF_IF#@ @+_PRG_SYS_ISIMPORT+@
+   @#DEF_IF#@ @!L_DECLARATIVE!@
+       DECLARATIVES.
+      * <TOTEM:EPT. INIT:@+_PRG_ATR_ID+@, INIT:@+_PRG_ATR_ID+@, BeforeDeclarative>
+       @#GET_ENTRYPOINT#@ @"INIT"@ @"INIT"@ @"BeforeDeclarative"@ @"Noperiod"@
+      * <TOTEM:END>
+       END DECLARATIVES.
+   @#END_IF#@
+@#ELSE#@
+    @#DEF_IF#@ @#EXP: @!G_EXISTDATASET!@ OR @!L_DECLARATIVE!@ #@
+       DECLARATIVES.
+      * <TOTEM:EPT. INIT:@+_PRG_ATR_ID+@, INIT:@+_PRG_ATR_ID+@, BeforeDeclarative>
+       @#GET_ENTRYPOINT#@ @"INIT"@ @"INIT"@ @"BeforeDeclarative"@ @"Noperiod"@
+      * <TOTEM:END>
+       INPUT-ERROR SECTION.
+           USE AFTER STANDARD ERROR PROCEDURE ON INPUT.
+       0100-DECL.
+           EXIT.
+       I-O-ERROR SECTION.
+           USE AFTER STANDARD ERROR PROCEDURE ON I-O.
+       0200-DECL.
+           EXIT.
+       OUTPUT-ERROR SECTION.
+           USE AFTER STANDARD ERROR PROCEDURE ON OUTPUT.
+       0300-DECL.
+           EXIT.
+       TRANSACTION-ERROR SECTION.
+           USE AFTER STANDARD ERROR PROCEDURE ON TRANSACTION.
+       0400-DECL.
+           EXIT.
+       END DECLARATIVES.
+    @#END_IF#@
+@#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}ENTRY-BEFPRG
+; ===================================================================
+@$ENTRY-BEFPRG$@
+    @#DEF_IF#@ @+_PRG_SYS_BEFOREPROGRAM+@
+           PERFORM @+_PRG_SYS_BEFOREPROGRAM+@
+    @#ELSE#@
+      *    Before Program
+    @#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}RUN-MAINSCR
+; ===================================================================
+@$RUN-MAINSCR$@
+   @#DEF_IF#@ @+_PRG_SYS_SRNNO+@
+   @<_PUSH_MEM>@
+      @<_SET_OBJ_MAINSCREEN>@
+         @#DEF_IF#@ @+_OBJ_SYS_EXISTSCREENMATCH+@
+           IF Has-Graphical-Interface
+              PERFORM @+_PRG_SYS_MAINSCREENNAME+@-OPEN-ROUTINE
+           ELSE
+              PERFORM @+_PRG_SYS_MAINSCREENNAME+@-OPEN-ROUTINE-T
+           END-IF.
+         @#ELSE#@
+            @#DEF_SET#@ @!L_MODE!@ @""@
+            @#DEF_IF#@ @+_OBJ_SYS_ISTEXTMODE+@
+               @#DEF_SET#@ @!L_MODE!@ @"-T"@
+            @#END_IF#@
+           PERFORM @+_PRG_SYS_MAINSCREENNAME+@-OPEN-ROUTINE@!L_MODE!@.
+         @#END_IF#@
+   @<_POP_MEM>@
+   @#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}CLOSEFILE
+; move to procedure.skl *{TOTEM}CLOSEFILE
+; ===================================================================
+;@$CLOSEFILE$@ 
+;  @#DEF_IF#@ @!G_EXISTFDSL!@
+;           PERFORM CLOSE-FILE-RTN
+;  @#END_IF#@
+;  @#DEF_IF#@ @!G_EXISTCUSTOMCOLOR!@
+;           PERFORM RESET-COLOR-PALETTE
+;  @#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}RES-DESTROY
+; move to procedure.skl *{TOTEM}RES-DESTROY
+; ===================================================================
+;@$RES-DESTROY$@
+;           @#GET_MEM#@   @"DESTROY_FONT_PROCESS"@
+;           @#GET_MEM#@   @"DESTROY_BITMAP_PROCESS"@
+;           @#GET_MEM#@   @"DESTROY_POPUP_PROCESS"@
+;  @#DEF_IF#@ @!G_EXISTACTIVEX!@
+;           CALL "C$RESOURCE" USING CRESOURCE-DESTROY, ActiveX-Res
+;  @#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}ENTRY-AFTPRG
+; move to procedure.skl *{TOTEM}ENTRY-AFTPRG
+; ===================================================================
+;@$ENTRY-AFTPRG$@
+;    @#DEF_IF#@ @+_PRG_SYS_AFTERPROGRAM+@
+;           PERFORM @+_PRG_SYS_AFTERPROGRAM+@
+;    @#ELSE#@
+;      *    After Program
+;    @#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}COPY-PROCEDURE
+; ===================================================================
+@$COPY-PROCEDURE$@
+@#DEF_IF#@ @+_PRG_SYS_ISIMPORT+@
+        @#GET_MEM#@ @"PROCEDURE-HEAD"@
+
+        @#GET_MEM#@ @"PROCEDURE"@
+
+        @#GET_MEM#@ @"MENU"@
+
+        @#GET_MEM#@ @"EVENT"@
+@#ELSE#@
+  @#DEF_IF#@ @+_SYS_ISGENCOPY+@
+       COPY "@+_PRG_ATR_ID+@.prd".
+  @#ELSE#@
+        @#GET_MEM#@ @"PROCEDURE-HEAD"@
+        @#GET_MEM#@ @"PROCEDURE"@
+  @#END_IF#@
+
+  @#DEF_IF#@ @+_SYS_ISGENCOPY+@
+     @#DEF_SET#@ @!L_DOIT!@ @""@
+	 @#DEF_SETMEM#@ @!L_DOIT!@ @"MENU"@
+	 @#DEF_IF#@ @!L_DOIT!@
+       COPY "@+_PRG_ATR_ID+@.mnu".
+     @#END_IF#@
+  @#ELSE#@
+        @#GET_MEM#@ @"MENU"@
+  @#END_IF#@
+
+  @#DEF_IF#@ @+_SYS_ISGENCOPY+@
+       COPY "@+_PRG_ATR_ID+@.evt".
+  @#ELSE#@
+       @#GET_MEM#@ @"EVENT"@
+  @#END_IF#@
+
+  @#DEF_IF#@ @+_SYS_ISGENCOPY+@
+     @#DEF_SET#@ @!L_DOIT!@ @""@
+	 @#DEF_SETMEM#@ @!L_DOIT!@ @"REPORT"@
+	 @#DEF_IF#@ @!L_DOIT!@
+       COPY "@+_PRG_ATR_ID+@.rpt".
+     @#END_IF#@
+  @#ELSE#@
+       @#GET_MEM#@ @"REPORT"@
+  @#END_IF#@
+@#END_IF#@
+;
+; ===================================================================
+; *{TOTEM}SHOW-MSG
+; ===================================================================
+@$SHOW-MSG$@
+@#DEF_SETPARA#@ @"2"@ @"TotemMsg.cpy"@
+@#DEF_IF#@ @#EXP: NOT @+_SYS_CHECK_EXTERNALCOPYFILE+@ #@
+  @#DEF_IF#@ @+_SYS_ISGENCOPY+@
+       COPY "TotemMsg.cpy".
+  @#ELSE#@
+       MESSAGE-FOR-FILEERROR.
+           CALL "C$RERRNAME" USING TOTEM-MSG-ERR-FILE
+           CALL "C$RERR" USING EXTEND-STAT, TEXT-MESSAGE
+              MOVE PRIMARY-ERROR TO TOTEM-MSG-ID
+           .
+
+       SHOW-TRANSACTION-ROUTINE.
+           IF TOTEM-TRANSACTION-FLAG = SPACES
+              IF TRANSACTION-STATUS NOT = 0
+                 STRING "TRANSACTION ERROR ", TRANSACTION-STATUS
+                    DELIMITED BY SIZE INTO TOTEM-MSG-1
+              END-IF
+           ELSE
+              PERFORM SHOW-MSG-ROUTINE
+              IF TRANSACTION-STATUS = 0
+                 MOVE "@!S_MSGTRAN_01!@" TO TOTEM-MSG-3
+              ELSE
+                 STRING "TRANSACTION ERROR ", TRANSACTION-STATUS
+                    DELIMITED BY SIZE INTO TOTEM-MSG-3
+              END-IF
+           END-IF
+           .
+
+       SHOW-MSG-ROUTINE.
+           MOVE SPACE TO TOTEM-MSG-1 TOTEM-MSG-2 TOTEM-MSG-3
+           EVALUATE TOTEM-MSG-ID
+               WHEN "10"
+                    STRING "File:" TOTEM-MSG-ERR-FILE DELIMITED BY SPACE
+                       INTO TOTEM-MSG-1
+                    MOVE "@!S_MSG10!@" TO TOTEM-MSG-2
+                    MOVE MB-DEFAULT-ICON TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-OK TO TOTEM-MSG-BUTTON-TYPE
+               WHEN "22"
+                    STRING "File:" TOTEM-MSG-ERR-FILE DELIMITED BY SPACE
+                       INTO TOTEM-MSG-1
+                    MOVE "@!S_MSG22!@" TO TOTEM-MSG-2
+                    MOVE MB-ERROR-ICON TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-OK TO TOTEM-MSG-BUTTON-TYPE
+               WHEN "23"
+                    STRING "File:" TOTEM-MSG-ERR-FILE DELIMITED BY SPACE
+                       INTO TOTEM-MSG-1
+                    MOVE "@!S_MSG23!@" TO TOTEM-MSG-2
+                    MOVE MB-WARNING-ICON TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-OK TO TOTEM-MSG-BUTTON-TYPE
+               WHEN "101"
+                    MOVE "@!S_MSG101!@" TO TOTEM-MSG-1
+                    MOVE 4 TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-YES-NO TO TOTEM-MSG-BUTTON-TYPE
+               WHEN "201"
+                    MOVE "@!S_MSG201!@" TO TOTEM-MSG-1
+                    MOVE 4 TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-YES-NO TO TOTEM-MSG-BUTTON-TYPE
+               WHEN "202"
+                    MOVE "@!S_MSG202!@" TO TOTEM-MSG-1
+                    MOVE 4 TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-YES-NO TO TOTEM-MSG-BUTTON-TYPE
+               WHEN "203"
+                    MOVE "@!S_MSG203!@" TO TOTEM-MSG-1
+                    MOVE 4 TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-YES-NO TO TOTEM-MSG-BUTTON-TYPE
+               WHEN "204"
+                    MOVE "@!S_MSG204!@" TO TOTEM-MSG-1
+                    MOVE MB-WARNING-ICON TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-OK TO TOTEM-MSG-BUTTON-TYPE
+               WHEN "301"
+                    MOVE "@!S_MSG301!@" TO TOTEM-MSG-1
+                    MOVE MB-DEFAULT-ICON TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-OK TO TOTEM-MSG-BUTTON-TYPE
+               WHEN "302"
+                    MOVE "@!S_MSG302!@" TO TOTEM-MSG-1
+                    MOVE MB-DEFAULT-ICON TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-OK TO TOTEM-MSG-BUTTON-TYPE
+               WHEN "303"
+                    MOVE "@!S_MSG303!@" TO TOTEM-MSG-1
+                    MOVE MB-DEFAULT-ICON TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-OK TO TOTEM-MSG-BUTTON-TYPE
+               WHEN "401"
+                    MOVE "@!S_MSG401!@" TO TOTEM-MSG-1
+                    MOVE MB-ERROR-ICON TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-OK TO TOTEM-MSG-BUTTON-TYPE
+               WHEN OTHER
+                    MOVE TEXT-MESSAGE TO TOTEM-MSG-1
+                    STRING "FILE:" TOTEM-MSG-ERR-FILE DELIMITED BY SPACE
+                       INTO TOTEM-MSG-3
+                    MOVE 0 TO TOTEM-IDX1
+                    INSPECT TOTEM-MSG-3 TALLYING TOTEM-IDX1
+                       FOR TRAILING SPACE
+                    STRING TOTEM-MSG-3(1:TOTEM-MSG-LENGTH - TOTEM-IDX1), 
+                       ", FILE STATUS ", PRIMARY-ERROR "," 
+                       SECONDARY-ERROR
+                    DELIMITED BY SIZE INTO TOTEM-MSG-2
+                    MOVE SPACES TO TOTEM-MSG-3
+                    MOVE MB-ERROR-ICON TO TOTEM-MSG-ICON-TYPE
+                    MOVE MB-OK TO TOTEM-MSG-BUTTON-TYPE
+           END-EVALUATE
+           PERFORM MESSAGE-BOX-ROUTINE
+           .
+
+       MESSAGE-BOX-ROUTINE.
+           MOVE 1 TO TOTEM-MSG-TEXT-POINTER
+           IF TOTEM-MSG-1 NOT = SPACE
+              MOVE 0 TO TOTEM-MSG-SIZE
+              INSPECT TOTEM-MSG-1 TALLYING TOTEM-MSG-SIZE FOR TRAILING SPACE
+              STRING TOTEM-MSG-1( 1 : TOTEM-MSG-LENGTH - TOTEM-MSG-SIZE )
+                 DELIMITED BY SIZE
+                 INTO TOTEM-MSG-TEXT, POINTER TOTEM-MSG-TEXT-POINTER
+           END-IF
+
+           IF TOTEM-MSG-2 NOT = SPACE
+              MOVE 0 TO TOTEM-MSG-SIZE
+              INSPECT TOTEM-MSG-2 TALLYING TOTEM-MSG-SIZE FOR TRAILING SPACE
+              IF TOTEM-MSG-TEXT-POINTER > 1
+                 STRING X"0A" DELIMITED BY SIZE
+                     INTO TOTEM-MSG-TEXT, POINTER TOTEM-MSG-TEXT-POINTER
+              END-IF
+              STRING TOTEM-MSG-2( 1 : TOTEM-MSG-LENGTH - TOTEM-MSG-SIZE )
+                  DELIMITED BY SIZE
+                  INTO TOTEM-MSG-TEXT, POINTER TOTEM-MSG-TEXT-POINTER
+           END-IF
+
+           IF TOTEM-MSG-3 NOT = SPACE
+              MOVE 0 TO TOTEM-MSG-SIZE
+              INSPECT TOTEM-MSG-3 TALLYING TOTEM-MSG-SIZE FOR TRAILING SPACE
+              IF TOTEM-MSG-TEXT-POINTER > 1
+                 STRING X"0A" DELIMITED BY SIZE
+                     INTO TOTEM-MSG-TEXT, POINTER TOTEM-MSG-TEXT-POINTER
+              END-IF
+              STRING TOTEM-MSG-3( 1 : TOTEM-MSG-LENGTH - TOTEM-MSG-SIZE )
+                  DELIMITED BY SIZE
+                  INTO TOTEM-MSG-TEXT, POINTER TOTEM-MSG-TEXT-POINTER
+           END-IF
+
+           IF TOTEM-MSG-TEXT-POINTER = 1
+              MOVE 0 TO TOTEM-MSG-SIZE
+              INSPECT TOTEM-MSG-TEXT TALLYING TOTEM-MSG-SIZE FOR TRAILING SPACE
+                  COMPUTE TOTEM-MSG-TEXT-POINTER = TOTEM-MSG-FULL-LENGTH - TOTEM-MSG-SIZE + 1
+           END-IF
+           MOVE LOW-VALUES TO TOTEM-MSG-TEXT(TOTEM-MSG-TEXT-POINTER : 1 )
+           .
+
+       MESSAGE-BOX-DISPLAY.
+           PERFORM SHOW-MSG-ROUTINE
+           PERFORM MESSAGE-BOX-ROUTINE
+           DISPLAY MESSAGE BOX TOTEM-MSG-TEXT
+               TITLE IS TOTEM-MSG-TITLE
+               TYPE  IS TOTEM-MSG-BUTTON-TYPE
+               ICON  IS TOTEM-MSG-DEFAULT-BUTTON
+               RETURNING TOTEM-MSG-RETURN-VALUE
+           .
+
+  @#END_IF#@
+@#END_IF#@
+;

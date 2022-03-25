@@ -1,0 +1,302 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; FD/SL Multiple Keys Generation Rule.   2001/04/19
+; ===================================================================
+;
+;
+@<_PUSH_MEM>@
+   @<_SET_FDSL_PKEY>@
+   @#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+      @#DEF_SET#@ @!L_PKEY!@ @"@+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF"@
+   @#ELSE#@
+      @#DEF_SET#@ @!L_PKEY!@ @+_FDSL_SYS_SLPKEY+@
+   @#END_IF#@
+@<_POP_MEM>@
+;
+; If DB_Frame and Form use the same DataSet, The Following function would duplicate
+;   @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Change-CurrentKey-Asc@!G_MODE!@.
+;   @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Change-CurrentKey-Desc@!G_MODE!@.
+;   @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Update-Key@!G_MODE!@.
+;
+@#DEF_SET#@ @!L_GENFUNC!@ @""@
+@#DEF_FIND#@ @!L_GENFUNC!@ @!G_FORMDATA!@ @".@!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@@!G_MODE!@."@
+@#DEF_IF#@ @#EXP: NOT @!L_GENFUNC!@ #@
+  @#DEF_APPEND#@ @!G_FORMDATA!@ @".@!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@."@
+@#END_IF#@
+;
+; ===================================================================
+; KEYIS
+; ===================================================================
+@#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ OR
+                  @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"RANDOM"@ #@
+@$WORKING$@
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"RELATIVE"@ #@
+       77 @+_OBJ_ATR_NAME+@-MULKEY-TMPBUF@!G_MODE!@   PIC 9(16).
+   @#ELSE#@
+       77 @+_OBJ_ATR_NAME+@-MULKEY-TMPBUF@!G_MODE!@   PIC X(@+_FDSL_SYS_FDSIZE+@).
+   @#END_IF#@
+@#END_IF#@
+;
+@#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+@$WORKING$@
+@#DEF_SET#@ @!L_KEYINDEX!@ @"0"@
+@#DEF_SET#@ @!L_EXISTDUP!@ @""@
+@<_PUSH_MEM>@
+@<_SET_FDSL_MULTIPLEKEY>@
+ @#DEF_SET#@ @!L_MULTIKEY!@ @""@
+ @#DEF_IF#@ @#EXP: @+_FDSL_SYS_MULTIPLEKEYNO+@ GREATER @"1"@ #@
+   @#DEF_SET#@ @!L_MULTIKEY!@ @"YES"@
+ @#END_IF#@
+ @#DEF_LOOP#@ @+_FDSL_SYS_MULTIPLEKEYNO+@
+   @<_FETCH_NEXT_FDSL_MULTIPLEKEY>@
+   @#DEF_ADD#@ @!L_KEYINDEX!@ @"1"@
+   ;
+   @<_PUSH_MEM>@
+     @<_SET_MULTIPLEKEY_KEYIS>@
+      @#DEF_IF#@ @#EXP: @+_FDSL_SYS_FDKEYTYPE+@ EQUAL @"DUPLICATE"@ #@
+       @#DEF_SET#@ @!L_EXISTDUP!@ @"YES"@
+       @#DEF_SET#@ @!L_ISSPLITKEY!@ @+_FDSL_SYS_ISSPLITKEY+@
+@$WORKING$@
+       77 @+_OBJ_ATR_NAME+@-KEYISTMP@!L_KEYINDEX!@@!G_MODE!@   PIC @+_KEY_SYS_PICTURE+@.
+;
+@$TMP-MOVEKEY$@
+       @#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+           @#DEF_SET#@ @!L_KEYIS!@ @"@+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF"@
+           WHEN @!L_KEYINDEX!@
+              MOVE @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF TO
+                   @+_OBJ_ATR_NAME+@-KEYISTMP@!L_KEYINDEX!@@!G_MODE!@
+       @#ELSE#@
+           @#DEF_SET#@ @!L_KEYIS!@ @+_MULTIPLEKEY_SYS_NAME+@
+           WHEN @!L_KEYINDEX!@
+              MOVE @+_MULTIPLEKEY_SYS_NAME+@ TO 
+                   @+_OBJ_ATR_NAME+@-KEYISTMP@!L_KEYINDEX!@@!G_MODE!@
+       @#END_IF#@
+;
+@#CLEAR_MEM#@ @"TMP-KEYIS-MERGE"@
+@$TMP-KEYIS-MERGE$@
+       @#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+              PERFORM @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-MERGE-SPLITBUF
+       @#END_IF#@
+;
+@$INIT_VALUE$@
+           MOVE ALL X'9' TO @+_OBJ_ATR_NAME+@-KEYISTMP@!L_KEYINDEX!@@!G_MODE!@
+;
+;
+@$DUPLI-PREV$@
+           WHEN @!L_KEYINDEX!@
+              @#GET_MEM#@ @"TMP-KEYIS-MERGE"@
+              IF @!L_KEYIS!@ = @+_OBJ_ATR_NAME+@-KEYISTMP@!L_KEYINDEX!@@!G_MODE!@
+                 MOVE @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER TO TMP-@+_OBJ_ATR_NAME+@-KEY@!L_KEYINDEX!@-ORDER
+                 MOVE "A" TO @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER
+                 PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START-EQUAL
+                 IF @+_FDSL_SYS_FILESTATUS88+@
+                    PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+                    PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@ OR 
+                         @!L_PKEY!@ = @+_OBJ_ATR_NAME+@-PKEYTMP@!G_MODE!@ OR
+                         @!L_KEYIS!@ NOT = @+_OBJ_ATR_NAME+@-KEYISTMP@!L_KEYINDEX!@@!G_MODE!@
+                       PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+                    END-PERFORM
+                 END-IF
+                 MOVE TMP-@+_OBJ_ATR_NAME+@-KEY@!L_KEYINDEX!@-ORDER TO @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER
+              ELSE
+                 PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START-LESS
+              END-IF
+;
+@$DUPLI-NEXT$@
+           WHEN @!L_KEYINDEX!@
+              @#GET_MEM#@ @"TMP-KEYIS-MERGE"@
+              IF @!L_KEYIS!@ = @+_OBJ_ATR_NAME+@-KEYISTMP@!L_KEYINDEX!@@!G_MODE!@
+                 MOVE @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER TO TMP-@+_OBJ_ATR_NAME+@-KEY@!L_KEYINDEX!@-ORDER
+                 MOVE "A" TO @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER
+                 PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START
+                 IF @+_FDSL_SYS_FILESTATUS88+@
+                    PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+                    PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@ OR 
+                         @!L_PKEY!@ = @+_OBJ_ATR_NAME+@-PKEYTMP@!G_MODE!@ OR
+                         @!L_KEYIS!@ NOT = @+_OBJ_ATR_NAME+@-KEYISTMP@!L_KEYINDEX!@@!G_MODE!@
+                       PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read-Next
+                    END-PERFORM
+                 END-IF
+                 MOVE TMP-@+_OBJ_ATR_NAME+@-KEY@!L_KEYINDEX!@-ORDER TO @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER
+              ELSE
+                 PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START-GREATER
+              END-IF
+;
+     @#END_IF#@ 
+   @<_POP_MEM>@
+;
+; Change Current Key Order
+@$Change-Key-Order-Asc$@
+           WHEN @!L_KEYINDEX!@
+              MOVE "A" TO @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER
+@$Change-Key-Order-Desc$@
+           WHEN @!L_KEYINDEX!@
+              MOVE "D" TO @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY@!L_KEYINDEX!@-ORDER
+@$FORM-IUD$@
+       @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-CHANGETO-KEY@!L_KEYINDEX!@@!G_MODE!@.
+ @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+           MOVE @!L_KEYINDEX!@ TO @+_DATASET_SYS_NAME+@-KEYIS
+ @#END_IF#@
+           PERFORM @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Update-Key@!G_MODE!@
+           .
+
+;
+@$CHECKKEYFIELD$@
+   @#DEF_SETMEM#@ @!L_DOIT!@ @"CHECKKEYFIELD-@+_MULTIPLEKEY_SYS_NAME+@"@
+   @#DEF_IF#@ @!L_DOIT!@
+      @#DEF_IF#@ @#EXP: @+_FDSL_SYS_MULTIPLEKEYNO+@ GREATER @"1"@ #@
+           WHEN @!L_KEYINDEX!@
+      @#END_IF#@
+              @#GET_MEM#@   @"CHECKKEYFIELD-@+_MULTIPLEKEY_SYS_NAME+@"@
+              @#CLEAR_MEM#@ @"CHECKKEYFIELD-@+_MULTIPLEKEY_SYS_NAME+@"@
+   @#END_IF#@
+;
+ @#END_LOOP#@
+@<_POP_MEM>@
+;
+  @#DEF_SETMEM#@ @!L_DOIT!@ @"CHECKKEYFIELD"@
+  @#DEF_IF#@ @!L_DOIT!@
+     @#DEF_IF#@ @!L_MULTIKEY!@
+@$ALL-EVALUATE$@ 
+           EVALUATE @+_DATASET_SYS_NAME+@-KEYIS
+@$ALL-END-EVALUATE$@
+           END-EVALUATE
+     @#END_IF#@
+  @#END_IF#@
+;
+@$FORM-IUD$@
+  @#DEF_IF#@ @#EXP: NOT @!L_GENFUNC!@ #@
+       @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Change-CurrentKey-Asc@!G_MODE!@.
+           EVALUATE @+_DATASET_SYS_NAME+@-KEYIS
+		      @#GET_MEM#@ @"Change-Key-Order-Asc"@
+           END-EVALUATE
+           PERFORM @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Update-Key@!G_MODE!@
+           .
+
+       @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Change-CurrentKey-Desc@!G_MODE!@.
+           EVALUATE @+_DATASET_SYS_NAME+@-KEYIS
+		      @#GET_MEM#@ @"Change-Key-Order-Desc"@
+           END-EVALUATE
+           PERFORM @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Update-Key@!G_MODE!@
+           .
+
+  @#END_IF#@
+; SINGLE KEY (PRIMARY FD BUT NOT INDEXED)
+@#ELSE#@
+@$FORM-IUD$@
+  @#DEF_IF#@ @#EXP: NOT @!L_GENFUNC!@ #@
+       @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Change-CurrentKey-Asc@!G_MODE!@.
+           MOVE "A" TO @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY-ORDER
+           PERFORM @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Update-Key@!G_MODE!@
+           .
+
+       @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Change-CurrentKey-Desc@!G_MODE!@.
+           MOVE "D" TO @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-KEY-ORDER
+           PERFORM @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Update-Key@!G_MODE!@
+           .
+
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT @!L_GENFUNC!@ #@
+       @!G_SCREENNAME!@-@+_DATASET_SYS_NAME+@-Update-Key@!G_MODE!@.
+ @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLFILEFORMAT+@ EQUAL @"INDEXED"@ #@
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ OR
+                     @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"RANDOM"@ #@
+           MOVE @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@ TO
+                     @+_OBJ_ATR_NAME+@-MULKEY-TMPBUF@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-CLEAR@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-INIT-DATA@!G_MODE!@
+           MOVE @+_OBJ_ATR_NAME+@-MULKEY-TMPBUF@!G_MODE!@ TO
+                     @+_FDSL_SYS_FDRECORDNAME+@ OF @+_FDSL_SYS_FDNAME+@
+           PERFORM @!G_FORMBASESET!@-@+_FDSL_SYS_FDNAME+@-Read
+           PERFORM @+_OBJ_ATR_NAME+@-DUPLICATE-MOVEKEY@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-DUMMY-CURR@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-IUD-Display@!G_MODE!@
+   @#ELSE#@
+           PERFORM @+_OBJ_ATR_NAME+@-CLEAR@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-INIT-DATA@!G_MODE!@
+   @#END_IF#@
+ @#ELSE#@
+           PERFORM @+_OBJ_ATR_NAME+@-CLEAR@!G_MODE!@
+           PERFORM @+_OBJ_ATR_NAME+@-INIT-DATA@!G_MODE!@
+ @#END_IF#@
+           .
+
+@#END_IF#@
+;
+;
+; ===================================================================
+; PKEY
+; ===================================================================
+;
+@#DEF_IF#@ @!L_EXISTDUP!@
+;
+@$WORKING$@
+   ;
+      * @+_OBJ_ATR_NAME+@ : PKEY & AKEY'S TEMP BUFFER
+   @<_PUSH_MEM>@
+      @<_SET_FDSL_PKEY>@
+       77 @+_OBJ_ATR_NAME+@-PKEYTMP@!G_MODE!@   PIC @+_KEY_SYS_PICTURE+@.
+   @<_POP_MEM>@
+   ;
+@$TMP-MOVEKEY-PKEY$@
+   ;
+   @<_PUSH_MEM>@
+      @<_SET_FDSL_PKEY>@
+      @#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+           @#DEF_SET#@ @!L_PKEY!@ @"@+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF"@
+           MOVE @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF TO @+_OBJ_ATR_NAME+@-PKEYTMP@!G_MODE!@
+      @#ELSE#@
+           @#DEF_SET#@ @!L_PKEY!@ @+_FDSL_SYS_SLPKEY+@
+           MOVE @+_FDSL_SYS_SLPKEY+@ TO @+_OBJ_ATR_NAME+@-PKEYTMP@!G_MODE!@
+      @#END_IF#@
+   @<_POP_MEM>@
+   ;
+@$INIT_VALUE$@
+           MOVE ALL X'9' TO @+_OBJ_ATR_NAME+@-PKEYTMP@!G_MODE!@
+   ;
+@#END_IF#@
+;
+;
+@$FORM-IUD$@
+       @#DEF_SETMEM#@ @!L_DOIT!@ @"DUPLI-PREV"@
+       @#DEF_IF#@ @!L_DOIT!@
+           @#DEF_SET#@ @!G_DUPLIPREV!@ @"Y"@
+       @+_OBJ_ATR_NAME+@-DUPLICATE-PREV@!G_MODE!@.
+           EVALUATE @+_DATASET_SYS_NAME+@-KEYIS
+              @#GET_MEM#@ @"DUPLI-PREV"@
+			  @#CLEAR_MEM#@ @"DUPLI-PREV"@
+           WHEN OTHER
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START-LESS
+           END-EVALUATE
+           .
+
+       @#END_IF#@
+       @#DEF_SETMEM#@ @!L_DOIT!@ @"DUPLI-NEXT"@
+       @#DEF_IF#@ @!L_DOIT!@
+           @#DEF_SET#@ @!G_DUPLINEXT!@ @"Y"@
+       @+_OBJ_ATR_NAME+@-DUPLICATE-NEXT@!G_MODE!@.
+           EVALUATE @+_DATASET_SYS_NAME+@-KEYIS
+              @#GET_MEM#@ @"DUPLI-NEXT"@
+              @#CLEAR_MEM#@ @"DUPLI-NEXT"@
+           WHEN OTHER
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START-GREATER
+           END-EVALUATE
+           .
+
+       @#END_IF#@
+       @+_OBJ_ATR_NAME+@-DUPLICATE-MOVEKEY@!G_MODE!@.
+           @#GET_MEM#@   @"TMP-MOVEKEY-PKEY"@
+           @#CLEAR_MEM#@   @"TMP-MOVEKEY-PKEY"@
+         @#DEF_SETMEM#@ @!L_DOIT!@ @"TMP-MOVEKEY"@
+         @#DEF_IF#@ @!L_DOIT!@
+           EVALUATE @+_DATASET_SYS_NAME+@-KEYIS
+              @#GET_MEM#@   @"TMP-MOVEKEY"@
+              @#CLEAR_MEM#@   @"TMP-MOVEKEY"@
+           END-EVALUATE
+         @#END_IF#@
+           .
+
+;
+@#CLEAR_MEM#@ @"Change-Key-Order-Asc"@
+@#CLEAR_MEM#@ @"Change-Key-Order-Desc"@

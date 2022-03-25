@@ -1,0 +1,160 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Bar Generation Rule.  2001/11/01
+;
+; ===================================================================
+;
+; ================== SCR -- DB -- SCREEN  SECTION ===================
+;
+@$SCREEN$@
+      * BAR
+       @+_OBJ_SYS_LEVEL+@
+           @+_OBJ_ATR_NAME+@, 
+           Bar,
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@ PIXELS,
+  @#ELSE#@
+           COL @+_OBJ_ATR_COLUMNINPIXELS+@ PIXELS, 
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_COLUMN+@
+           COL @+_OBJ_ATR_COLUMN+@, 
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CCOL+@
+           CCOL @+_OBJ_ATR_CCOL+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@ PIXELS,
+  @#ELSE#@
+           LINE @+_OBJ_ATR_LINEINPIXELS+@ PIXELS,
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_LINE+@
+           LINE @+_OBJ_ATR_LINE+@,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CLINE+@
+           CLINE @+_OBJ_ATR_CLINE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CLINES+@
+           CLINES @+_OBJ_ATR_CLINES+@ @+_OBJ_SYS_CLINESUNIT+@,
+@#END_IF#@
+@#DEF_CASE#@ @+_OBJ_ATR_KIND+@
+;
+; Vertial Line
+;
+   @#CASE#@ @"VERTICAL"@
+   @#DEF_IF#@ @#EXP: @+_OBJ_SYS_LINESUNIT+@ EQUAL @"PIXELS"@ #@
+     @#DEF_IF#@ @+_OBJ_ATR_SIZELINESVARIABLE+@
+           LINES @+_OBJ_ATR_SIZELINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+     @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINESINPIXELS+@ @+_OBJ_SYS_LINESUNIT+@,
+     @#END_IF#@
+   @#ELSE#@
+     @#DEF_IF#@ @+_OBJ_ATR_SIZELINESVARIABLE+@
+           LINES @+_OBJ_ATR_SIZELINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+     @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINES+@ @+_OBJ_SYS_LINESUNIT+@,
+     @#END_IF#@
+   @#END_IF#@
+;
+; Horizontal
+;
+   @#CASE_DEFAULT#@
+   @#DEF_IF#@ @#EXP: @+_OBJ_SYS_SIZEUNIT+@ EQUAL @"PIXELS"@ #@
+     @#DEF_IF#@ @+_OBJ_ATR_SIZELINESVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZELINESVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+     @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZEINPIXELS+@ @+_OBJ_SYS_SIZEUNIT+@,
+     @#END_IF#@
+   @#ELSE#@
+     @#DEF_IF#@ @+_OBJ_ATR_SIZELINESVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZELINESVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+     @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZE+@ @+_OBJ_SYS_SIZEUNIT+@,
+     @#END_IF#@
+   @#END_IF#@
+@#END_CASE#@
+@#DEF_IF#@ @+_OBJ_ATR_CSIZE+@
+           CSIZE @+_OBJ_ATR_CSIZE+@ @+_OBJ_SYS_CSIZEUNIT+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_COLORVARIABLE+@
+           COLOR IS @+_OBJ_ATR_COLORVARIABLE+@,
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_COLOR+@
+           COLOR IS @+_OBJ_ATR_COLOR+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_CASE#@ @+_OBJ_ATR_DESTROYTYPE+@
+   @#CASE#@ @"PERMANENT"@
+           PERMANENT,
+   @#CASE#@ @"TEMPORARY"@
+           TEMPORARY,
+@#END_CASE#@
+@#DEF_IF#@ @+_OBJ_ATR_HELPIDVARIABLE+@
+           HELP-ID @+_OBJ_ATR_HELPIDVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HELPID+@
+           HELP-ID @+_OBJ_ATR_HELPID+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_IDVARIABLE+@
+           ID IS @+_OBJ_ATR_IDVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_ID+@
+           ID IS @+_OBJ_ATR_ID+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_OCCURS+@ EQUAL @"0"@ OR @+_OBJ_ATR_OCCURS+@ EQUAL @"1"@) #@
+           OCCURS @+_OBJ_ATR_OCCURS+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEIGHTINCELLS+@
+           HEIGHT-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_WIDTHINCELLS+@
+           WIDTH-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_LINESTYLES+@
+           @+_OBJ_ATR_LINESTYLES+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_STYLE+@
+           @+_OBJ_ATR_STYLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_SYS_ROWSSETTINGCOLOR+@
+           COLORS @+_OBJ_SYS_ROWSSETTINGCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_SYS_ROWSSETTINGSHADING+@
+           SHADING @+_OBJ_SYS_ROWSSETTINGSHADING+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_SYS_ROWSSETTINGLEADING+@
+           LEADING-SHIFT @+_OBJ_SYS_ROWSSETTINGLEADING+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_SYS_ROWSSETTINGTRAILING+@
+           TRAILING-SHIFT @+_OBJ_SYS_ROWSSETTINGTRAILING+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_POSITIONSHIFT+@
+           POSITION-SHIFT = @+_OBJ_ATR_POSITIONSHIFT+@,
+@#END_IF#@
+           WIDTH @+_OBJ_ATR_WIDTH+@,
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEVARIABLE+@
+           VISIBLE @+_OBJ_ATR_VISIBLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"1"@ #@
+           VISIBLE 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"2"@ #@
+           VISIBLE 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ADDITIONALPROPERTIES+@
+    @<_SET_OBJ_ADDITIONALLINE>@
+    @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+       @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+    @#END_LOOP#@
+@#END_IF#@
+           .
+
+;

@@ -1,0 +1,324 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report MainPrg Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+;   @!G_RPT_WATERMARK!@ :
+;      If there's watermark in this Report, the background-color 
+;      attribute should be disabled in Section.
+;
+; ===================================================================
+;
+; ===================== WRK -- WORKING STORAGE ======================
+;
+@<_SET_OBJ_REPORT>@
+@#DEF_IF#@ @+_PRG_SYS_REPORTNO+@
+@$WORKING$@
+       78 SUBRPT-MASTER                  VALUE 1.
+       78 SUBRPT-GRID                    VALUE 2.
+       78 SUBRPT-OCCURS                  VALUE 3.
+       78 SUBRPT-TEXTBOX                 VALUE 4.
+
+       77 REPORT-HEADER-PRINT-BEFORE-PAGE   PIC 9  VALUE  0.
+       77 REPORT-FOOTER-PRINT-AFTER-PAGE    PIC 9  VALUE  0.
+       01 STAT-PRINTF.
+           05  STAT-1-PRINTF              PIC X(01).
+               88  VALID-PRINTF           VALUE "0".
+               88  END-PRINTF             VALUE "1".
+           05  STAT-2-PRINTF              PIC X(01).
+
+       01 WS-PRINT-VARIABLE.
+           05  CNT-LINE                   PIC 9(03).
+           05  RPT-LINE         REDEFINES CNT-LINE PIC 9(03).
+           05  CNT-PAGE                   PIC 9(05).
+           05  RPT-PAGE         REDEFINES CNT-PAGE PIC 9(05).
+           05  WSDATE.
+               10  WSYY                   PIC 9(02).
+               10  WSMM                   PIC 9(02).
+               10  WSDD                   PIC 9(02).
+           05  WSDATE-R REDEFINES WSDATE  PIC 9(06).
+           05  WSTIME.
+               10  WSHH                   PIC 9(02).
+               10  WSMN                   PIC 9(02).
+               10  WSSS                   PIC 9(02).
+               10  WSHS                   PIC 9(02).
+           05  WSTIME-R REDEFINES WSTIME  PIC 9(08).
+           05  CRT-STATUS                 PIC 9(03).
+           05  CRT-CURSOR.
+               10 CRT-ROW                 PIC 9(02) VALUE 0.
+               10 CRT-COL                 PIC 9(02) VALUE 0.
+           05  DUMY-LINE                  PIC X(132) VALUE SPACES.
+           05  PRINT-FULLNAME             PIC X(132) VALUE SPACES.
+           05  PTR-DEV-NAME               PIC X(132) VALUE "PRINTER".
+           05  PRINT-BUF                  PIC X(1024).
+           05  PRINT-TMP-BUF              PIC X(1024).
+           05  INDENT-BUF                 PIC X(132).
+           05  TMP-PIXELS                 PIC 9(06) VALUE 0.
+           05  CNT-PIXELS                 PIC 9(06) VALUE 0.
+           05  CNT-INPAGEPIXELS           PIC 9(06) VALUE 0.
+           05  CNT-INPAGEPIXELS-TMP       PIC 9(06) VALUE 0.
+           05  CNT-PIXELS-TMP             PIC 9(06) VALUE 0.
+           05  CNT-PAGENUM-TMP            PIC 9(06) VALUE 0.
+           05  CURRENT-HEIGHT             PIC 9(06) VALUE 0.
+           05  TMP-BUF-INT                PIC 9(06) VALUE 0.
+           05  RPT-RETURN-VALUE           PIC 9     VALUE 0.
+           05  TMP-FORM-INDEX             PIC 9(2).
+           05  HIGH-OFFSET                PIC 9(06) VALUE 0.
+           05  HIGH-OFFSET-IN             PIC 9(06) VALUE 0.
+           05  SUBREPORT-DISPATCH         PIC 9(06) VALUE 0.
+           05  SUBRPT-DISPATCH-NAME       PIC X(60) VALUE SPACES.
+           05  SECTION-HIGH-STACK         PIC S9(6) VALUE 0.
+           05  NEW-PAGE                   PIC 9     VALUE 0.
+           05  NTOPCOLUMNNUM              PIC 9(2)  VALUE 1.
+           05  CURRENT-COL                PIC 9(2)  VALUE 1.
+           05  CURRENT-TEXTLINE           PIC 9(3)  VALUE 1.
+           05  CURRENT-LEFTOFFSET         PIC 9(6)  VALUE 0.
+           05  DETAIL-WIDTH               PIC 9(6)  VALUE 0.
+           05  BREAKPAGE-BUF              PIC X.
+           05  SUBRPT-LEFT-OFFSET         PIC 9(2)  VALUE 1.
+           05  NTOP-MAXLINES              PIC 9(4)  VALUE 0.
+           05  TMP-PRINTORNOT             PIC 9     VALUE 0.
+           05  SYS-SHOWPAGEFOOTER         PIC 9     VALUE 0.
+           05  SYS-ISFIRSTLINE            PIC 9     VALUE 1.
+           05  SYS-ENDPRIMARYFD           PIC 9     VALUE 0.
+      * FOR NetScape N-TOP Variables
+           05  RN-NTOP-TOTALCNT           PIC 9(8)  VALUE 0.
+           05  RN-NTOP-CURRENTIDX         PIC 9(8)  VALUE 0.
+           05  RN-NTOP-COLTOTAL           PIC 9(8)  VALUE 0.
+           05  CALLBY-INDEX               PIC 9(2)  VALUE 0.
+           05  PRT-FULLFILENAME           PIC X(132).
+           05  PRINT-BROWSER-PARA         PIC X(132) VALUE SPACES.
+       77  PRINT-UNIT-TYPE                SIGNED-INT.
+       77  PRINT-PTR                      POINTER.
+@#END_IF#@
+;
+;
+; =================== PREPARE ALL SECTIONS' DATA ====================
+;
+@#DEF_SET#@ @!G_EXISTTEXTRPT!@ @""@
+@#DEF_SET#@ @!G_EXISTTXTNTOP!@ @""@
+@#DEF_SET#@ @!G_EXISTCOLVAR!@ @""@
+;@<_SET_OBJ_REPORT>@ move to 15th line where before @$working$@...
+@#DEF_LOOP#@ @+_PRG_SYS_REPORTNO+@
+    @<_FETCH_NEXT_OBJ_REPORT>@
+    ;
+    ; Setting REPORT Global Variable.
+    ;
+    @#DEF_SET#@ @!G_EXISTRPTBUF!@     @""@
+    @#DEF_SET#@ @!G_EXISTGROUP!@      @""@
+    @#DEF_SET#@ @!G_EXISTISNEWPAGE!@  @""@
+    @#DEF_SET#@ @!G_EXISTSUM!@        @""@
+	@#DEF_SET#@ @!G_EXISTPAGEFOOTER!@ @""@
+    @#DEF_ADD#@ @!G_SCREENINDEX!@ @"1"@
+    @#DEF_SET#@ @!G_REPORTNAME!@ @+_RPT_ATR_NAME+@
+    @#DEF_SET#@ @!G_RPT_WATERMARK!@ @""@
+    @#DEF_IF#@ @#EXP: @+_RPT_ATR_WATERMARK+@ AND (NOT (@+_RPT_ATR_WATERMARKSTYLE+@ EQUAL @"NONE"@)) #@
+        @#DEF_SET#@ @!G_RPT_WATERMARK!@ @"YES"@
+    @#END_IF#@
+    ;
+    ; Report pre-Checking.
+    ;
+    @#DEF_IF#@ @#EXP: NOT @+_RPT_ATR_DATASET+@ #@
+       @#SHOW_MSG#@ @"Warning3"@
+    @#END_IF#@
+    ;
+    ; ===============================================================
+    ; Clear Label Mem.
+    ; ===============================================================
+    @#DEF_IF#@ @+_RPT_ATR_DATASET+@
+       @<_PUSH_MEM>@
+       @<_SET_DATASET_FDSLCHILD>@
+       @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+          @<_FETCH_NEXT_DATASET_FDSL>@
+          @#CLEAR_MEM#@ @"GRIDFD_@+_FDSL_SYS_FDNAME+@"@
+       @#END_LOOP#@
+       @<_POP_MEM>@
+    @#END_IF#@
+    ;
+    ; Graphical
+    ;
+    @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISTEXTMODE+@ #@
+	   ; ============================================================
+	   ; Common Paragraph of Graphic Report
+	   ; ============================================================
+	   @%Rpt_GraphRep.skl%@
+       ; ============================================================
+	   ; It's just suitable for IE 4.0
+       ; ============================================================
+       @#DEF_IF#@ @#EXP: @+_RPT_ATR_TARGETBROWSER+@ EQUAL @"Specify Internet Explorer"@ #@
+          @#DEF_SET#@ @!G_MODE!@ @""@
+          @<_SET_RPT_SECTION>@
+          @#DEF_LOOP#@ @+_RPT_SYS_SECTIONNO+@
+             @<_FETCH_NEXT_RPT_SECTION>@
+             @#DEF_SET#@ @!G_SECTIONNAME!@ @+_RPT_ATR_NAME+@
+             @%Rpt_Section.Skl%@
+          @#END_LOOP#@
+          @<_SET_CURRENTOBJ_REPORT>@
+          @%Rpt_Report.Skl%@
+       @#ELSE#@
+       ; ============================================================
+	   ; It's fit all of browser. (NETSCAPE & IE)
+       ; ============================================================
+          @#DEF_SET#@ @!G_MODE!@ @""@
+          @<_SET_RPT_SECTION>@
+          @#DEF_LOOP#@ @+_RPT_SYS_SECTIONNO+@
+             @<_FETCH_NEXT_RPT_SECTION>@
+             @#DEF_SET#@ @!G_SECTIONNAME!@ @+_RPT_ATR_NAME+@
+             @%RN_Section.Skl%@
+          @#END_LOOP#@
+          @<_SET_CURRENTOBJ_REPORT>@
+          @#DEF_IF#@ @#EXP: @+_RPT_ATR_REPORTSTYLE+@ EQUAL @"N-TOP"@ #@
+             @%RN_NTopReport.Skl%@
+          @#ELSE#@
+             @%RN_Report.Skl%@
+          @#END_IF#@
+       @#END_IF#@
+    ;
+    ; Text
+    ;
+    @#ELSE#@
+       @#DEF_SET#@ @!G_EXISTTEXTRPT!@ @"YES"@
+       @#DEF_SET#@ @!G_MODE!@ @"-T"@
+       @<_SET_RPT_SECTION>@
+       @#DEF_LOOP#@ @+_RPT_SYS_SECTIONNO+@
+           @<_FETCH_NEXT_RPT_SECTION>@
+           @#DEF_SET#@ @!G_SECTIONNAME!@ @+_RPT_ATR_NAME+@
+           @%Rpt_TxtSection.Skl%@
+       @#END_LOOP#@
+       @<_SET_CURRENTOBJ_REPORT>@
+       @%Rpt_TxtReport.Skl%@
+    @#END_IF#@
+@#END_LOOP#@
+;
+;
+@#DEF_IF#@ @+_PRG_SYS_REPORTNO+@
+;
+; =============== CBL -- FILE CONTROL (PRINT) -- SL =================
+;
+@$PRINT_FILE_SL$@
+      * PRINT SL
+           SELECT PRINTF
+                  ASSIGN TO PRINT PTR-DEV-NAME
+                  FILE   STATUS   IS STAT-PRINTF.
+;
+; =============== CBL -- FILE SECTION (PRINT) -- FD =================
+;
+@$PRINT_FILE_FD$@
+      * PRINT FD
+       FD PRINTF    LABEL   RECORD  OMITTED.
+       01 PRINTF-R.
+          05 PRINTF-01              PIC X OCCURS 1024 TIMES.
+;
+; =================== PRD -- PRINTF OPEN ROUTINE ====================
+;
+@$REPORT-BODY$@
+       PRINTF-OPEN-ROUTINE.
+           OPEN   OUTPUT               PRINTF WITH NO REWIND.
+           MOVE   STAT-PRINTF          TO    STAT-PRINTF.
+           IF     NOT VALID-PRINTF
+                  MOVE   "PRINTF"      TO   TOTEM-ERR-FILE.
+
+       PRINTF-CLOSE-ROUTINE.
+; why need it? it may contain the garbage
+;           WRITE       PRINTF-R        FROM    DUMY-LINE
+           CLOSE       PRINTF.
+
+;
+@$REPORT$@
+    @#GET_MEM#@   @"TABLE-PRINT"@
+    @#CLEAR_MEM#@ @"TABLE-PRINT"@
+    @#GET_MEM#@   @"REPORT-BODY"@
+    @#CLEAR_MEM#@ @"REPORT-BODY"@
+    @#GET_MEM#@   @"SECTION-PRINT-PROCEDURE"@
+    @#CLEAR_MEM#@ @"SECTION-PRINT-PROCEDURE"@
+    @#GET_MEM#@   @"RPT-OTHER-PARAGRAPH"@
+    @#CLEAR_MEM#@ @"RPT-OTHER-PARAGRAPH"@
+    @#GET_MEM#@   @"RPT-TXT-NTOP"@
+    @#CLEAR_MEM#@ @"RPT-TXT-NTOP"@
+
+@#DEF_IF#@ @!G_EXISTTEXTRPT!@
+    @#DEF_IF#@ @!G_EXISTTXTNTOP!@
+@$WORKING$@
+      * N-TOP PAGE BUFFER
+       01 NTOPPAGE-T.
+           05 NTOPLINES OCCURS 100 TIMES.
+              10 @!G_REPORTNAME!@-NTOPPOS OCCURS 132 TIMES PIC X.
+
+@$REPORT$@
+       PRINT-LINE-T.
+           IF NTOPCOLUMNNUM > 1
+              MOVE PRINT-BUF TO NTOPLINES(CURRENT-TEXTLINE)(CURRENT-LEFTOFFSET:)
+              ADD 1 TO CURRENT-TEXTLINE
+           ELSE
+              IF SYS-ISFIRSTLINE > 0
+                 WRITE PRINTF-R FROM PRINT-BUF
+                 MOVE 0 TO SYS-ISFIRSTLINE
+              ELSE
+                 WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+              END-IF
+              ADD 1 TO CURRENT-TEXTLINE
+           END-IF
+           .
+
+       DUMP-TO-FILE.
+           IF CURRENT-COL = 1 AND CURRENT-TEXTLINE = 1
+              EXIT PARAGRAPH
+           END-IF
+           PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL TOTEM-IDX1 > NTOP-MAXLINES
+               IF SYS-ISFIRSTLINE > 0
+                   MOVE NTOPLINES(TOTEM-IDX1) TO PRINT-BUF
+                   WRITE PRINTF-R FROM PRINT-BUF
+                   MOVE 0 TO SYS-ISFIRSTLINE
+               ELSE
+                   MOVE NTOPLINES(TOTEM-IDX1) TO PRINT-BUF
+                   WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               END-IF
+           END-PERFORM
+           INITIALIZE NTOPPAGE-T
+           .
+
+    @#ELSE#@
+       PRINT-LINE-T.
+           IF SYS-ISFIRSTLINE > 0
+               WRITE PRINTF-R FROM PRINT-BUF
+               MOVE 0 TO SYS-ISFIRSTLINE
+           ELSE
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           END-IF
+           ADD 1 TO CURRENT-TEXTLINE
+           .
+
+    @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @!G_EXISTCOLVAR!@
+@$WORKING$@
+      * COLOR TMP BUFFER
+       01 TMP-COLOR-BUF pic 9(4).
+       01 TMP-ACU-COLOR-IDX.
+          05  TMP-ACU-FG-IDX  pic 9(2).
+          05  TMP-ACU-BG-IDX  pic 9(2).
+       01 TMP-HTML-COLOR-BUF.
+          05  TMP-HTML-FG-BUF  pic x(7).
+          05  TMP-HTML-BG-BUF  pic x(7).
+
+@$REPORT$@
+       Trans-ACUCOLOR-HTMLCOLOR.
+           DIVIDE 32 INTO TMP-COLOR-BUF GIVING TMP-ACU-BG-IDX 
+                  REMAINDER TMP-ACU-FG-IDX
+           MOVE TMP-ACU-BG-IDX TO TMP-COLOR-BUF
+           DIVIDE 32 INTO TMP-COLOR-BUF GIVING TMP-COLOR-BUF
+                  REMAINDER TMP-ACU-BG-IDX
+           @#GET_ENTRYPOINT#@ @"CODEGEN"@ @"CODEGEN"@ @"CODE_HTMLCOLOR_PALLETE"@
+           .
+
+;
+@#END_IF#@
+       SUBREPORT-DO-PRINT-RTN.
+           @#GET_MEM#@   @"CALLBY-ALL-SUBREPORT"@
+           @#CLEAR_MEM#@ @"CALLBY-ALL-SUBREPORT"@
+           .
+
+;
+@#END_IF#@
+;

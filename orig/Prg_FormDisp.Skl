@@ -1,0 +1,20 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; 1-M Form Relations Generation Rule.  2001/04/19
+;
+;
+; ===================================================================
+;
+@#DEF_SET#@ @!L_BUFFLD!@ @!G_SCREENNAME!@
+@#DEF_SET#@ @!L_FRMIDX!@ @"0"@
+@#DEF_IF#@ @!G_FRAMENAME!@
+    @#DEF_SET#@ @!L_BUFFLD!@ @!G_FRAMENAME!@
+    @#DEF_SET#@ @!L_FRMIDX!@ @!G_FRAMEINDEX!@
+@#END_IF#@
+;
+; ===================== PRD -- -REF-'s EVALUATE =====================
+;
+@$REL_ALL_IU_DISPATCH_@+_DATASET_SYS_NAME+@$@
+              WHEN @!G_SCREENINDEX!@ ALSO @!L_FRMIDX!@
+                  PERFORM @!L_BUFFLD!@-Buf-To-Fld@!G_MODE!@
+;

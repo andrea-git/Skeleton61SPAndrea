@@ -1,0 +1,66 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; FD Split Key Generation Rule.  2001/04/19
+;
+; Remarks:
+;   This Skeleton was called by FdSl.Skl, all Split Keys in each FD
+;   would be generated a paragraph to merge keys to a buffer.
+;
+; ===================================================================
+;
+@<_PUSH_MEM>@
+@<_SET_FDSL_PKEY>@
+   @#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+@$FDIO_PARAGRAPH$@
+       @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-MERGE-SPLITBUF.
+           INITIALIZE @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF
+      @#DEF_SET#@ @!L_STARTPOS!@ @"1"@
+      @#DEF_LOOP#@ @+_KEY_SYS_KEYNO+@
+      @<_FETCH_NEXT_KEY_ITEM>@
+           MOVE @+_KEY_SYS_NAME+@(1:@+_KEY_SYS_PICLENGTH+@) TO @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@)
+         @#DEF_ADD#@ @!L_STARTPOS!@ @+_KEY_SYS_PICLENGTH+@
+      @#END_LOOP#@
+           .
+
+       @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF-TOFLD.
+@<_SET_FDSL_PKEY>@
+      @#DEF_SET#@ @!L_STARTPOS!@ @"1"@
+      @#DEF_LOOP#@ @+_KEY_SYS_KEYNO+@
+      @<_FETCH_NEXT_KEY_ITEM>@
+           MOVE @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@) TO @+_KEY_SYS_NAME+@(1:@+_KEY_SYS_PICLENGTH+@)
+         @#DEF_ADD#@ @!L_STARTPOS!@ @+_KEY_SYS_PICLENGTH+@
+      @#END_LOOP#@
+           .
+
+@$WORKING-FDSPTBUF$@
+       77 @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF  PIC X(@!L_STARTPOS!@).
+@$FD-SPLIT-@+_FDSL_SYS_FDNAME+@$@
+           PERFORM @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-MERGE-SPLITBUF
+   @#END_IF#@
+@<_POP_MEM>@
+;
+@<_PUSH_MEM>@
+@<_SET_FDSL_AKEY>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_AKEYNO+@
+   @<_FETCH_NEXT_FDSL_AKEY>@
+      @#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+@$FDIO_PARAGRAPH$@
+       @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-MERGE-SPLITBUF.
+           INITIALIZE @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF
+         @#DEF_SET#@ @!L_STARTPOS!@ @"1"@
+         @#DEF_LOOP#@ @+_KEY_SYS_KEYNO+@
+         @<_FETCH_NEXT_KEY_ITEM>@
+           MOVE @+_KEY_SYS_NAME+@(1:@+_KEY_SYS_PICLENGTH+@) TO @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF(@!L_STARTPOS!@:@+_KEY_SYS_PICLENGTH+@)
+            @#DEF_ADD#@ @!L_STARTPOS!@ @+_KEY_SYS_PICLENGTH+@
+         @#END_LOOP#@
+           .
+
+@$WORKING-FDSPTBUF$@
+       77 @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF  PIC X(@!L_STARTPOS!@).
+@$FD-SPLIT-@+_FDSL_SYS_FDNAME+@$@
+           PERFORM @+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-MERGE-SPLITBUF
+      @#END_IF#@
+   @#END_LOOP#@
+@<_POP_MEM>@
+;
+;

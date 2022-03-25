@@ -1,0 +1,44 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Event Procedure Generation Rule.  2001/04/19
+;
+; Remarks:
+;
+; ===================================================================
+;@#KEEP_IN_MEM#@
+;
+; ======================= PRD -- EVENT PROCESS ======================
+;
+      @#DEF_IF#@ @#EXP: (@+_OBJ_SYS_TYPE+@ EQUAL @"Data.Navigator"@) OR
+                        (@+_OBJ_SYS_TYPE+@ EQUAL @"Label"@) OR
+                        (@+_OBJ_SYS_TYPE+@ EQUAL @"Data.Label"@) OR
+                        (@+_OBJ_SYS_TYPE+@ EQUAL @"Data.Date-Time"@) OR
+                        (@+_OBJ_SYS_TYPE+@ EQUAL @"Data.Summary"@) OR
+                        (@+_OBJ_SYS_TYPE+@ EQUAL @"Status-Bar"@) OR
+                        (@+_OBJ_SYS_TYPE+@ EQUAL @"Menu"@) OR
+                        (@+_OBJ_SYS_TYPE+@ EQUAL @"Bar"@) OR 
+						(@+_OBJ_SYS_TYPE+@ EQUAL @"Data.ZoomProgram"@) #@
+      @#ELSE_IF#@ @#EXP: (@+_OBJ_SYS_TYPE+@ EQUAL @"Frame"@) OR
+                         (@+_OBJ_SYS_TYPE+@ EQUAL @"Data.Frame"@) OR
+                         (@+_OBJ_SYS_TYPE+@ EQUAL @"Page"@) OR
+                         (@+_OBJ_SYS_TYPE+@ EQUAL @"ToolBar"@) #@
+          @<_PUSH_MEM>@
+          @<_SET_OBJ_CTRLCHILD>@
+          @#DEF_LOOP#@ @+_OBJ_SYS_CTRLNO+@
+             @<_FETCH_NEXT_OBJ_CTRL>@
+             @%Event_Dispatch.Skl%@
+          @#END_LOOP#@
+          @<_POP_MEM>@
+      @#ELSE_IF#@ @#EXP: (@+_OBJ_SYS_TYPE+@ EQUAL @"Tab-Control"@) #@
+          @%Event_Para.Skl%@
+          @<_PUSH_MEM>@
+          @<_SET_OBJ_CTRLCHILD>@
+          @#DEF_LOOP#@ @+_OBJ_SYS_CTRLNO+@
+             @<_FETCH_NEXT_OBJ_CTRL>@
+             @%Event_Dispatch.Skl%@
+          @#END_LOOP#@
+          @<_POP_MEM>@
+      @#ELSE#@
+         @%Event_Para.Skl%@
+      @#END_IF#@
+;

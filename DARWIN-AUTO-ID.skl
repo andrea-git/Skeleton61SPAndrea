@@ -1,0 +1,24 @@
+@#DEF_SET#@ @!G_VALORE_AUTO_ID!@ @""@
+@#DEF_IF#@ @+_OBJ_ATR_IDVARIABLE+@
+;
+         @#DEF_SET#@ @!L_NOME-ID!@ @+_OBJ_ATR_IDVARIABLE+@
+         @#DEF_IF#@ @#EXP: @!L_NOME-ID!@ EQUAL @"AUTO-ID"@ #@
+           ID IS 78-ID-@+_OBJ_ATR_NAME+@,                
+                    @$WORKING-ID-LOGICO$@
+                    @#DEF_ADD#@ @!G_ID_LOGICO!@ @"1"@
+                    @#DEF_SET#@ @!G_DARWINID!@ @!G_ID_LOGICO!@
+                    @#DEF_SET#@ @!G_VALORE_AUTO_ID!@ @"78-ID-@+_OBJ_ATR_NAME+@"@
+       78  78-ID-@+_OBJ_ATR_NAME+@ VALUE @!G_ID_LOGICO!@.
+                   @$SCREEN$@
+         @#ELSE#@
+            @#DEF_SET#@ @!G_DARWINID!@ @+_OBJ_ATR_IDVARIABLE+@
+           ID IS @+_OBJ_ATR_IDVARIABLE+@,
+         @#END_IF#@
+;
+@#ELSE_IF#@ @+_OBJ_ATR_ID+@
+           ID IS @+_OBJ_ATR_ID+@,
+                   @#DEF_SET#@ @!G_DARWINID!@ @+_OBJ_ATR_ID+@
+@#ELSE#@
+                   @#DEF_SET#@ @!G_DARWINID!@ @!G_SYSID!@
+@#END_IF#@
+;

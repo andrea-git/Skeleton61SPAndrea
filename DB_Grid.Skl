@@ -1,0 +1,1514 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; DB_Grid Generation Rule.  2001/11/02
+;
+;  Default Event Paragraphs Listing :
+;
+;    << for DB_GridPage.Skl >>
+;    1.  Data.Grid = EVENT, Msg-Paged-Next
+;    2.  Data.Grid = EVENT, Msg-Paged-Prev
+;    3.  Data.Grid = EVENT, Msg-Paged-First
+;    4.  Data.Grid = EVENT, Msg-Paged-Last
+;    5.  Data.Grid = EVENT, Msg-Validate
+;
+; ===================================================================
+;
+; ========================== Pre-Checking ===========================
+;
+@#DEF_IF#@ @#EXP: NOT @+_OBJ_ATR_FILE+@ #@
+   @#SHOW_MSG#@ @"Error4"@
+@#END_IF#@
+;
+;
+; ===================================================================
+; ===================================================================
+@#DEF_SET#@ @!L_MASTERGRID!@ @""@
+@<_PUSH_MEM>@
+@<_SET_DATASET_MASTERFDSL>@
+    @#DEF_IF#@ @#EXP: @+_FDSL_SYS_FDNAME+@ EQUAL @+_OBJ_ATR_FILE+@ #@
+	    @#DEF_SET#@ @!L_MASTERGRID!@ @"YES"@
+    @#END_IF#@
+@<_POP_MEM>@
+@#DEF_IF#@ @#EXP: @!L_MASTERGRID!@ AND (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) #@
+   @#DEF_IF#@ @+_OBJ_ATR_LIMITED+@
+       ; ============================================================
+       ;  Master Grid with Limited.
+       ; ============================================================
+       @%DB_MasterGridPage.Skl%@
+   @#ELSE#@
+       @%DB_MasterGrid.Skl%@
+   @#END_IF#@
+@#ELSE_IF#@ @#EXP: @!L_MASTERGRID!@ AND (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"SEQUENTIAL"@) #@
+       @%DB_SeqMstGrid.Skl%@
+@#ELSE_IF#@ @+_OBJ_ATR_LIMITED+@
+       ; ============================================================
+       ;  Normal Grid with Limited.
+       ; ============================================================
+       @%DB_GridPage.Skl%@
+@#ELSE#@
+   @#DEF_IF#@ @#EXP: NOT ((@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@) OR
+                          (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"SEQUENTIAL"@)) #@
+      @#SHOW_MSG#@ @"Warning6"@
+   @#END_IF#@
+;
+; ========================== Pre-Checking ===========================
+;
+@#DEF_SET#@ @!L_STARTROW!@ @"1"@
+@#DEF_IF#@ @+_OBJ_ATR_NUMCOLHEADINGS+@
+     @#DEF_SET#@ @!L_STARTROW!@ @+_OBJ_ATR_NUMCOLHEADINGS+@
+	 @#DEF_ADD#@ @!L_STARTROW!@ @"1"@
+@#ELSE_IF#@ @+_OBJ_ATR_COLUMNHEADINGS+@
+     @#DEF_SET#@ @!L_STARTROW!@ @"2"@
+@#END_IF#@
+@#DEF_SET#@ @!L_INTERACT!@ @""@
+;
+; ============= DB'S FIRST TIME BUF GROUP DEFINITION ================
+;
+@#DEF_SET#@ @!G_EXISTDBCONTROL!@ @"YES"@
+; << ============ WRK -- DB -- WORKING STORAGE (CONTROL) ========= >>
+@#DEF_SET#@ @!L_COLUMNINDEX!@ @"0"@
+;
+; << If exist columns Setting, Add these comments. >>
+;
+@$DB_WORKING_BUFBODY$@
+      * @+_OBJ_SYS_TYPE+@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_OCCURS+@ EQUAL @"0"@ OR @+_OBJ_ATR_OCCURS+@ EQUAL @"1"@) #@
+              @+_OBJ_SYS_LEVEL+@ @+_OBJ_ATR_NAME+@-BUF OCCURS @+_OBJ_ATR_OCCURS+@ TIMES.
+@#ELSE#@
+              @+_OBJ_SYS_LEVEL+@ @+_OBJ_ATR_NAME+@-BUF.
+@#END_IF#@
+@$FDSL_BUFTOFLD_MGRID$@
+      * DB_Grid : @+_OBJ_ATR_NAME+@
+@$FDSL_FLDTOBUF$@
+      * DB_Grid : @+_OBJ_ATR_NAME+@
+;
+@$WORKING$@
+       77 @+_OBJ_ATR_NAME+@-IDX1      PIC  9(8)  VALUE 0.
+       77 @+_OBJ_ATR_NAME+@-IDX2      PIC  9(8)  VALUE 0.
+;
+; ================== SCR -- DB -- SCREEN  SECTION ===================
+;
+@$SCREEN$@
+      * DB_GRID
+       @+_OBJ_SYS_LEVEL+@
+           @+_OBJ_ATR_NAME+@, 
+           Grid, 
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@ PIXELS,
+  @#ELSE#@
+           COL @+_OBJ_ATR_COLUMNINPIXELS+@ PIXELS, 
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_COLUMN+@
+           COL @+_OBJ_ATR_COLUMN+@, 
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@ PIXELS,
+  @#ELSE#@
+           LINE @+_OBJ_ATR_LINEINPIXELS+@ PIXELS,
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_LINE+@
+           LINE @+_OBJ_ATR_LINE+@,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_LINESUNIT+@ EQUAL @"PIXELS"@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+           LINES @+_OBJ_ATR_LINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINESINPIXELS+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+           LINES @+_OBJ_ATR_LINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINES+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_SIZEUNIT+@ EQUAL @"PIXELS"@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZEVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZEINPIXELS+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZEVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ADJUSTABLECOLUMNS+@
+           ADJUSTABLE-COLUMNS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_BORDER+@
+           @+_OBJ_ATR_BORDER+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CENTEREDHEADINGS+@
+           CENTERED-HEADINGS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_COLORVARIABLE+@
+           COLOR IS @+_OBJ_ATR_COLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_COLOR+@
+           COLOR IS @+_OBJ_ATR_COLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_SYS_DATACOLUMNS+@
+           DATA-COLUMNS @+_OBJ_SYS_DATACOLUMNS+@,
+   @#DEF_IF#@ @+_OBJ_SYS_ALIGNMENT+@
+           ALIGNMENT @+_OBJ_SYS_ALIGNMENT+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_SEPARATION+@
+           SEPARATION @+_OBJ_SYS_SEPARATION+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_DATATYPE+@
+           DATA-TYPES @+_OBJ_SYS_DATATYPE+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_COLUMNDIVIDERS+@
+           COLUMN-DIVIDERS @+_OBJ_SYS_COLUMNDIVIDERS+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_NUMCOLHEADINGS+@
+           NUM-COL-HEADINGS @+_OBJ_ATR_NUMCOLHEADINGS+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_COLUMNHEADINGS+@
+           COLUMN-HEADINGS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CURSORCOLORVARIABLE+@
+           CURSOR-COLOR @+_OBJ_ATR_CURSORCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_CURSORCOLOR+@
+           CURSOR-COLOR @+_OBJ_ATR_CURSORCOLOR+@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CURSORFRAMEWIDTHVARIABLE+@
+           CURSOR-FRAME-WIDTH @+_OBJ_ATR_CURSORFRAMEWIDTHVARIABLE+@,
+@#ELSE#@
+           CURSOR-FRAME-WIDTH @+_OBJ_ATR_CURSORFRAMEWIDTH+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CURSORXVARIABLE+@
+           CURSOR-X @+_OBJ_ATR_CURSORXVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_CURSORX+@
+           CURSOR-X @+_OBJ_ATR_CURSORX+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CURSORYVARIABLE+@
+           CURSOR-Y @+_OBJ_ATR_CURSORYVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_CURSORY+@
+           CURSOR-Y @+_OBJ_ATR_CURSORY+@,
+@#END_IF#@
+@#DEF_CASE#@ @+_OBJ_ATR_DESTROYTYPE+@
+  @#CASE#@ @"PERMANENT"@
+           PERMANENT,
+  @#CASE#@ @"TEMPORARY"@
+           TEMPORARY,
+@#END_CASE#@
+@#DEF_IF#@ @+_OBJ_ATR_DIVIDERCOLORVARIABLE+@
+           DIVIDER-COLOR @+_OBJ_ATR_DIVIDERCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_DIVIDERCOLOR+@
+           DIVIDER-COLOR @+_OBJ_ATR_DIVIDERCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_DRAGCOLORVARIABLE+@
+           DRAG-COLOR @+_OBJ_ATR_DRAGCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_DRAGCOLOR+@
+           DRAG-COLOR @+_OBJ_ATR_DRAGCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ENABLEVARIABLE+@
+           ENABLED @+_OBJ_ATR_ENABLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_ENABLE+@ EQUAL @"1"@ #@
+           ENABLED 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_ENABLE+@ EQUAL @"2"@ #@
+           ENABLED 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ENDCOLORVARIABLE+@
+           END-COLOR @+_OBJ_ATR_ENDCOLORVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_ENDCOLOR+@
+           END-COLOR @+_OBJ_ATR_ENDCOLOR+@,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FONTVARIABLE+@
+           FONT IS @+_OBJ_ATR_FONTVARIABLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEADINGCOLORVARIABLE+@
+           HEADING-COLOR @+_OBJ_ATR_HEADINGCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HEADINGCOLOR+@
+           HEADING-COLOR @+_OBJ_ATR_HEADINGCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEADINGDIVIDERCOLORVARIABLE+@
+           HEADING-DIVIDER-COLOR @+_OBJ_ATR_HEADINGDIVIDERCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HEADINGDIVIDERCOLOR+@
+           HEADING-DIVIDER-COLOR @+_OBJ_ATR_HEADINGDIVIDERCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEADINGFONTVARIABLE+@
+           HEADING-FONT IS @+_OBJ_ATR_HEADINGFONTVARIABLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HELPIDVARIABLE+@
+           HELP-ID @+_OBJ_ATR_HELPIDVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HELPID+@
+           HELP-ID @+_OBJ_ATR_HELPID+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HSCROLL+@,
+           HSCROLL,
+@#END_IF#@
+;==========================================
+;CODICE ORIGINALE (DAVIDE)
+;==========================================
+;
+;@#DEF_IF#@ @+_OBJ_ATR_IDVARIABLE+@
+;           ID IS @+_OBJ_ATR_IDVARIABLE+@,
+;		   @#DEF_SET#@ @!L_SYSID!@ @+_OBJ_ATR_IDVARIABLE+@
+;@#ELSE_IF#@ @+_OBJ_ATR_ID+@
+;           ID IS @+_OBJ_ATR_ID+@,
+;		   @#DEF_SET#@ @!L_SYSID!@ @+_OBJ_ATR_ID+@
+;@#ELSE#@
+; **********************************************
+;   ID Logico - inizio
+; **********************************************
+; Codice originale
+;		   @#DEF_SET#@ @!L_SYSID!@ @!G_SYSID!@
+; Nuovo Codice
+;           ID IS 78-ID-@+_OBJ_ATR_NAME+@,
+;@$WORKING-ID-LOGICO$@
+;     @#DEF_ADD#@ @!G_ID_LOGICO!@ @"1"@
+;     @#DEF_SET#@ @!L_SYSID!@ @!G_ID_LOGICO!@
+;       78  78-ID-@+_OBJ_ATR_NAME+@ VALUE @!G_ID_LOGICO!@.
+;@$SCREEN$@
+; **********************************************
+;   ID Logico - fine
+; **********************************************
+;@#END_IF#@
+;=========================================
+;DARWIN - MODIFICA PER ID VARIABLE
+;==========================================
+;
+@%DARWIN-AUTO-ID.skl%@
+@#DEF_SET#@ @!L_SYSID!@ @!G_DARWINID!@
+;
+;==========================================
+;DARWIN - FINE MODIFICA PER ID VARIABLE
+;==========================================
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_OCCURS+@ EQUAL @"0"@ OR @+_OBJ_ATR_OCCURS+@ EQUAL @"1"@) #@
+           OCCURS @+_OBJ_ATR_OCCURS+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEIGHTINCELLS+@
+           HEIGHT-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_WIDTHINCELLS+@
+           WIDTH-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_KEYVARIABLE+@
+           KEY IS @+_OBJ_ATR_KEYVARIABLE+@,
+@#ELSE_IF#@ @#EXP: NOT (@+_OBJ_ATR_KEY+@ EQUAL @""@) #@
+           KEY IS "@+_OBJ_ATR_KEY+@",
+@#END_IF#@
+;@#DEF_IF#@ @+_OBJ_ATR_LASTROWVARIABLE+@
+;           LAST-ROW @+_OBJ_ATR_LASTROWVARIABLE+@,
+;@#ELSE_IF#@ @+_OBJ_ATR_LASTROW+@
+;           LAST-ROW @+_OBJ_ATR_LASTROW+@,
+;@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_NOTAB+@
+           NO-TAB,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_NUMCOLUMNS+@
+  ;
+  ; DATA-COLUMNS & DISPLAY COLUMNS
+  ;
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_NUMROWSVARIABLE+@
+           NUM-ROWS @+_OBJ_ATR_NUMROWSVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_NUMROWS+@
+           NUM-ROWS @+_OBJ_ATR_NUMROWS+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_POPUPMENU+@
+           POP-UP MENU IS @+_OBJ_ATR_POPUPMENU+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_ROWDIVIDERS+@ EQUAL @"1"@) #@
+           ROW-DIVIDERS @+_OBJ_ATR_ROWDIVIDERS+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_SYS_ROWCOLORPATTERN+@
+           ROW-COLOR-PATTERN = @+_OBJ_SYS_ROWCOLORPATTERN+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ROWHEADINGS+@
+           ROW-HEADINGS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_TILEDHEADINGS+@
+           TILED-HEADINGS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_USETAB+@
+           USE-TAB,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VIRTUALWIDTH+@
+           VIRTUAL-WIDTH @+_OBJ_ATR_VIRTUALWIDTH+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEVARIABLE+@
+           VISIBLE @+_OBJ_ATR_VISIBLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"1"@ #@
+           VISIBLE 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"2"@ #@
+           VISIBLE 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VPADDINGVARIABLE+@
+           VPADDING @+_OBJ_ATR_VPADDINGVARIABLE+@,
+@#ELSE#@
+           VPADDING @+_OBJ_ATR_VPADDING+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VSCROLL+@
+           VSCROLL,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ADDITIONALPROPERTIES+@
+    @<_SET_OBJ_ADDITIONALLINE>@
+    @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+       @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+    @#END_LOOP#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT ( @+_OBJ_ATR_HINT+@ OR @+_OBJ_ATR_HINTVARIABLE+@ ) #@
+  @#DEF_IF#@ @#EXP: @+_OBJ_EVT_BEFOREPROCEDURE+@ AND @+_OBJ_EVT_BEFOREPROCEDURETHRU+@ #@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@ THRU @+_OBJ_EVT_BEFOREPROCEDURETHRU+@, 
+  @#ELSE_IF#@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@, 
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_EVT_PROCEDURE+@ AND @+_OBJ_EVT_THRUPROCEDURE+@ #@
+           EVENT PROCEDURE @+_OBJ_EVT_PROCEDURE+@ THRU @+_OBJ_EVT_THRUPROCEDURE+@,
+@#ELSE_IF#@ @#EXP: @+_OBJ_EVT_PROCEDURE+@ #@
+           EVENT PROCEDURE @+_OBJ_EVT_PROCEDURE+@,
+@#ELSE#@
+           EVENT PROCEDURE @+_OBJ_ATR_NAME+@-Event,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_EXPEVT_PROCEDURE+@ AND @+_OBJ_EXPEVT_THRUPROCEDURE+@ #@
+           EXCEPTION PROCEDURE @+_OBJ_EXPEVT_PROCEDURE+@ THRU @+_OBJ_EXPEVT_THRUPROCEDURE+@, 
+@#ELSE_IF#@ @+_OBJ_EXPEVT_PROCEDURE+@
+           EXCEPTION PROCEDURE @+_OBJ_EXPEVT_PROCEDURE+@, 
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_SYS_EXPEVENT+@
+           EXCEPTION PROCEDURE @+_OBJ_ATR_NAME+@-Exception,
+  @#END_IF#@
+@#END_IF#@
+;
+; ===================================================================
+; DARWIN - Inizio - Utilizzo MY PROPERTY per CONTROLLO-OLD
+; ===================================================================       
+@#DEF_SET#@ @!G_DARWINID!@ @!L_SYSID!@ 
+@%DARWIN-my-property-ID.skl%@
+; ===================================================================
+; DARWIN - Fine - Utilizzo MY PROPERTY
+; ===================================================================
+;           .
+@#DEF_SETANSI#@ @"EVENT"@
+; ======================= BEFORE PROCEDURE ======================
+; collact in form's before procedure 
+@$BEFOREPROCEDURE$@
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_HINT+@ OR @+_OBJ_ATR_HINTVARIABLE+@ #@
+  @#DEF_IF#@ @#EXP: @+_OBJ_EVT_BEFOREPROCEDURE+@ AND @+_OBJ_EVT_BEFOREPROCEDURETHRU+@ #@
+           When @!L_SYSID!@ PERFORM @+_OBJ_EVT_BEFOREPROCEDURE+@ THRU @+_OBJ_EVT_BEFOREPROCEDURETHRU+@
+  @#ELSE_IF#@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+           When @!L_SYSID!@ PERFORM @+_OBJ_EVT_BEFOREPROCEDURE+@
+  @#END_IF#@
+@#END_IF#@
+; ======================= AFTER PROCEDURE ======================
+; collact in form's after procedure 
+@$AFTERPROCEDURE$@
+@#DEF_IF#@ @#EXP: @+_OBJ_EVT_AFTERPROCEDURE+@ AND @+_OBJ_EVT_AFTERPROCEDURETHRU+@ #@
+           When @!L_SYSID!@ PERFORM @+_OBJ_EVT_AFTERPROCEDURE+@ THRU @+_OBJ_EVT_AFTERPROCEDURETHRU+@
+           When @!L_SYSID!@ PERFORM @+_OBJ_EVT_AFTERPROCEDURE+@
+@#END_IF#@
+@#DEF_SETANSI#@ @""@
+;
+@#DEF_SET#@ @!L_COLREADONLY!@    @""@
+@#DEF_SET#@ @!L_EXISTVALID!@     @""@
+;
+@#DEF_SET#@ @!L_OCC1!@ @"@+_OBJ_SYS_OCCURSTIME1+@"@
+@#DEF_SET#@ @!L_OCC2!@ @"@+_OBJ_SYS_OCCURSTIME2+@"@
+@#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+@#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+@#DEF_SET#@ @!L_SUBSCRIPT!@ @"@+_OBJ_SYS_OCCURSSUBSCRIPT+@"@
+@#DEF_SET#@ @!L_LEVEL!@ @"@+_OBJ_SYS_LEVEL+@"@
+@#DEF_ADD#@ @!L_LEVEL!@ @"01"@
+@#DEF_FORMAT#@ @!L_LEVEL!@ @"2"@
+  @<_PUSH_MEM>@
+  @<_SET_OBJ_COLUMNCTRL>@
+     @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+     @<_FETCH_NEXT_GRID_OBJ>@
+     @#DEF_ADD#@ @!L_COLUMNINDEX!@ @"1"@
+     @#DEF_SET#@ @!L_GRIDBUF!@ @+_OBJ_ATR_NAME+@
+     @#DEF_APPEND#@ @!L_GRIDBUF!@ @"-BUF-"@
+     @#DEF_APPEND#@ @!L_GRIDBUF!@ @!L_COLUMNINDEX!@
+;
+; << ============ WRK -- DB -- WORKING STORAGE (CONTROL) ========= >>
+@$DB_WORKING_BUFBODY$@
+   @#DEF_IF#@ @+_GRID_SYS_EDITEDPICTURE+@
+                 @!L_LEVEL!@ @!L_GRIDBUF!@ PIC @+_GRID_SYS_EDITEDPICTURE+@.
+   @#ELSE#@
+                 @!L_LEVEL!@ @!L_GRIDBUF!@.
+   @#END_IF#@
+;
+; ====================== PRD -- DB -- BUFTOFLD ======================
+@$FDSL_BUFTOFLD_MGRID$@
+        @#DEF_IF#@ @!L_OCC1!@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+              MOVE @!L_GRIDBUF!@@!L_SUBSCRIPT!@ TO @+_GRID_SYS_NAME+@@!L_SUBSCRIPT!@
+        @#DEF_IF#@ @!L_OCC1!@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           END-PERFORM
+        @#END_IF#@           
+;
+; ====================== PRD -- DB -- FLDTOBUF ======================
+@$FDSL_FLDTOBUF$@
+        @#DEF_IF#@ @!L_OCC1!@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+              MOVE @+_GRID_SYS_NAME+@@!L_SUBSCRIPT!@ TO @!L_GRIDBUF!@@!L_SUBSCRIPT!@
+        @#DEF_IF#@ @!L_OCC1!@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           END-PERFORM
+        @#END_IF#@           
+;
+;
+; ===================== PRD -- DB -- VALIDATION =====================
+@$COL-VALIDATION$@
+@#DEF_SETANSI#@ @"EVENT"@
+    @<_SET_COLUMN_VALIDATE>@
+    @#DEF_IF#@ @+_VALIDATE_SYS_VALIDATIONNO+@
+                 WHEN @!L_COLUMNINDEX!@ ALSO ANY 
+        @#DEF_IF#@ @!L_OCC1!@
+                    PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+                    PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+                       INQUIRE @+_OBJ_ATR_NAME+@@!L_SUBSCRIPT!@(EVENT-DATA-2, EVENT-DATA-1)
+                         RECORD-DATA IN @+_OBJ_ATR_NAME+@-BUF@!L_SUBSCRIPT!@
+        @#DEF_IF#@ @!L_OCC1!@
+                    END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+                    END-PERFORM
+        @#END_IF#@           
+                    PERFORM @!G_SCREENNAME!@-Buf-To-Fld
+                    SET TOTEM-CHECK-OK TO FALSE
+                    PERFORM @+_OBJ_ATR_NAME+@-COL@!L_COLUMNINDEX!@-VALIDATION
+                    IF NOT TOTEM-CHECK-OK
+                       MOVE EVENT-ACTION-FAIL TO EVENT-ACTION
+                       MOVE 1 TO Accept-Control
+      @#DEF_IF#@ @!G_ISMESSAGELINE!@
+                    ELSE
+                       PERFORM @!G_SCREENNAME!@-CLEAR-STATUS-MSG
+      @#END_IF#@
+                    END-IF
+;
+; ===================== PRD -- DB -- VALIDATION =====================
+@$ALL-COL-VALIDATION$@
+@#DEF_SETANSI#@ @""@
+              SET TOTEM-CHECK-OK TO FALSE
+              PERFORM @+_OBJ_ATR_NAME+@-COL@!L_COLUMNINDEX!@-VALIDATION
+              IF NOT TOTEM-CHECK-OK
+      @#DEF_IF#@ @!G_INPAGENUM!@
+                 MOVE @!G_INPAGENUM!@ TO @!G_TABNAME!@-TAB-VALUE
+                 PERFORM @!G_TABNAME!@-TABCHANGE
+      @#END_IF#@
+                 MOVE 4 TO ACCEPT-CONTROL
+                 MOVE @!L_SYSID!@ TO CONTROL-ID
+        @#DEF_IF#@ @!L_OCC1!@
+                 PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+                 PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+                    MODIFY @+_OBJ_ATR_NAME+@@!L_SUBSCRIPT!@,
+                        CURSOR-X = @!L_COLUMNINDEX!@,
+                        CURSOR-Y = @+_OBJ_ATR_NAME+@-WCursor-Y
+        @#DEF_IF#@ @!L_OCC1!@
+                 END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+                 END-PERFORM
+        @#END_IF#@           
+                 EXIT PARAGRAPH
+              END-IF
+       ;  
+       @#DEF_SET#@ @!L_EXISTVALID!@   @"YES"@
+       @#DEF_SET#@ @!G_EXTRANAME!@    @"COL@!L_COLUMNINDEX!@-"@
+       @#DEF_SET#@ @!G_VALIDFIELD!@   @+_GRID_SYS_NAME+@
+       @#DEF_SET#@ @!G_VALIDPICTURE!@ @+_GRID_SYS_PICTURE+@
+       @%Validation.Skl%@
+    @#END_IF#@
+;
+; ====================== PRD -- DB -- READONLY ======================
+@$COL-READONLY$@
+@#DEF_SETANSI#@ @"EVENT"@
+    @#DEF_IF#@ @+_GRID_SYS_READONLY+@
+       @#DEF_SET#@ @!L_COLREADONLY!@ @"YES"@
+                 WHEN @!L_COLUMNINDEX!@ ALSO ANY 
+                    MOVE EVENT-ACTION-FAIL TO EVENT-ACTION
+    @#END_IF#@
+; ===================================================================
+@$COLUMN-DECIMAL$@
+              WHEN @!L_COLUMNINDEX!@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                 INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(EVENT-DATA-2, EVENT-DATA-1)
+                 CELL-DATA IN @!L_GRIDBUF!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(EVENT-DATA-2, EVENT-DATA-1)
+                 CELL-DATA IS @!L_GRIDBUF!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+@#DEF_SETANSI#@ @""@
+; ===================================================================
+@$NONE-LABEL$@
+     @#END_LOOP#@
+  @<_POP_MEM>@
+;
+@#DEF_IF#@ @#EXP: (@!G_OPERATIONMODE!@ EQUAL @"INTERACTIVEMODE"@) AND @!L_EXISTVALID!@ #@
+    @#DEF_SET#@ @!L_INTERACT!@ @"YES"@
+@#END_IF#@
+;
+@$DISPLAY_COLUMNS_INIT_VALUE$@
+;      * @+_OBJ_ATR_NAME+@'S DISPLAY-COLUMNS
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, DISPLAY-COLUMNS @+_OBJ_SYS_DISPLAYCOLUMNS+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+;
+; ======================= PRD -- EVENT PROCESS ======================
+;
+;
+@#DEF_SETANSI#@ @"EVENT"@
+@#DEF_IF#@ @+_REGION_SYS_ISSETTING+@
+    @%Grid_RegionColor.Skl%@
+@#END_IF#@
+;
+;
+   @#DEF_IF#@ @+_OBJ_EVT_PROCEDURE+@
+       @#DEF_SET#@ @!L_EVENT!@ @+_OBJ_EVT_PROCEDURE+@
+   @#ELSE#@
+       @#DEF_SET#@ @!L_EVENT!@ @"@+_OBJ_ATR_NAME+@-Event"@
+   @#END_IF#@
+   @#DEF_IF#@ @+_REGION_SYS_ISSETTING+@
+@$EVENT-PRO-HEAD-@!L_EVENT!@$@
+      * GRID (@+_OBJ_ATR_NAME+@)
+           IF Event-Control-Id = @!L_SYSID!@ AND
+                 Event-Window-Handle = @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_ATR_NAME+@-REGION-COLOR@!G_MODE!@
+           END-IF
+   @#END_IF#@
+@$EVENT-PRO-@!L_EVENT!@$@
+     @#DEF_IF#@ @+_OBJ_CMD_GOTO+@
+           WHEN Cmd-Goto ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_CMD_GOTO+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_CMD_HELP+@
+           WHEN Cmd-Help ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_CMD_HELP+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_BEGINDRAG+@
+           WHEN Msg-Begin-Drag ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_BEGINDRAG+@
+     @#END_IF#@
+; ===================================================================
+;  Default Event : READONLY.
+; ===================================================================
+     @#DEF_IF#@ @#EXP: @+_OBJ_MSG_BEGINENTRY+@ OR @!L_COLREADONLY!@ #@
+           WHEN Msg-Begin-Entry ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+        @#DEF_IF#@ @+_OBJ_MSG_BEGINENTRY+@
+              PERFORM @+_OBJ_MSG_BEGINENTRY+@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_COLREADONLY!@
+      * COLUMN READONLY
+              EVALUATE EVENT-DATA-1 ALSO EVENT-DATA-2
+                 @#GET_MEM#@   @"COL-READONLY"@
+                 @#CLEAR_MEM#@ @"COL-READONLY"@
+              END-EVALUATE 
+        @#END_IF#@
+     @#END_IF#@
+; ===================================================================
+;  End of Default Event : READONLY.
+; ===================================================================
+     @#DEF_IF#@ @+_OBJ_MSG_BEGINHEADINGDRAG+@
+           WHEN Msg-End-Heading-Drag ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_BEGINHEADINGDRAG+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_BITMAPCLICKED+@
+           WHEN Msg-Bitmap-Clicked ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_BITMAPCLICKED+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_BITMAPDBLCLICK+@
+           WHEN Msg-Bitmap-Dblclick ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_BITMAPDBLCLICK+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_CANCELENTRY+@
+           WHEN Msg-Cancel-Entry ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_CANCELENTRY+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_COLWIDTHCHANGED+@
+           WHEN Msg-Col-Width-Changed ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_COLWIDTHCHANGED+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_ENDDRAG+@
+           WHEN Msg-End-Drag ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_ENDDRAG+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_ENDHEADINGDRAG+@
+           WHEN Msg-End-Heading-Drag ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_ENDHEADINGDRAG+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_ENDMENU+@
+           WHEN Msg-End-Menu ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_ENDMENU+@
+     @#END_IF#@
+; ===================================================================
+;  Default Event : COLUMN VALIDATION
+; ===================================================================
+           WHEN Msg-Finish-Entry ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+        @#DEF_IF#@ @+_OBJ_MSG_FINISHENTRY+@
+              PERFORM @+_OBJ_MSG_FINISHENTRY+@
+        @#END_IF#@
+              EVALUATE EVENT-DATA-1
+                 @#GET_MEM#@   @"COLUMN-DECIMAL"@
+                 @#CLEAR_MEM#@ @"COLUMN-DECIMAL"@
+              END-EVALUATE
+        @#DEF_IF#@ @!L_INTERACT!@
+      * COLUMN'S VALIDATION
+              EVALUATE EVENT-DATA-1 ALSO EVENT-DATA-2
+                 @#GET_MEM#@   @"COL-VALIDATION"@
+                 @#CLEAR_MEM#@ @"COL-VALIDATION"@
+              END-EVALUATE 
+        @#END_IF#@
+; ===================================================================
+;  End of Default Event : COLUMN VALIDATION
+; ===================================================================
+     @#DEF_IF#@ @+_OBJ_MSG_GOTOCELL+@
+           WHEN Msg-Goto-Cell ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_GOTOCELL+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_GOTOCELLDRAG+@
+           WHEN Msg-Goto-Cell-Drag ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_GOTOCELLDRAG+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_GOTOCELLMOUSE+@
+           WHEN Msg-Goto-Cell-Mouse ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_GOTOCELLMOUSE+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_GRIDRBUTTONDOWN+@
+           WHEN Msg-Grid-Rbutton-Down ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_GRIDRBUTTONDOWN+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_GRIDRBUTTONUP+@
+           WHEN Msg-Grid-Rbutton-Up ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_GRIDRBUTTONUP+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_HEADINGCLICKED+@
+           WHEN Msg-Heading-Clicked ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_HEADINGCLICKED+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_HEADINGDBLCLICK+@
+           WHEN Msg-Heading-Dblclick ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_HEADINGDBLCLICK+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_HEADINGDRAGGED+@
+           WHEN Msg-Heading-Dragged ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_HEADINGDRAGGED+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_INITMENU+@
+           WHEN Msg-Init-Menu ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_INITMENU+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_MENUINPUT+@
+           WHEN Msg-Menu-Input ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_MENUINPUT+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_PAGEDFIRST+@
+           WHEN Msg-Paged-First ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_PAGEDFIRST+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_PAGEDLAST+@
+           WHEN Msg-Paged-Last ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_PAGEDLAST+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_PAGEDNEXT+@
+           WHEN Msg-Paged-Next ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_PAGEDNEXT+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_PAGEDNEXTPAGE+@
+           WHEN Msg-Paged-Nextpage ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_PAGEDNEXTPAGE+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_PAGEDPREV+@
+           WHEN Msg-Paged-Prev ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_PAGEDPREV+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_PAGEDPREVPAGE+@
+           WHEN Msg-Paged-Prevpage ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_PAGEDPREVPAGE+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_MSG_VALIDATE+@
+           WHEN Msg-Validate ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_VALIDATE+@
+     @#END_IF#@
+     @#DEF_IF#@ @+_OBJ_EVT_OTHER+@
+@$EVENT-OTHER-@!L_EVENT!@$@
+              WHEN @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+                 PERFORM @+_OBJ_EVT_OTHER+@
+     @#END_IF#@
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_EXPEVENT+@ OR @+_OBJ_EXPEVT_PROCEDURE+@ #@
+   @#DEF_IF#@ @+_OBJ_EXPEVT_PROCEDURE+@
+       @#DEF_SET#@ @!L_EXPEVENT!@ @+_OBJ_EXPEVT_PROCEDURE+@
+   @#ELSE#@
+       @#DEF_SET#@ @!L_EXPEVENT!@ @"@+_OBJ_ATR_NAME+@-Exception"@
+   @#END_IF#@
+@$EXPEVENT-PRO-@!L_EXPEVENT!@$@
+   @#DEF_IF#@ @+_OBJ_EXPCMD_GOTO+@
+              WHEN Cmd-Goto ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+                 PERFORM @+_OBJ_EXPCMD_GOTO+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_EXPCMD_HELP+@
+              WHEN Cmd-Help ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@ 
+                 PERFORM @+_OBJ_EXPCMD_HELP+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_EXPEVT_OTHER+@
+@$EXPEVENT-OTHER-@!L_EXPEVENT!@$@
+                 WHEN @!L_SYSID!@ 
+                    PERFORM @+_OBJ_EXPEVT_OTHER+@
+   @#END_IF#@
+@#END_IF#@
+
+@#DEF_SETANSI#@ @""@
+;
+; ======================= PRD -- FONT PROCESS =======================
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+   @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_OBJ_ATR_FONTVARIABLE+@
+   @%FontProcess.Skl%@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEADINGFONTVARIABLE+@
+   @<_PUSH_MEM>@
+   @<_SET_OBJ_HEADINGFONT>@
+   @#DEF_IF#@ @+_OBJ_SYS_ISFONTCREATE+@ 
+      @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_OBJ_ATR_HEADINGFONTVARIABLE+@
+      @%FontProcess.Skl%@
+   @#END_IF#@
+   @<_POP_MEM>@
+@#END_IF#@
+;
+; =========== LOCAL - For Relation's Trigger Paragraph ==============
+;
+@$FDSL-REFERENCE$@
+   @<_SET_FDSL_RELATION>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+   @#END_LOOP#@
+;
+; ===================== PRD -- DB -- INIT_DATA ======================
+; Remarks:
+;    ( The same as DB_ListBox )
+;    If the Control's FD was triggered by other Relation ( It means
+;    the FD is belong to someone Relation's Slave FD ), we don't
+;    perform the initial paragraph ( -Content ). Just when it was
+;    an independent FD, then we would browse all data in initial.
+;
+   @#DEF_SET#@ @!L_FDNAME!@ @+_FDSL_SYS_FDNAME+@
+   @#DEF_SET#@ @!L_WASTRIGGER!@ @""@
+   @<_PUSH_MEM>@
+      @<_SET_DATASET_FDSLCHILD>@
+      @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+         @<_FETCH_NEXT_DATASET_FDSL>@
+         @<_SET_FDSL_RELATION>@
+         @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+            @<_FETCH_NEXT_FDSL_RELATION>@
+            @#DEF_IF#@ @#EXP: @!L_FDNAME!@ EQUAL @+_FDSL_RELATION_SLAVEFD+@ #@
+               @#DEF_SET#@ @!L_WASTRIGGER!@ @"YES"@
+            @#END_IF#@
+         @#END_LOOP#@
+      @#END_LOOP#@
+   @<_POP_MEM>@
+;
+@$INIT_DATA$@
+      * DB_GRID
+           PERFORM @+_OBJ_ATR_NAME+@-CellSetting
+   @#DEF_IF#@ @#EXP: NOT @!L_WASTRIGGER!@ #@
+           PERFORM @+_OBJ_ATR_NAME+@-Content
+   @#END_IF#@
+;
+; ========== PRD -- DB -- INIT_DATA'S PARAGRAPH (Content) ===========
+;
+@$INITDATA-PROCEDURE$@
+      * DB_GRID
+       @+_OBJ_ATR_NAME+@-Content.
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Grid:@+_OBJ_ATR_NAME+@, BeforeLoadRecord>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Grid"@ @"BeforeLoadRecord"@
+      * <TOTEM:END>
+      * reset
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW = TOTEM-IDX1
+           PERFORM VARYING TOTEM-IDX2 FROM @!L_STARTROW!@ BY 1 
+                 UNTIL TOTEM-IDX2 > TOTEM-IDX1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RECORD-TO-DELETE = @!L_STARTROW!@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              END-PERFORM
+           @#END_IF#@           
+           END-PERFORM
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@ 
+   ; ===================================================================
+   ; If the SlaveFD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+      * fetch
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-INITSTART
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-START
+           IF @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-IF
+           PERFORM VARYING TOTEM-IDX1 FROM @!L_STARTROW!@ BY 1  UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+           @#DEF_IF#@ @+_OBJ_ATR_NUMROWSVARIABLE+@
+                       OR (TOTEM-IDX1 > @+_OBJ_ATR_NUMROWSVARIABLE+@ AND
+                           @+_OBJ_ATR_NUMROWSVARIABLE+@ NOT = -1)
+           ;
+           ; If Num Rows == -1, that means perform until NOT-VALID.
+           ;
+           @#ELSE_IF#@ @#EXP: ( NOT (@+_OBJ_ATR_NUMROWS+@ EQUAL @"-1"@) ) AND @+_OBJ_ATR_NUMROWS+@ #@
+                       OR TOTEM-IDX1 > @+_OBJ_ATR_NUMROWS+@
+           @#END_IF#@
+              ;
+              ; It should be prepare ready before here.
+              ;
+              @#GET_MEM#@   @"FDSL-REFERENCE"@
+              @#CLEAR_MEM#@ @"FDSL-REFERENCE"@
+              PERFORM @!G_SCREENNAME!@-Fld-To-Buf
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+     @#DEF_IF#@ @+_OBJ_ATR_CONDITION+@
+              IF (@+_OBJ_ATR_CONDITION+@)
+                  MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RECORD-TO-ADD = @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+              END-IF
+     @#ELSE#@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RECORD-TO-ADD = @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+     @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              END-PERFORM
+           @#END_IF#@           
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-PERFORM
+   @#ELSE_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"SEQUENTIAL"@ #@
+   ; ===================================================================
+   ; If the SlaveFD is Sequential or it's AccessMode is Sequential.
+   ; And it's I/O Mode is "INPUT".
+   ; ===================================================================
+      * fetch
+           CLOSE @+_FDSL_SYS_FDNAME+@
+           PERFORM OPEN-@+_FDSL_SYS_FDNAME+@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+              PERFORM @!G_SCREENNAME!@-Fld-To-Buf
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+             @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+             @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+     @#DEF_IF#@ @+_OBJ_ATR_CONDITION+@
+              IF (@+_OBJ_ATR_CONDITION+@)
+                  MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RECORD-TO-ADD = @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+              END-IF
+     @#ELSE#@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RECORD-TO-ADD = @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+     @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+              END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+              END-PERFORM
+           @#END_IF#@           
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-PERFORM
+   @#END_IF#@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Grid:@+_OBJ_ATR_NAME+@, AfterLoadRecord>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Grid"@ @"AfterLoadRecord"@
+      * <TOTEM:END>
+           .
+
+;
+; ============ PRD -- DB -- INIT_DATA'S PARAGRAPH (Cell) ============
+;
+@#DEF_SET#@ @!L_OCC1!@ @"@+_OBJ_SYS_OCCURSTIME1+@"@
+@#DEF_SET#@ @!L_OCC2!@ @"@+_OBJ_SYS_OCCURSTIME2+@"@
+@#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+@#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+@#DEF_SET#@ @!L_SUBSCRIPT!@ @"@+_OBJ_SYS_OCCURSSUBSCRIPT+@"@
+@$INITDATA-PROCEDURE$@
+      * DB_GRID
+       @+_OBJ_ATR_NAME+@-CellSetting.
+@#DEF_IF#@ @+_OBJ_ATR_ACTION+@
+        @#DEF_IF#@ @!L_OCC1!@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+              MODIFY @+_OBJ_ATR_NAME+@@!L_SUBSCRIPT!@, ACTION Action-@+_OBJ_ATR_ACTION+@
+        @#DEF_IF#@ @!L_OCC1!@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           END-PERFORM
+        @#END_IF#@           
+@#END_IF#@
+      *  CELLS' SETTING
+@<_PUSH_MEM>@
+@#DEF_SET#@ @!L_GRIDNAME!@ @+_OBJ_ATR_NAME+@
+@<_SET_OBJ_CELLCTRL>@
+;  what if no cell data, but have bitmap
+        @#DEF_IF#@ @!L_OCC1!@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+        @#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_NUMCOLHEADINGS+@
+     @#DEF_SET#@ @!L_IDX!@ @"1"@
+	 @#DEF_LOOP#@ @+_OBJ_ATR_NUMCOLHEADINGS+@
+           MODIFY @!L_GRIDNAME!@@!L_SUBSCRIPT!@, X = 1, Y = @!L_IDX!@,
+                CELL-DATA = " ",
+ 	    @#DEF_ADD#@ @!L_IDX!@ @"1"@
+	 @#END_LOOP#@
+@#ELSE_IF#@ @+_OBJ_ATR_COLUMNHEADINGS+@
+           MODIFY @!L_GRIDNAME!@@!L_SUBSCRIPT!@, X = 1, Y = 1,
+                CELL-DATA = " ",
+@#END_IF#@
+  @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+     @<_FETCH_NEXT_GRID_OBJ>@
+@$INITDATA-PROCEDURE$@
+     @#DEF_IF#@ @+_GRID_SYS_HASDATA+@
+              MODIFY @!L_GRIDNAME!@@!L_SUBSCRIPT!@, X = @+_GRID_SYS_COLUMN+@, Y = @+_GRID_SYS_ROW+@,
+       @#DEF_IF#@ @+_GRID_SYS_COLORVARIABLE+@
+                CELL-COLOR = @+_GRID_SYS_COLORVARIABLE+@,
+       @#ELSE_IF#@ @+_GRID_SYS_COLOR+@
+                CELL-COLOR = @+_GRID_SYS_COLOR+@,
+       @#END_IF#@
+       @#DEF_IF#@ @+_GRID_SYS_FONTVARIABLE+@
+                CELL-FONT @+_GRID_SYS_FONTVARIABLE+@,
+       @#END_IF#@
+       @#DEF_IF#@ @#EXP: NOT (@+_GRID_SYS_DATA+@ EQUAL @""@) #@
+                CELL-DATA = @+_GRID_SYS_DATA+@,
+       @#END_IF#@
+       @#DEF_IF#@ @+_GRID_SYS_BITMAP+@
+                BITMAP = @+_GRID_SYS_BITMAPHANDLE+@,
+         @#DEF_IF#@ @+_GRID_SYS_BITMAPTRAILING+@
+                BITMAP-TRAILING = 1,
+         @#END_IF#@
+                BITMAP-NUMBER = @+_GRID_SYS_BITMAPNUMBER+@,
+                BITMAP-WIDTH = @+_GRID_SYS_BITMAPWIDTH+@,
+;
+         @#DEF_SET#@ @!G_TMPBITMAP!@          @+_GRID_SYS_BITMAP+@
+         @#DEF_SET#@ @!G_TMPBITMAPFILE!@      @+_GRID_SYS_BITMAPFILE+@
+         @#DEF_SET#@ @!G_TMPBMPHANDLE!@       @+_GRID_SYS_BITMAPHANDLE+@
+         @#DEF_SET#@ @!G_TMPBMPRELATIVEFILE!@ @+_GRID_SYS_BITMAPRELATIVEFILE+@
+         @#DEF_SET#@ @!G_COPYRESOURCE!@		  @+_GRID_SYS_COPYRESOURCE+@
+         @%BmpProcess.Skl%@
+;
+       @#END_IF#@
+     @#END_IF#@
+  @#END_LOOP#@
+        @#DEF_IF#@ @!L_OCC1!@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @!L_OCC2!@
+           END-PERFORM
+        @#END_IF#@           
+@<_POP_MEM>@
+;
+@$INITDATA-PROCEDURE$@
+      *  COLUMNS' SETTING
+@<_PUSH_MEM>@
+@<_SET_OBJ_COLUMNCTRL>@
+  @#DEF_SET#@ @!L_COLUMNCNT!@ @"0"@
+  @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+     @<_FETCH_NEXT_GRID_OBJ>@
+     @#DEF_ADD#@ @!L_COLUMNCNT!@ @"1"@
+     @#DEF_IF#@ @+_GRID_SYS_HASDATA+@
+       @#DEF_IF#@ @!L_OCC1!@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+       @#END_IF#@
+       @#DEF_IF#@ @!L_OCC2!@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+       @#END_IF#@
+              MODIFY @!L_GRIDNAME!@@!L_SUBSCRIPT!@, X = @!L_COLUMNCNT!@  
+       @#DEF_IF#@ @+_GRID_SYS_COLORVARIABLE+@
+                COLUMN-COLOR = @+_GRID_SYS_COLORVARIABLE+@,
+       @#ELSE_IF#@ @+_GRID_SYS_COLOR+@
+                COLUMN-COLOR = @+_GRID_SYS_COLOR+@,
+       @#END_IF#@
+       @#DEF_IF#@ @+_GRID_SYS_FONTVARIABLE+@
+                COLUMN-FONT = @+_GRID_SYS_FONTVARIABLE+@,
+       @#END_IF#@
+       @#DEF_IF#@ @!L_OCC1!@
+           END-PERFORM
+       @#END_IF#@
+       @#DEF_IF#@ @!L_OCC2!@
+           END-PERFORM
+       @#END_IF#@           
+     @#END_IF#@
+  @#END_LOOP#@
+@<_POP_MEM>@
+      *  ROWS' SETTING
+@<_PUSH_MEM>@
+@<_SET_OBJ_ROWCTRL>@
+  @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+     @<_FETCH_NEXT_GRID_OBJ>@
+     @#DEF_IF#@ @+_GRID_SYS_HASDATA+@
+       @#DEF_IF#@ @!L_OCC1!@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @!L_OCC1!@
+       @#END_IF#@
+       @#DEF_IF#@ @!L_OCC2!@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @!L_OCC2!@
+       @#END_IF#@
+              MODIFY @!L_GRIDNAME!@@!L_SUBSCRIPT!@, Y = @+_GRID_SYS_ROW+@  
+       @#DEF_IF#@ @+_GRID_SYS_COLORVARIABLE+@
+                ROW-COLOR = @+_GRID_SYS_COLORVARIABLE+@,
+       @#ELSE_IF#@ @+_GRID_SYS_COLOR+@
+                ROW-COLOR = @+_GRID_SYS_COLOR+@,
+       @#END_IF#@
+       @#DEF_IF#@ @+_GRID_SYS_FONTVARIABLE+@
+                ROW-FONT = @+_GRID_SYS_FONTVARIABLE+@,
+       @#END_IF#@
+       @#DEF_IF#@ @!L_OCC1!@
+           END-PERFORM
+       @#END_IF#@
+       @#DEF_IF#@ @!L_OCC2!@
+           END-PERFORM
+       @#END_IF#@           
+     @#END_IF#@
+  @#END_LOOP#@
+@<_POP_MEM>@
+           .
+
+;
+; ======================= PRD -- FONT PROCESS =======================
+;
+@<_PUSH_MEM>@
+   @<_SET_OBJ_CELLCTRL>@
+   @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+      @<_FETCH_NEXT_GRID_OBJ>@
+      @#DEF_IF#@ @#EXP: @+_GRID_SYS_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+         @#DEF_SET#@    @!G_FONTVARIABLE!@ @+_GRID_SYS_FONTVARIABLE+@
+         @%FontProcess.Skl%@
+      @#END_IF#@
+   @#END_LOOP#@
+@<_POP_MEM>@
+@<_PUSH_MEM>@
+   @<_SET_OBJ_COLUMNCTRL>@
+   @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+      @<_FETCH_NEXT_GRID_OBJ>@
+      @#DEF_IF#@ @#EXP: @+_GRID_SYS_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+         @#DEF_SET#@    @!G_FONTVARIABLE!@ @+_GRID_SYS_FONTVARIABLE+@
+         @%FontProcess.Skl%@
+      @#END_IF#@
+   @#END_LOOP#@
+@<_POP_MEM>@
+@<_PUSH_MEM>@
+   @<_SET_OBJ_ROWCTRL>@
+   @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+      @<_FETCH_NEXT_GRID_OBJ>@
+      @#DEF_IF#@ @#EXP: @+_GRID_SYS_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+         @#DEF_SET#@    @!G_FONTVARIABLE!@ @+_GRID_SYS_FONTVARIABLE+@
+         @%FontProcess.Skl%@
+      @#END_IF#@
+   @#END_LOOP#@
+@<_POP_MEM>@
+;
+; ==================== PRD -- TO CLEAR THE FORM =====================
+;
+@#DEF_IF#@ @!L_WASTRIGGER!@
+@$FORM-CLEAR$@
+      * DB_GRID
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RESET-GRID = 1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           PERFORM @+_OBJ_ATR_NAME+@-CellSetting
+@$FORM_RESET_ALLGRID$@
+      * DB_GRID
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RESET-GRID = 1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           PERFORM @+_OBJ_ATR_NAME+@-CellSetting
+@#END_IF#@
+;
+; ================== PREPARE FOR 1-M MULTI QUERY ====================
+;
+@#DEF_SET#@ @!L_PKEY!@ @""@
+@#DEF_IF#@ @#EXP: NOT (@+_FDSL_SYS_SLREADTYPE+@ EQUAL @"SEQUENTIAL"@) #@
+   @#DEF_SET#@ @!L_PKEY!@ @+_FDSL_SYS_SLPKEY+@
+   @<_PUSH_MEM>@
+   @<_SET_FDSL_PKEY>@
+   ; LK6B0464
+   @#DEF_SET#@ @!L_PKEYPICLENGTH!@ @"0"@
+   @#DEF_LOOP#@ @+_KEY_SYS_KEYNO+@
+      @<_FETCH_NEXT_KEY_ITEM>@
+      @#DEF_ADD#@ @!L_PKEYPICLENGTH!@ @+_KEY_SYS_PICLENGTH+@
+   @#END_LOOP#@
+   @#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+      @#DEF_SET#@ @!L_PKEY!@ @"@+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF"@
+   @#END_IF#@
+   @<_POP_MEM>@
+@#END_IF#@
+;
+; ===================================================================
+;
+@#DEF_SET#@ @!L_FILE!@ @+_FDSL_SYS_FDNAME+@
+@<_PUSH_MEM>@
+   @<_SET_SCREEN_DATASET>@
+   @<_SET_DATASET_FDSLCHILD>@
+   @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+      @<_FETCH_NEXT_DATASET_FDSL>@
+      @<_SET_FDSL_RELATION>@
+      @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+          @<_FETCH_NEXT_FDSL_RELATION>@
+          @#DEF_IF#@ @#EXP: (@+_FDSL_RELATION_SLAVEFD+@ EQUAL @!L_FILE!@) AND
+		                    (@+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@) #@
+; ===================================================================
+;  1-M Query 
+; ===================================================================
+@$REL1M_HEAD_@+_FDSL_RELATION_NAME+@$@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RESET-GRID = 1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           PERFORM @+_OBJ_ATR_NAME+@-CellSetting
+@$REL1M_BODY_@+_FDSL_RELATION_NAME+@$@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+                    MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                       RECORD-TO-ADD = @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 END-PERFORM
+           @#END_IF#@           
+      @#DEF_IF#@ @!L_PKEY!@
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+                 MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                 INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW = TOTEM-IDX1
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, X = 1, Y = TOTEM-IDX1
+                      HIDDEN-DATA   = @!L_PKEY!@
+                      LENGTH = @!L_PKEYPICLENGTH!@                      
+      @#END_IF#@
+; ===================================================================
+;   End of 1-M Query
+; ===================================================================
+              ;
+              ; for Insert/Update/Delete
+              ;
+              @#DEF_IF#@ @#EXP: (@+_RELATION_RI_INSERT+@ EQUAL @"CASCADE FOR GRID"@) OR
+                                (@+_RELATION_RI_UPDATE+@ EQUAL @"CASCADE FOR GRID"@) OR
+                                (@+_RELATION_RI_DELETE+@ EQUAL @"CASCADE"@) #@
+                 @#DEF_SET#@ @!L_DOGRIDIUD!@ @""@
+                 @<_PUSH_MEM>@
+                    @<_SET_RELATION_KEYSLAVE>@
+                    @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@ 
+                       @#DEF_SET#@ @!L_DOGRIDIUD!@ @"YES"@
+                    @#END_IF#@
+                 @<_POP_MEM>@
+                 @#DEF_IF#@ @!L_DOGRIDIUD!@
+                    ; Only Dynamic AccessMode support I/U/D
+                    @%DB_GridIUD.Skl%@
+                 @#END_IF#@
+              @#END_IF#@
+          @#END_IF#@
+      @#END_LOOP#@
+   @#END_LOOP#@
+@<_POP_MEM>@
+;
+;
+; ================== PREPARE FOR 1-M MULTI QUERY ====================
+;
+; If you were in Data.Frame, you should have your own 1-M paragraph
+; in different Frame.
+;
+; ===================================================================
+;
+@#DEF_IF#@ @!G_FRAMENAME!@
+@<_PUSH_MEM>@
+   @<_SET_FRMDATASET_FDSLCHILD>@
+   @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+      @<_FETCH_NEXT_DATASET_FDSL>@
+      @<_SET_FDSL_RELATION>@
+      @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+          @<_FETCH_NEXT_FDSL_RELATION>@
+          @#DEF_IF#@ @#EXP: (@+_FDSL_RELATION_SLAVEFD+@ EQUAL @!L_FILE!@) AND
+		                    (@+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@) #@
+; ===================================================================
+;  1-M Query 
+; ===================================================================
+@$REL1M_FRMHEAD_@+_FDSL_RELATION_NAME+@$@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+              MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, RESET-GRID = 1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+           @#END_IF#@           
+           PERFORM @+_OBJ_ATR_NAME+@-CellSetting
+@$REL1M_FRMBODY_@+_FDSL_RELATION_NAME+@$@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+                    MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+                       RECORD-TO-ADD = @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+                 END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+                 END-PERFORM
+           @#END_IF#@           
+      @#DEF_IF#@ @!L_PKEY!@
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+                 MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+                 INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW = TOTEM-IDX1
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, X = 1, Y = TOTEM-IDX1
+                      HIDDEN-DATA   = @!L_PKEY!@
+                      LENGTH = @!L_PKEYPICLENGTH!@
+      @#END_IF#@
+; ===================================================================
+;   End of 1-M Query
+; ===================================================================
+              ;
+              ; for Insert/Update/Delete
+              ;
+              @#DEF_IF#@ @#EXP: (@+_RELATION_RI_INSERT+@ EQUAL @"CASCADE FOR GRID"@) OR
+                                (@+_RELATION_RI_UPDATE+@ EQUAL @"CASCADE FOR GRID"@) OR
+                                (@+_RELATION_RI_DELETE+@ EQUAL @"CASCADE"@) #@
+                 @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@ 
+                    ; Only Dynamic AccessMode support I/U/D
+                    @%DB_FrmGridIUD.Skl%@
+                 @#END_IF#@
+              @#END_IF#@
+          @#END_IF#@
+      @#END_LOOP#@
+   @#END_LOOP#@
+@<_POP_MEM>@
+@#END_IF#@
+;
+; =============== PRD -- TO VALIDATION IN BLOCKMODE =================
+;
+@#DEF_IF#@ @!L_EXISTVALID!@
+@$FORM-VALIDATION-HEAD$@
+      * @+_OBJ_ATR_NAME+@'s Validation
+;           SET TOTEM-CHECK-OK TO FALSE
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW TOTEM-IDX1
+           PERFORM VARYING TOTEM-IDX2 FROM @!L_STARTROW!@ BY 1 
+                                     UNTIL TOTEM-IDX2 > TOTEM-IDX1
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+             PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+             PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+              INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(TOTEM-IDX2, 1)
+                         RECORD-DATA IN @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+             END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+             END-PERFORM
+           @#END_IF#@           
+              @#GET_MEM#@   @"ALL-COL-VALIDATION"@
+              @#CLEAR_MEM#@ @"ALL-COL-VALIDATION"@
+           END-PERFORM
+@#END_IF#@
+;
+; =========== PRD -- DB -- FOR VALIDATION'S ENTRY POINT =============
+;
+@$FORM-VALIDATION$@
+       @+_OBJ_ATR_NAME+@-BEFORE-VALIDATION.
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Grid:@+_OBJ_ATR_NAME+@, BeforeValidation>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Grid"@ @"BeforeValidation"@
+      * <TOTEM:END>
+           .
+
+       @+_OBJ_ATR_NAME+@-AFTER-VALIDATION.
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Grid:@+_OBJ_ATR_NAME+@, AfterValidation>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Grid"@ @"AfterValidation"@
+      * <TOTEM:END>
+           .
+
+;
+; Hint property
+@#DEF_IF#@ @+_OBJ_ATR_HINTVARIABLE+@
+@$HINT$@
+           WHEN @!L_SYSID!@ MOVE @+_OBJ_ATR_HINTVARIABLE+@ to TOTEM-HINT-TEXT
+@#ELSE_IF#@ @+_OBJ_ATR_HINT+@
+@$HINT$@
+           WHEN @!L_SYSID!@ MOVE "@+_OBJ_ATR_HINT+@" to TOTEM-HINT-TEXT
+@#END_IF#@
+;
+;
+; ===================================================================
+;   End of @!L_MASTERGRID!@ 
+; ===================================================================
+@#END_IF#@
+; Enable condition
+@#DEF_IF#@ @+_OBJ_ATR_ENABLECONDITION+@
+@$VERIFY-ENABLECONDITION$@
+      * @+_OBJ_ATR_NAME+@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+        @#END_IF#@
+          @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+          @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              IF (@+_OBJ_ATR_ENABLECONDITION+@)
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, ENABLED = TRUE
+              ELSE
+                 MODIFY @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, ENABLED = FALSE
+              END-IF
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+        @#END_IF#@           
+@#END_IF#@
+;

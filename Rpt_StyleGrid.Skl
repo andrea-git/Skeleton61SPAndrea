@@ -1,0 +1,840 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Rpt.Grid Control Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+; HTML :
+;
+; ===================================================================
+@#KEEP_IN_MEM#@
+;
+; ====================== Initial Local Variable =====================
+;
+@<_PUSH_MEM>@
+@<_SET_DATASET_MASTERFDSL>@
+    @#DEF_SET#@ @!L_MASTERFD!@ @+_FDSL_SYS_FDNAME+@
+@<_POP_MEM>@
+@#DEF_SET#@ @!L_ROWCOLORPTN!@ @""@
+@<_PUSH_MEM>@
+@<_SET_OBJ_ROWCOLORPTN>@
+    @#DEF_IF#@ @+_GRID_SYS_CTRLNO+@
+	   @#DEF_SET#@ @!L_ROWCOLORPTN!@ @"Y"@
+	@#END_IF#@
+@<_POP_MEM>@
+@#DEF_SET#@ @!L_ISMASTERFD!@ @""@
+@#DEF_IF#@ @#EXP: @!L_MASTERFD!@ EQUAL @+_FDSL_SYS_FDNAME+@ #@
+    @#DEF_SET#@ @!L_ISMASTERFD!@ @"YES"@
+@#END_IF#@
+; ======================= WRK -- RPT -- Grids ======================
+;
+@$WORKING$@
+      * GRID's Control Buffer
+       77 @+_RPT_ATR_NAME+@-GDHEIGHT      PIC 9(4) VALUE 0.
+@#DEF_IF#@ @!L_ROWCOLORPTN!@
+       77 @+_RPT_ATR_NAME+@-ROWCOLOR-FG   PIC X(7).
+       77 @+_RPT_ATR_NAME+@-ROWCOLOR-BG   PIC X(7).
+       77 @+_RPT_ATR_NAME+@-ROWCOLOR-IDX  PIC 9 VALUE 0.
+@#END_IF#@
+@$RPT_PRE_DATABUF$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-BUF.
+@$RPT_DB_WORKING_BUFBODY$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-BUF.
+;
+  @<_PUSH_MEM>@
+  @<_SET_OBJ_COLUMNCTRL>@
+     @#DEF_IF#@ @+_GRID_SYS_CTRLNO+@
+        @#DEF_SET#@ @!G_EXISTRPTBUF!@ @"YES"@
+     @#END_IF#@
+     @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+     @<_FETCH_NEXT_GRID_OBJ>@
+     ;
+     @#DEF_ADD#@ @!L_COLUMNINDEX!@ @"1"@
+     @#DEF_SET#@ @!L_GRIDBUF!@ @+_RPT_ATR_NAME+@
+     @#DEF_APPEND#@ @!L_GRIDBUF!@ @"-BUF-"@
+     @#DEF_APPEND#@ @!L_GRIDBUF!@ @!L_COLUMNINDEX!@
+     ;
+   @#DEF_IF#@ @+_GRID_SYS_EDITEDPICTURE+@
+@$RPT_PRE_DATABUF$@
+               05 @!L_GRIDBUF!@ PIC @+_GRID_SYS_EDITEDPICTURE+@.
+@$RPT_DB_WORKING_BUFBODY$@
+               05 @!L_GRIDBUF!@ PIC @+_GRID_SYS_EDITEDPICTURE+@.
+   @#ELSE#@
+@$RPT_PRE_DATABUF$@
+               05 @!L_GRIDBUF!@.
+@$RPT_DB_WORKING_BUFBODY$@
+               05 @!L_GRIDBUF!@.
+   @#END_IF#@
+@$RPT_FDSL_FLDTOBUF-GRIDBODY$@
+           MOVE @+_GRID_SYS_NAME+@
+                   TO @!L_GRIDBUF!@ OF RPT-@!G_REPORTNAME!@-BUF
+     ;
+     @#END_LOOP#@
+  @<_POP_MEM>@
+;
+;
+;
+@$GRID-FDSL$@
+  @<_PUSH_MEM>@
+  @<_SET_FDSL_RELATION>@
+      @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+         @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-1"@ #@
+                 PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@
+         @#END_IF#@
+      @#END_LOOP#@
+  @<_POP_MEM>@
+;
+; ===================================================================
+; Attention : 
+;    It's CodeGen rule. If you want to present data by Grid, it means
+; the data should be multiple. So if the relation link to the File of
+; the Grid is not the 1-M, we don't add any data to the Grid, not even
+; one, just as same as the Screen.
+;    And If the File isn't the primary File in the DataSet, there should
+; be relation connect to the File, othrewise, it won't be executed.
+; ===================================================================
+@#DEF_IF#@ @!L_ISMASTERFD!@
+  @#DEF_SET#@ @!L_TRIGGERBYM!@ @"YES"@
+@#ELSE#@
+  @#DEF_SET#@ @!L_TRIGGERBYM!@ @""@
+  @<_PUSH_MEM>@
+      @<_SET_DATASET_FDSLCHILD>@
+      @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+         @<_FETCH_NEXT_DATASET_FDSL>@
+         @<_SET_FDSL_RELATION>@
+         @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+            @<_FETCH_NEXT_FDSL_RELATION>@
+            @#DEF_IF#@ @#EXP: (@+_RPT_ATR_FILE+@ EQUAL @+_FDSL_RELATION_SLAVEFD+@) AND
+                              (@+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@) #@
+               @#DEF_SET#@ @!L_TRIGGERBYM!@ @"YES"@
+            @#END_IF#@
+         @#END_LOOP#@
+      @#END_LOOP#@
+   @<_POP_MEM>@
+@#END_IF#@
+;
+;
+@#DEF_SET#@ @!L_RELATIONNAME!@ @""@
+@#DEF_SET#@ @!L_RELCONDITION!@ @""@
+@#DEF_SET#@ @!L_FILE!@ @+_FDSL_SYS_FDNAME+@
+@<_PUSH_MEM>@
+   @<_SET_DATASET_FDSLCHILD>@
+   @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+      @<_FETCH_NEXT_DATASET_FDSL>@
+      @<_SET_FDSL_RELATION>@
+      @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+          @<_FETCH_NEXT_FDSL_RELATION>@
+          @#DEF_IF#@ @#EXP: @+_FDSL_RELATION_SLAVEFD+@ EQUAL @!L_FILE!@ #@
+             @#DEF_SET#@ @!L_WASTRIGGER!@ @"YES"@
+             @#DEF_SET#@ @!L_MASTERKEY!@  @+_RELATION_KEY_MASTER+@
+             @#DEF_SET#@ @!L_SLAVEKEY!@   @+_RELATION_KEY_SLAVE+@
+             @#DEF_SET#@ @!L_MASTERFD!@   @+_FDSL_RELATION_MASTERFD+@
+             @#DEF_SET#@ @!L_ISMULTI!@    @""@
+             @#DEF_IF#@ @#EXP: @!L_RELATIONNAME!@ EQUAL @""@ #@
+                 @#DEF_SET#@ @!L_RELATIONNAME!@ @+_FDSL_RELATION_NAME+@
+                 @#DEF_SET#@ @!L_RELCONDITION!@ @+_RELATION_SYS_CONDITION+@
+             @#END_IF#@
+             @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@ #@
+                 @#DEF_SET#@ @!L_ISMULTI!@ @"YES"@
+                 @#DEF_SET#@ @!L_RELATIONNAME!@ @+_FDSL_RELATION_NAME+@
+                 @#DEF_SET#@ @!L_RELCONDITION!@ @+_RELATION_SYS_CONDITION+@
+             @#END_IF#@
+;
+@$COMPARE_CONDITION$@
+    @#GET_ENTRYPOINT#@ @"CODEGEN"@ @"CODEGEN"@ @"CODE_RELATION_MAPCONDITION"@
+@#DEF_SETMEM#@ @!L_COMSTR!@ @"COMPARE_CONDITION"@
+@#CLEAR_MEM#@ @"COMPARE_CONDITION"@
+;
+          @#END_IF#@
+      @#END_LOOP#@
+   @#END_LOOP#@
+@<_POP_MEM>@
+;
+; ====================== PRD -- DB -- FLDTOBUF ======================
+@$RPT_FDSL_FLDTOBUF$@
+      * RPT.GRID : @+_RPT_ATR_NAME+@
+           @#GET_MEM#@   @"RPT_FDSL_FLDTOBUF-GRIDBODY"@
+           @#CLEAR_MEM#@ @"RPT_FDSL_FLDTOBUF-GRIDBODY"@
+;
+; ===================================================================
+;              RPT -- CSS STYLE'S SETTING (Grid's DIV)
+; ===================================================================
+;
+    @#DEF_SET#@    @!L_CSSGRID!@ @"   .@+_RPT_ATR_NAME+@-GRID {"@
+    @#DEF_APPEND#@ @!L_CSSGRID!@ @"POSITION:ABSOLUTE; LEFT:@+_RPT_SYS_LEFTPIXELS+@; "@
+    @#DEF_APPEND#@ @!L_CSSGRID!@ @"WIDTH:@+_RPT_SYS_WIDTHPIXELS+@; "@
+    @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISCOLORDEFAULT+@ #@
+        @#DEF_APPEND#@ @!L_CSSGRID!@ @"COLOR:@+_RPT_SYS_FOREGROUNDRGBCOLOR+@; "@
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISBGCOLORDEFAULT+@ #@
+        @#DEF_APPEND#@ @!L_CSSGRID!@ @"BACKGROUND-COLOR:@+_RPT_SYS_BACKGROUNDRGBCOLOR+@; "@
+    @#ELSE#@
+        @#DEF_APPEND#@ @!L_CSSGRID!@ @"BACKGROUND-COLOR:TRANSPARENT; "@
+    @#END_IF#@
+    @#DEF_APPEND#@ @!L_CSSGRID!@ @"}"@
+;
+@$STYLE_CSS_ALL$@
+      * @+_RPT_ATR_NAME+@ TABLE'S CSS SETTING
+           MOVE '@!L_CSSGRID!@' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+;
+; ===================================================================
+;              RPT -- CSS STYLE'S SETTING (TABLE's DIV)
+; ===================================================================
+;
+    @#DEF_SET#@    @!L_CSSTAB!@ @"   .@+_RPT_ATR_NAME+@-TAB {"@
+    @#DEF_APPEND#@ @!L_CSSTAB!@ @"POSITION:ABSOLUTE; TOP:0; LEFT:0; "@
+    @#DEF_APPEND#@ @!L_CSSTAB!@ @"FONT-SIZE:@+_RPT_SYS_FONTSIZE+@pt; FONT-FAMILY:@+_RPT_SYS_FONTNAME+@; "@
+    @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISCOLORDEFAULT+@ #@
+        @#DEF_APPEND#@ @!L_CSSTAB!@ @"COLOR:@+_RPT_SYS_FOREGROUNDRGBCOLOR+@; "@
+    @#END_IF#@
+    @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISBGCOLORDEFAULT+@ #@
+        @#DEF_APPEND#@ @!L_CSSTAB!@ @"BACKGROUND-COLOR:@+_RPT_SYS_BACKGROUNDRGBCOLOR+@; "@
+    @#ELSE#@
+        @#DEF_APPEND#@ @!L_CSSTAB!@ @"BACKGROUND-COLOR:TRANSPARENT; "@
+    @#END_IF#@
+    @#DEF_APPEND#@ @!L_CSSTAB!@ @"}"@
+;
+@$STYLE_CSS_ALL$@
+      * @+_RPT_ATR_NAME+@ TABLE'S CSS SETTING
+           MOVE '@!L_CSSTAB!@' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+;
+    @#DEF_SET#@ @!L_TABATR!@ @"cellspacing=0 cellpadding=0 "@
+    @#DEF_IF#@ @#EXP: @+_RPT_ATR_BORDERSTYLE+@ EQUAL @"NOBOX"@ #@
+        @#DEF_APPEND#@ @!L_TABATR!@ @"BORDER=0 "@
+    @#ELSE#@
+        @#DEF_APPEND#@ @!L_TABATR!@ @"BORDER=@+_RPT_ATR_BORDERWIDTH+@ BORDERCOLOR=\"@+_RPT_SYS_BORDERRGBCOLOR+@\" BORDERCOLORLIGHT=\"@+_RPT_SYS_BORDERRGBCOLOR+@\" "@
+    @#END_IF#@
+;
+;
+; ====================== RPT -- REGULAR SETTING =====================
+;
+; Font : <STRONG><EM> ... </EM></STRONG>
+;
+; ===================================================================
+@#DEF_SET#@ @!L_TABBEFOREATTR!@ @""@
+@#DEF_SET#@ @!L_TABAFTERATTR!@  @""@
+    @#DEF_IF#@ @+_RPT_SYS_FONTBOLD+@
+        @#DEF_APPEND#@ @!L_TABBEFOREATTR!@ @"<STRONG>"@
+        @#DEF_SET#@ @!L_TMPBUF!@ @"</STRONG>"@
+        @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_TABAFTERATTR!@
+        @#DEF_SET#@ @!L_TABAFTERATTR!@ @!L_TMPBUF!@
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_SYS_FONTITALIC+@
+        @#DEF_APPEND#@ @!L_TABBEFOREATTR!@ @"<EM>"@
+        @#DEF_SET#@ @!L_TMPBUF!@ @"</EM>"@
+        @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_TABAFTERATTR!@
+        @#DEF_SET#@ @!L_TABAFTERATTR!@ @!L_TMPBUF!@
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_SYS_FONTUNDERLINE+@
+        @#DEF_APPEND#@ @!L_TABBEFOREATTR!@ @"<U>"@
+        @#DEF_SET#@ @!L_TMPBUF!@ @"</U>"@
+        @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_TABAFTERATTR!@
+        @#DEF_SET#@ @!L_TABAFTERATTR!@ @!L_TMPBUF!@
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_SYS_FONTSTRIKEOUT+@
+        @#DEF_APPEND#@ @!L_TABBEFOREATTR!@ @"<STRIKE>"@
+        @#DEF_SET#@ @!L_TMPBUF!@ @"</STRIKE>"@
+        @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_TABAFTERATTR!@
+        @#DEF_SET#@ @!L_TABAFTERATTR!@ @!L_TMPBUF!@
+    @#END_IF#@
+;
+@#DEF_SET#@ @!L_SHOWGRIDLINE!@ @+_RPT_ATR_SHOWGRIDLINE+@
+@#DEF_SET#@ @!L_ROWHEIGHT!@    @+_RPT_SYS_ROWHEIGHT+@
+@#DEF_SET#@ @!L_CELLFGCOLOR!@  @+_RPT_SYS_FOREGROUNDRGBCOLOR+@
+@#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISBGCOLORDEFAULT+@ #@
+	@#DEF_SET#@ @!L_CELLBGCOLOR!@  @+_RPT_SYS_BACKGROUNDRGBCOLOR+@
+@#ELSE#@
+	@#DEF_SET#@ @!L_CELLBGCOLOR!@  @"TRANSPARENT"@
+@#END_IF#@
+
+;
+  @<_PUSH_MEM>@
+  @<_SET_OBJ_COLUMNCTRL>@
+  @#DEF_SET#@ @!L_COLUMNINDEX!@ @"0"@
+     @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+     @<_FETCH_NEXT_GRID_OBJ>@
+        @#DEF_ADD#@ @!L_COLUMNINDEX!@ @"1"@
+        @#DEF_SET#@ @!L_GRIDBUF!@ @+_RPT_ATR_NAME+@
+        @#DEF_APPEND#@ @!L_GRIDBUF!@ @"-BUF-"@
+        @#DEF_APPEND#@ @!L_GRIDBUF!@ @!L_COLUMNINDEX!@
+; ===================================================================
+;              RPT -- CSS STYLE'S SETTING (COLUMN)
+; ===================================================================
+        @#DEF_SET#@    @!L_CSSCOL!@ @"   .@+_RPT_ATR_NAME+@-COL@!L_COLUMNINDEX!@ {"@
+;        @#DEF_APPEND#@ @!L_CSSCOL!@ @"width:@+_GRID_SYS_WIDTH+@;"@
+        @#DEF_IF#@ @+_GRID_SYS_ALIGNMENT+@
+            @#DEF_APPEND#@ @!L_CSSCOL!@ @"text-align:@+_GRID_SYS_ALIGNMENT+@; "@
+        @#END_IF#@
+        @#DEF_IF#@ @#EXP: (NOT @+_GRID_SYS_COLORVARIABLE+@ ) AND @+_GRID_SYS_COLOR+@ #@
+            @#DEF_APPEND#@ @!L_CSSCOL!@ @"COLOR:@+_GRID_SYS_FGRGBCOLOR+@; "@
+            @#DEF_APPEND#@ @!L_CSSCOL!@ @"BACKGROUND-COLOR:@+_GRID_SYS_BGRGBCOLOR+@; "@
+        @#END_IF#@
+        @#DEF_IF#@ @#EXP: NOT @!L_SHOWGRIDLINE!@ #@
+            @#DEF_APPEND#@ @!L_CSSCOL!@ @"BORDER:0px; "@
+        @#ELSE#@
+            @#DEF_APPEND#@ @!L_CSSCOL!@ @"BORDER-bottom:0px; BORDER-left:0px; "@
+          @#DEF_IF#@ @#EXP: @!L_COLUMNINDEX!@ EQUAL @+_GRID_SYS_CTRLNO+@ #@
+            @#DEF_APPEND#@ @!L_CSSCOL!@ @"BORDER-right:0px;"@
+          @#END_IF#@
+        @#END_IF#@
+        @#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISFONTDEFAULT+@ #@
+            @#DEF_APPEND#@ @!L_CSSCOL!@ @"FONT-SIZE:@+_RPT_SYS_FONTSIZE+@pt; "@
+            @#DEF_APPEND#@ @!L_CSSCOL!@ @"FONT-FAMILY:@+_RPT_SYS_FONTNAME+@; "@
+        @#END_IF#@
+        @#DEF_APPEND#@ @!L_CSSCOL!@ @"}"@
+;
+@$STYLE_CSS_ALL$@
+      * @+_RPT_ATR_NAME+@ TABLE'S COLUMNS (@!L_COLUMNINDEX!@th) CSS SETTING
+           MOVE '@!L_CSSCOL!@' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+;
+   	    @#DEF_SET#@    @!L_TDATR!@ @"height=@!L_ROWHEIGHT!@; "@
+        @#DEF_APPEND#@ @!L_TDATR!@ @"CLASS=\"@+_RPT_ATR_NAME+@-COL@!L_COLUMNINDEX!@\" "@
+; ====================== RPT -- REGULAR SETTING =====================
+@#DEF_IF#@ @#EXP: NOT @+_RPT_SYS_ISFONTDEFAULT+@ #@
+	@#DEF_SET#@ @!L_BEFOREATTR!@    @""@
+	@#DEF_SET#@ @!L_AFTERATTR!@     @""@
+    @#DEF_IF#@ @+_RPT_SYS_FONTBOLD+@
+        @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRONG>"@
+        @#DEF_SET#@ @!L_TMPBUF!@ @"</STRONG>"@
+        @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_SYS_FONTITALIC+@
+        @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<EM>"@
+        @#DEF_SET#@ @!L_TMPBUF!@ @"</EM>"@
+        @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_SYS_FONTUNDERLINE+@
+        @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<U>"@
+        @#DEF_SET#@ @!L_TMPBUF!@ @"</U>"@
+        @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+    @#END_IF#@
+    @#DEF_IF#@ @+_RPT_SYS_FONTSTRIKEOUT+@
+        @#DEF_APPEND#@ @!L_BEFOREATTR!@ @"<STRIKE>"@
+        @#DEF_SET#@ @!L_TMPBUF!@ @"</STRIKE>"@
+        @#DEF_APPEND#@ @!L_TMPBUF!@ @!L_AFTERATTR!@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TMPBUF!@
+    @#END_IF#@
+@#ELSE#@
+        @#DEF_SET#@ @!L_BEFOREATTR!@ @!L_TABBEFOREATTR!@
+        @#DEF_SET#@ @!L_AFTERATTR!@ @!L_TABAFTERATTR!@
+@#END_IF#@
+@$GRID-HEAD$@
+        @#DEF_IF#@ @+_RPT_ATR_COLUMNHEADING+@
+               @#DEF_SET#@ @!L_TDHEAD!@  @"STYLE=\""@
+			   @#DEF_IF#@ @+_RPT_SYS_HEADFGCOLOR+@
+					@#DEF_APPEND#@ @!L_TDHEAD!@  @"COLOR:@+_RPT_SYS_HEADFGCOLOR+@; "@
+			   @#END_IF#@
+			   @#DEF_IF#@ @+_RPT_SYS_HEADBGCOLOR+@
+					@#DEF_APPEND#@ @!L_TDHEAD!@  @"BACKGROUND-COLOR:@+_RPT_SYS_HEADBGCOLOR+@; "@
+			   @#END_IF#@
+			   @#DEF_APPEND#@ @!L_TDHEAD!@ @"\""@
+               @#DEF_SET#@ @!L_COLHEAD!@ @+_GRID_SYS_HEAD+@
+               @#DEF_IF#@ @#EXP: NOT @+_GRID_SYS_HEAD+@ #@
+                  @#DEF_SET#@ @!L_COLHEAD!@ @"&nbsp;"@
+               @#END_IF#@
+               STRING '            <TD nowrap @!L_TDATR!@@!L_TDHEAD!@ STYLE="BORDER-top:0px;"><DIV STYLE="width:@+_GRID_SYS_WIDTH+@; OVERFLOW:HIDDEN">@!L_BEFOREATTR!@',
+                      '@!L_COLHEAD!@',
+                      '@!L_AFTERATTR!@</DIV></TD>'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+        @#END_IF#@
+@$GRID-BODY$@
+   @#DEF_IF#@ @+_GRID_SYS_COLORVARIABLE+@
+       @#DEF_SET#@ @!G_EXISTCOLVAR!@ @"YES"@
+               MOVE @+_GRID_SYS_COLORVARIABLE+@ TO TMP-COLOR-BUF
+               PERFORM Trans-ACUCOLOR-HTMLCOLOR
+               STRING '            <TD nowrap @!L_TDATR!@><DIV STYLE="COLOR:'
+                        TMP-HTML-FG-BUF,'; BACKGROUND-COLOR:'
+                        TMP-HTML-BG-BUF,'; width:@+_GRID_SYS_WIDTH+@; OVERFLOW:HIDDEN;">@!L_BEFOREATTR!@' 
+                        DELIMITED BY SIZE INTO PRINT-BUF
+   @#ELSE#@
+               STRING '            <TD nowrap @!L_TDATR!@><DIV STYLE="width:@+_GRID_SYS_WIDTH+@; OVERFLOW:HIDDEN;">@!L_BEFOREATTR!@'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+   @#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+    @#DEF_IF#@ @+_GRID_SYS_HYPERLINKVARIABLE+@
+               IF NOT ( @+_GRID_SYS_HYPERLINKVARIABLE+@ = ZEROS OR SPACES)
+                   STRING '              <A HREF="',
+                          @+_GRID_SYS_HYPERLINKVARIABLE+@, '">'
+                          DELIMITED BY SIZE INTO PRINT-BUF
+                   WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                   INITIALIZE PRINT-BUF
+               END-IF
+	@#ELSE_IF#@ @+_GRID_SYS_HYPERLINK+@
+               STRING '              <A HREF="@+_GRID_SYS_HYPERLINK+@">'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+    @#END_IF#@
+               IF @!L_GRIDBUF!@ OF RPT-@!G_REPORTNAME!@-BUF = SPACES
+                   STRING '&nbsp;'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+               ELSE
+                   STRING @!L_GRIDBUF!@ OF RPT-@!G_REPORTNAME!@-BUF
+                      DELIMITED BY SIZE INTO PRINT-BUF
+               END-IF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+		@#DEF_IF#@ @+_GRID_SYS_HYPERLINKVARIABLE+@
+               IF @+_GRID_SYS_HYPERLINKVARIABLE+@ = ZEROS OR SPACES
+                   STRING '            @!L_AFTERATTR!@</DIV></TD>' DELIMITED BY SIZE INTO PRINT-BUF
+               ELSE
+                   STRING '            </A>@!L_AFTERATTR!@</DIV></TD>' DELIMITED BY SIZE INTO PRINT-BUF
+               END-IF
+		@#ELSE_IF#@ @+_GRID_SYS_HYPERLINK+@ #@
+               STRING '            </A>@!L_AFTERATTR!@</DIV></TD>' DELIMITED BY SIZE INTO PRINT-BUF
+		@#ELSE#@
+               STRING '            @!L_AFTERATTR!@</DIV></TD>' DELIMITED BY SIZE INTO PRINT-BUF
+		@#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+     @#END_LOOP#@
+  @<_POP_MEM>@
+
+;
+; ===================================================================
+;                           PRINT ROUTINE
+; ===================================================================
+;
+@$RPT-CTRL-PRINT$@
+      * RPT.Grid : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Grid:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Grid"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+               IF CALLBY-INDEX NOT = @!G_SCREENINDEX!@
+                  MOVE SUBRPT-GRID TO SUBREPORT-DISPATCH
+                  PERFORM SUBREPORT-DO-PRINT-RTN
+               ELSE
+                  PERFORM @+_RPT_ATR_NAME+@-TABBODY
+               END-IF
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Grid:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Grid"@ @"AfterPrint"@
+      * <TOTEM:END>
+;
+; ===================================================================
+;                   REAL GRID TABLE PRINT PARAGRAPH
+; ===================================================================
+;
+@$RPT-OBJ-PRINT-BODY$@
+       @+_RPT_ATR_NAME+@-TABHEADER.
+;
+; =========================== DIV HEADER ============================
+;
+               MOVE '      <!-- Grid (@+_RPT_ATR_NAME+@) -->' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               IF NEW-PAGE NOT = 0
+                   MOVE 0 TO TMP-PIXELS
+               ELSE
+                   COMPUTE TMP-PIXELS = @+_RPT_SYS_TOPPIXELS+@ + SECTION-HIGH-STACK
+               END-IF
+   @#DEF_IF#@ @+_RPT_ATR_COLORVARIABLE+@
+       @#DEF_SET#@ @!G_EXISTCOLVAR!@ @"YES"@
+               MOVE @+_RPT_ATR_COLORVARIABLE+@ TO TMP-COLOR-BUF
+               PERFORM Trans-ACUCOLOR-HTMLCOLOR
+               STRING '      <DIV CLASS="@+_RPT_ATR_NAME+@-GRID" STYLE="COLOR:'
+                        TMP-HTML-FG-BUF,'; BACKGROUND-COLOR:'
+                        TMP-HTML-BG-BUF,'; TOP:',
+                        TMP-PIXELS,';">'
+                        DELIMITED BY SIZE INTO PRINT-BUF
+   @#ELSE#@
+               STRING '      <DIV CLASS="@+_RPT_ATR_NAME+@-GRID" STYLE="TOP:',
+                      TMP-PIXELS,
+                      ';">'
+                     DELIMITED BY SIZE INTO PRINT-BUF
+   @#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+;
+; ======================== HTML TABLE HEADER ========================
+;
+   @#DEF_IF#@ @+_RPT_ATR_COLORVARIABLE+@
+       @#DEF_SET#@ @!G_EXISTCOLVAR!@ @"YES"@
+               MOVE @+_RPT_ATR_COLORVARIABLE+@ TO TMP-COLOR-BUF
+               PERFORM Trans-ACUCOLOR-HTMLCOLOR
+               STRING '      <TABLE @!L_TABATR!@ CLASS="@+_RPT_ATR_NAME+@-TAB" STYLE="COLOR:'
+                        TMP-HTML-FG-BUF,'; BACKGROUND-COLOR:'
+                        TMP-HTML-BG-BUF,'; ">'
+                        DELIMITED BY SIZE INTO PRINT-BUF
+   @#ELSE#@
+               MOVE '      <TABLE @!L_TABATR!@ CLASS="@+_RPT_ATR_NAME+@-TAB" >' TO PRINT-BUF
+   @#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+        @#DEF_IF#@ @+_RPT_ATR_COLUMNHEADING+@
+               MOVE '         <TR>' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               @#GET_MEM#@   @"GRID-HEAD"@
+               @#CLEAR_MEM#@ @"GRID-HEAD"@
+               MOVE '         </TR>' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               COMPUTE @+_RPT_ATR_NAME+@-GDHEIGHT = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+        @#END_IF#@
+           .
+
+       @+_RPT_ATR_NAME+@-TABFOOTER.
+;
+; ======================== DIV & HTML FOOTER ========================
+;
+               MOVE "         </TABLE></P></DIV>" TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+           .
+
+       @+_RPT_ATR_NAME+@-TABROW.
+           @#GET_MEM#@   @"GRID-BODY"@
+           @#CLEAR_MEM#@ @"GRID-BODY"@
+   @#DEF_IF#@ @!L_ROWCOLORPTN!@
+           PERFORM @+_RPT_ATR_NAME+@-CHANGE-ROWCOLOR
+   @#END_IF#@
+           .
+
+      * RPT.Grid : @+_RPT_ATR_NAME+@
+       @+_RPT_ATR_NAME+@-TABBODY.
+           MOVE TOTEM-PAGENUM-SYS  TO CNT-PAGENUM-TMP
+           MOVE 0 TO @+_RPT_ATR_NAME+@-GDHEIGHT
+           MOVE 0 TO NEW-PAGE
+   @#DEF_IF#@ @!L_RELATIONNAME!@
+           PERFORM @+_DATASET_SYS_NAME+@-@!L_RELATIONNAME!@-EXPRESSION
+   @#END_IF#@
+           PERFORM @+_RPT_ATR_NAME+@-TABHEADER
+   @#DEF_IF#@ @!L_ROWCOLORPTN!@
+           MOVE 1 TO @+_RPT_ATR_NAME+@-ROWCOLOR-IDX
+           PERFORM @+_RPT_ATR_NAME+@-CHANGE-ROWCOLOR
+   @#END_IF#@
+@#DEF_IF#@ @!L_TRIGGERBYM!@
+;
+; ========================= HTML TABLE BODY =========================
+;
+   @#DEF_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"DYNAMIC"@ #@ 
+   ; ===================================================================
+   ; If the SlaveFD is Index/Relative, and AccessMode is "Dynamic".
+   ; ===================================================================
+     @#DEF_IF#@ @#EXP: NOT @+_RPT_ATR_AUTORESIZE+@ #@
+           COMPUTE TMP-PIXELS = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+        @#DEF_IF#@ @#EXP: NOT @!L_ISMASTERFD!@ #@
+           @#DEF_IF#@ @!L_COMSTR!@
+                         OR (@+_FDSL_SYS_FILESTATUS88+@ AND NOT (@!L_COMSTR!@))
+           @#END_IF#@
+        @#END_IF#@
+                         OR (@+_FDSL_SYS_FILESTATUS88+@ AND TMP-PIXELS > @+_RPT_SYS_HEIGHTPIXELS+@)
+        @#DEF_IF#@ @!L_RELCONDITION!@
+              IF (@!L_RELCONDITION!@)
+        @#END_IF#@
+                 @#GET_MEM#@ @"GRID-FDSL"@
+                 PERFORM RPT-@!G_REPORTNAME!@-FLD-TO-BUF
+                 PERFORM @!G_REPORTNAME!@-@+_RPT_ATR_FILE+@-MULTI-SUMMARY
+            @#DEF_IF#@ @!L_ROWCOLORPTN!@
+                 STRING '         <TR STYLE="COLOR:',
+                      @+_RPT_ATR_NAME+@-ROWCOLOR-FG,' ;BACKGROUND-COLOR:',
+                      @+_RPT_ATR_NAME+@-ROWCOLOR-BG
+                      '">'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+            @#ELSE#@
+                 MOVE '         <TR>' TO PRINT-BUF
+            @#END_IF#@
+                 WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                 INITIALIZE PRINT-BUF
+                 PERFORM @+_RPT_ATR_NAME+@-TABROW
+                 MOVE '         </TR>' TO PRINT-BUF
+                 WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                 INITIALIZE PRINT-BUF
+                 COMPUTE @+_RPT_ATR_NAME+@-GDHEIGHT = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+                 COMPUTE TMP-PIXELS = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+        @#DEF_IF#@ @!L_RELCONDITION!@
+              END-IF
+        @#END_IF#@
+        @#DEF_IF#@ @#EXP: (NOT @!L_ISMASTERFD!@) AND @!L_ISMULTI!@ #@
+              PERFORM @+_DATASET_SYS_NAME+@-@!L_MASTERFD!@-REF-@+_FDSL_SYS_FDNAME+@-SUB
+        @#ELSE#@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+        @#END_IF#@
+           END-PERFORM
+     @#ELSE#@
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+        @#DEF_IF#@ @#EXP: NOT @!L_ISMASTERFD!@ #@
+           @#DEF_IF#@ @!L_COMSTR!@
+                         OR (@+_FDSL_SYS_FILESTATUS88+@ AND NOT (@!L_COMSTR!@))
+           @#END_IF#@
+        @#END_IF#@
+        @#DEF_IF#@ @!L_RELCONDITION!@
+              IF (@!L_RELCONDITION!@)
+        @#END_IF#@
+                 @#GET_MEM#@ @"GRID-FDSL"@
+                 PERFORM RPT-@!G_REPORTNAME!@-FLD-TO-BUF
+                 PERFORM @!G_REPORTNAME!@-@+_RPT_ATR_FILE+@-MULTI-SUMMARY
+      * Grid Control's Height
+                 COMPUTE @+_RPT_ATR_NAME+@-GDHEIGHT = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+                 COMPUTE TMP-PIXELS = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+      * Check if it's over Grid's Size
+                 IF TMP-PIXELS > @+_RPT_SYS_HEIGHTPIXELS+@ OR NEW-PAGE NOT = 0
+      * New Detail-Section's Height
+                   IF NEW-PAGE = 0
+                       COMPUTE @!G_SECTIONNAME!@-HEIGHT OF @!G_REPORTNAME!@-HEIGHT = @!G_SECTIONNAME!@-DEF-HEIGHT OF @!G_REPORTNAME!@-HEIGHT + @+_RPT_ATR_NAME+@-GDHEIGHT - @+_RPT_SYS_HEIGHTPIXELS+@ + SECTION-HIGH-STACK
+                       COMPUTE CURRENT-HEIGHT = @+_RPT_SYS_TOPPIXELS+@ + @+_RPT_ATR_NAME+@-GDHEIGHT + SECTION-HIGH-STACK
+                   ELSE
+                       COMPUTE @!G_SECTIONNAME!@-HEIGHT OF @!G_REPORTNAME!@-HEIGHT = @!G_SECTIONNAME!@-DEF-HEIGHT OF @!G_REPORTNAME!@-HEIGHT - @+_RPT_SYS_HEIGHTPIXELS+@ - @+_RPT_SYS_TOPPIXELS+@ + @+_RPT_ATR_NAME+@-GDHEIGHT
+                       COMPUTE CURRENT-HEIGHT = @+_RPT_ATR_NAME+@-GDHEIGHT + SECTION-HIGH-STACK
+                   END-IF
+      * Check if it's over Page Size
+                   MOVE 0 TO RPT-RETURN-VALUE
+                   PERFORM RPT-@!G_REPORTNAME!@-PAGE-FOOTER-OVERPAGE
+                   IF RPT-RETURN-VALUE NOT = 0
+      * End of the Table.
+                       PERFORM @+_RPT_ATR_NAME+@-TABFOOTER
+                       INITIALIZE PRINT-BUF
+      * End of the Section.
+      *                Cause Grid-Heigh had been add this Row already.
+                       IF NEW-PAGE = 0
+                           COMPUTE TMP-PIXELS = @+_RPT_SYS_TOPPIXELS+@ + @+_RPT_ATR_NAME+@-GDHEIGHT - @+_RPT_SYS_ROWHEIGHT+@
+                       ELSE
+                           COMPUTE TMP-PIXELS = @+_RPT_ATR_NAME+@-GDHEIGHT - @+_RPT_SYS_ROWHEIGHT+@
+                       END-IF
+                       STRING '      <DIV STYLE="POSITION:RELATIVE; HEIGHT:', 
+                              TMP-PIXELS, 
+							  ';"> </DIV>'
+                               DELIMITED BY SIZE INTO PRINT-BUF
+                       WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                       INITIALIZE PRINT-BUF
+                       MOVE '   </DIV>' TO PRINT-BUF
+                       WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                       MOVE PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT TO CURRENT-HEIGHT
+      * Change New-Page Status
+                       MOVE 1 TO NEW-PAGE
+                       PERFORM RPT-@!G_REPORTNAME!@-PAGE-FOOTER
+                       PERFORM RPT-@!G_REPORTNAME!@-PAGE-HEADER
+      * Rebegin the Section.
+;                       PERFORM @!G_REPORTNAME!@-ZEBRA-COLOR-CHANGE
+                       PERFORM @!G_SECTIONNAME!@-SEC-HEAD
+      * Rebegin the Table.
+                       MOVE 0 TO SECTION-HIGH-STACK
+                       MOVE 0 TO @+_RPT_ATR_NAME+@-GDHEIGHT
+                       PERFORM @+_RPT_ATR_NAME+@-TABHEADER
+      * Reset All Variable.
+                       COMPUTE @+_RPT_ATR_NAME+@-GDHEIGHT = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+                       COMPUTE @!G_SECTIONNAME!@-HEIGHT OF @!G_REPORTNAME!@-HEIGHT = @!G_SECTIONNAME!@-DEF-HEIGHT OF @!G_REPORTNAME!@-HEIGHT - @+_RPT_SYS_HEIGHTPIXELS+@ - @+_RPT_SYS_TOPPIXELS+@ + @+_RPT_ATR_NAME+@-GDHEIGHT
+                   END-IF
+                 END-IF
+            @#DEF_IF#@ @!L_ROWCOLORPTN!@
+                 STRING '         <TR STYLE="COLOR:',
+                      @+_RPT_ATR_NAME+@-ROWCOLOR-FG,' ;BACKGROUND-COLOR:',
+                      @+_RPT_ATR_NAME+@-ROWCOLOR-BG
+                      '">'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+            @#ELSE#@
+                 MOVE '         <TR>' TO PRINT-BUF
+            @#END_IF#@
+                 WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                 INITIALIZE PRINT-BUF
+                 PERFORM @+_RPT_ATR_NAME+@-TABROW
+                 MOVE '         </TR>' TO PRINT-BUF
+                 WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                 INITIALIZE PRINT-BUF
+        @#DEF_IF#@ @!L_RELCONDITION!@
+              END-IF
+        @#END_IF#@
+        @#DEF_IF#@ @#EXP: (NOT @!L_ISMASTERFD!@) AND @!L_ISMULTI!@ #@
+              PERFORM @+_DATASET_SYS_NAME+@-@!L_MASTERFD!@-REF-@+_FDSL_SYS_FDNAME+@-SUB
+        @#ELSE#@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+        @#END_IF#@
+           END-PERFORM
+     @#END_IF#@
+   @#ELSE_IF#@ @#EXP: @+_FDSL_SYS_SLREADTYPE+@ EQUAL @"SEQUENTIAL"@ #@
+   ; ===================================================================
+   ; If the SlaveFD is Sequential or it's AccessMode is Sequential.
+   ; And it's I/O Mode is "INPUT".
+   ; ===================================================================
+     @#DEF_IF#@ @#EXP: NOT @+_RPT_ATR_AUTORESIZE+@ #@
+           COMPUTE TMP-PIXELS = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+           CLOSE @+_FDSL_SYS_FDNAME+@
+           PERFORM OPEN-@+_FDSL_SYS_FDNAME+@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+                         OR (@+_FDSL_SYS_FILESTATUS88+@ AND TMP-PIXELS > @+_RPT_SYS_HEIGHTPIXELS+@)
+        @#DEF_IF#@ @#EXP: NOT @!L_ISMASTERFD!@ #@
+              IF (@!L_RELCONDITION!@)
+        @#END_IF#@
+                 @#GET_MEM#@ @"GRID-FDSL"@
+                 PERFORM RPT-@!G_REPORTNAME!@-FLD-TO-BUF
+                 PERFORM @!G_REPORTNAME!@-@+_RPT_ATR_FILE+@-MULTI-SUMMARY
+            @#DEF_IF#@ @!L_ROWCOLORPTN!@
+                 STRING '         <TR STYLE="COLOR:',
+                      @+_RPT_ATR_NAME+@-ROWCOLOR-FG,' ;BACKGROUND-COLOR:',
+                      @+_RPT_ATR_NAME+@-ROWCOLOR-BG
+                      '">'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+            @#ELSE#@
+                 MOVE '         <TR>' TO PRINT-BUF
+            @#END_IF#@
+                 WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                 INITIALIZE PRINT-BUF
+                 PERFORM @+_RPT_ATR_NAME+@-TABROW
+                 MOVE '         </TR>' TO PRINT-BUF
+                 WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                 INITIALIZE PRINT-BUF
+                 COMPUTE @+_RPT_ATR_NAME+@-GDHEIGHT = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+                 COMPUTE TMP-PIXELS = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+        @#DEF_IF#@ @#EXP: NOT @!L_ISMASTERFD!@ #@
+              END-IF
+        @#END_IF#@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-PERFORM
+     @#ELSE#@
+           CLOSE @+_FDSL_SYS_FDNAME+@
+           PERFORM OPEN-@+_FDSL_SYS_FDNAME+@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           PERFORM UNTIL NOT @+_FDSL_SYS_FILESTATUS88+@
+        @#DEF_IF#@ @#EXP: NOT @!L_ISMASTERFD!@ #@
+              IF (@!L_RELCONDITION!@)
+        @#END_IF#@
+                 @#GET_MEM#@ @"GRID-FDSL"@
+                 PERFORM RPT-@!G_REPORTNAME!@-FLD-TO-BUF
+                 PERFORM @!G_REPORTNAME!@-@+_RPT_ATR_FILE+@-MULTI-SUMMARY
+      * Grid Control's Height
+                 COMPUTE @+_RPT_ATR_NAME+@-GDHEIGHT = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+                 COMPUTE TMP-PIXELS = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+      * Check if it's over Grid's Size
+                 IF TMP-PIXELS > @+_RPT_SYS_HEIGHTPIXELS+@ OR NEW-PAGE NOT = 0
+      * New Detail-Section's Height
+                   IF NEW-PAGE = 0
+                       COMPUTE @!G_SECTIONNAME!@-HEIGHT OF @!G_REPORTNAME!@-HEIGHT = @!G_SECTIONNAME!@-DEF-HEIGHT OF @!G_REPORTNAME!@-HEIGHT + @+_RPT_ATR_NAME+@-GDHEIGHT - @+_RPT_SYS_HEIGHTPIXELS+@ + SECTION-HIGH-STACK
+                       COMPUTE CURRENT-HEIGHT = @+_RPT_SYS_TOPPIXELS+@ + @+_RPT_ATR_NAME+@-GDHEIGHT + SECTION-HIGH-STACK
+                   ELSE
+                       COMPUTE @!G_SECTIONNAME!@-HEIGHT OF @!G_REPORTNAME!@-HEIGHT = @!G_SECTIONNAME!@-DEF-HEIGHT OF @!G_REPORTNAME!@-HEIGHT - @+_RPT_SYS_HEIGHTPIXELS+@ - @+_RPT_SYS_TOPPIXELS+@ + @+_RPT_ATR_NAME+@-GDHEIGHT
+                       COMPUTE CURRENT-HEIGHT = @+_RPT_ATR_NAME+@-GDHEIGHT + SECTION-HIGH-STACK
+                   END-IF
+      * Check if it's over Page Size
+                   MOVE 0 TO RPT-RETURN-VALUE
+                   PERFORM RPT-@!G_REPORTNAME!@-PAGE-FOOTER-OVERPAGE
+                   IF RPT-RETURN-VALUE NOT = 0
+      * End of the Table.
+                       PERFORM @+_RPT_ATR_NAME+@-TABFOOTER
+                       INITIALIZE PRINT-BUF
+      * End of the Section.
+      *                Cause Grid-Heigh had been add this Row already.
+                       IF NEW-PAGE = 0
+                           COMPUTE TMP-PIXELS = @+_RPT_SYS_TOPPIXELS+@ + @+_RPT_ATR_NAME+@-GDHEIGHT - @+_RPT_SYS_ROWHEIGHT+@
+                       ELSE
+                           COMPUTE TMP-PIXELS = @+_RPT_ATR_NAME+@-GDHEIGHT - @+_RPT_SYS_ROWHEIGHT+@
+                       END-IF
+                       STRING '      <DIV STYLE="POSITION:RELATIVE; HEIGHT:', 
+                              TMP-PIXELS, 
+							  ';"> </DIV>'
+                               DELIMITED BY SIZE INTO PRINT-BUF
+                       WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                       INITIALIZE PRINT-BUF
+                       MOVE '   </DIV>' TO PRINT-BUF
+                       WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                       MOVE PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT TO CURRENT-HEIGHT
+      * Change New-Page Status
+                       MOVE 1 TO NEW-PAGE
+                       PERFORM RPT-@!G_REPORTNAME!@-PAGE-FOOTER
+                       PERFORM RPT-@!G_REPORTNAME!@-PAGE-HEADER
+      * Rebegin the Section.
+;                       PERFORM @!G_REPORTNAME!@-ZEBRA-COLOR-CHANGE
+                       PERFORM @!G_SECTIONNAME!@-SEC-HEAD
+      * Rebegin the Table.
+                       MOVE 0 TO SECTION-HIGH-STACK
+                       MOVE 0 TO @+_RPT_ATR_NAME+@-GDHEIGHT
+                       PERFORM @+_RPT_ATR_NAME+@-TABHEADER
+      * Reset All Variable.
+                       COMPUTE @+_RPT_ATR_NAME+@-GDHEIGHT = @+_RPT_ATR_NAME+@-GDHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+                       COMPUTE @!G_SECTIONNAME!@-HEIGHT OF @!G_REPORTNAME!@-HEIGHT = @!G_SECTIONNAME!@-DEF-HEIGHT OF @!G_REPORTNAME!@-HEIGHT - @+_RPT_SYS_HEIGHTPIXELS+@ - @+_RPT_SYS_TOPPIXELS+@ + @+_RPT_ATR_NAME+@-GDHEIGHT
+                   END-IF
+                 END-IF
+            @#DEF_IF#@ @!L_ROWCOLORPTN!@
+                 STRING '         <TR STYLE="COLOR:',
+                      @+_RPT_ATR_NAME+@-ROWCOLOR-FG,' ;BACKGROUND-COLOR:',
+                      @+_RPT_ATR_NAME+@-ROWCOLOR-BG
+                      '">'
+                      DELIMITED BY SIZE INTO PRINT-BUF
+            @#ELSE#@
+                 MOVE '         <TR>' TO PRINT-BUF
+            @#END_IF#@
+                 WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                 INITIALIZE PRINT-BUF
+                 PERFORM @+_RPT_ATR_NAME+@-TABROW
+                 MOVE '         </TR>' TO PRINT-BUF
+                 WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                 INITIALIZE PRINT-BUF
+        @#DEF_IF#@ @#EXP: NOT @!L_ISMASTERFD!@ #@
+              END-IF
+        @#END_IF#@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_SYS_FDNAME+@-Read-Next
+           END-PERFORM
+     @#END_IF#@
+   ; ================================================================
+   ;  End of @+_FDSL_SYS_SLREADTYPE+@
+   ; ================================================================
+   @#END_IF#@
+@#END_IF#@
+           PERFORM @+_RPT_ATR_NAME+@-TABFOOTER
+           COMPUTE SECTION-HIGH-STACK = @!G_SECTIONNAME!@-HEIGHT - @!G_SECTIONNAME!@-DEF-HEIGHT
+           MOVE 0 TO @+_RPT_ATR_NAME+@-GDHEIGHT
+           .
+
+@#CLEAR_MEM#@ @"GRID-FDSL"@
+;
+;======== GRIDFD_@+_RPT_ATR_FILE+@ ===============================
+@$GRIDFD_@+_RPT_ATR_FILE+@$@
+      * GRID
+           PERFORM @!G_REPORTNAME!@-@+_RPT_ATR_FILE+@-OFF-SUMMARY
+           PERFORM RPT-@!G_REPORTNAME!@-FLD-TO-BUF
+           PERFORM RPT-@!G_REPORTNAME!@-DO-PRINT-RTN
+           EXIT PARAGRAPH
+      * END OF GRID
+;
+;======== GRID Row Color Pattern ===============================
+@#DEF_IF#@ @!L_ROWCOLORPTN!@
+@$RPT-OBJ-PRINT-BODY$@
+       @+_RPT_ATR_NAME+@-CHANGE-ROWCOLOR.
+           EVALUATE @+_RPT_ATR_NAME+@-ROWCOLOR-IDX
+  @<_PUSH_MEM>@
+  @#DEF_SET#@ @!L_IDX!@ @"1"@
+  @<_SET_OBJ_ROWCOLORPTN>@
+    @#DEF_LOOP#@ @+_GRID_SYS_CTRLNO+@
+    @<_FETCH_NEXT_GRID_OBJ>@
+           WHEN @!L_IDX!@
+              MOVE "@+_ROWPTN_SYS_FGCOLOR+@" TO @+_RPT_ATR_NAME+@-ROWCOLOR-FG
+              MOVE "@+_ROWPTN_SYS_BGCOLOR+@" TO @+_RPT_ATR_NAME+@-ROWCOLOR-BG
+           @#DEF_ADD#@ @!L_IDX!@ @"1"@
+    @#END_LOOP#@
+  @<_POP_MEM>@
+           END-EVALUATE
+           ADD 1 TO @+_RPT_ATR_NAME+@-ROWCOLOR-IDX
+           IF @+_RPT_ATR_NAME+@-ROWCOLOR-IDX = @!L_IDX!@
+              MOVE 1 TO @+_RPT_ATR_NAME+@-ROWCOLOR-IDX
+           END-IF
+           .
+
+@#END_IF#@

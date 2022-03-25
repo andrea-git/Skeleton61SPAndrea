@@ -1,0 +1,127 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Validation Checking Generation Rule.   2001/11/02
+;
+; Remarks :
+;   Because the Message Editor in TOTEM Validation is multiple-lines
+;   free text editor, so when we are going to display it, we should
+;   convert to "LINE1", H"0A", "LINE2", H"0A", "LINE3" .... format
+;   to STRING it to a Text and display it.
+;   So, @+_VALIDATE_ATR_FILECHECKINGMESSAGE+@ ....
+;
+; ===================================================================
+;@#KEEP_IN_MEM#@
+;
+; ================== PRD -- ControlName-Validation ==================
+;
+@#DEF_SET#@ @!G_VALIDX!@ @"0"@
+;
+@#DEF_IF#@ @#EXP: (NOT @!G_DECLAREVALID!@) AND @+_VALIDATE_SYS_VALIDATIONNO+@ #@
+       @#DEF_SET#@ @!G_DECLAREVALID!@ @"YES"@
+@$WORKING$@
+      * FOR VALIDATION TMP BUFFER
+       77 VALID-FILE-TMPVAL       PIC 9.
+       77 VALID-LOGICAL-TMPVAL    PIC 9.
+       77 VALID-LISTCHECK-TMPVAL  PIC 9.
+       77 VALID-RANGE-TMPVAL      PIC 9.
+
+@#END_IF#@
+;
+@#DEF_LOOP#@ @+_VALIDATE_SYS_VALIDATIONNO+@
+   @<_FETCH_NEXT_OBJ_VALIDATE>@
+   @#DEF_ADD#@ @!G_VALIDX!@ @"1"@
+;
+;
+@$WORKING$@
+    @#DEF_IF#@ @+_VALIDATE_SYS_ISLISTCHECKING+@
+       77 @+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@LSTCHKBUF@!G_MODE!@ PIC @!G_VALIDPICTURE!@.
+           88 VALID-@+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@LISTCHECKING@!G_MODE!@ VALUE @+_VALIDATE_ATR_LISTCHECKING+@.
+    @#END_IF#@
+;
+@$VALIDATION-LOOP-CHECK$@
+           MOVE 0 TO @+_VALIDATE_ATR_STATUSVARIABLE+@
+    @#DEF_IF#@ @+_VALIDATE_ATR_MESSAGE+@
+      * VALIDATION -- @!G_VALIDX!@
+           PERFORM @+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@MULTI-VALID-@!G_VALIDX!@@!G_MODE!@
+           IF @+_VALIDATE_ATR_STATUSVARIABLE+@ NOT = 0
+              MOVE SPACES TO TOTEM-MSG-1 TOTEM-MSG-2 TOTEM-MSG-3
+              STRING @+_VALIDATE_ATR_MESSAGE+@
+                   DELIMITED BY SIZE INTO TOTEM-MSG-1
+              PERFORM @!G_SCREENNAME!@-DISPLAY-MESSAGE@!G_MODE!@
+              PERFORM @+_OBJ_ATR_NAME+@-AFTER-VALIDATION@!G_MODE!@
+              EXIT PARAGRAPH
+           END-IF
+    @#ELSE#@
+      * VALIDATION -- @!G_VALIDX!@ ( NO MESSAGE )
+           PERFORM @+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@MULTI-VALID-@!G_VALIDX!@@!G_MODE!@
+    @#END_IF#@
+;
+@$VALIDATION-PROCEDURE$@
+;
+;
+       @+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@MULTI-VALID-@!G_VALIDX!@@!G_MODE!@.
+           MOVE 0 TO VALID-FILE-TMPVAL     , VALID-LOGICAL-TMPVAL
+           MOVE 0 TO VALID-LISTCHECK-TMPVAL, VALID-RANGE-TMPVAL
+    ;
+    ; File Checking
+    ;
+    @#DEF_IF#@ @+_VALIDATE_SYS_ISFILECHECKING+@
+           @%Valid_FileChecking.Skl%@
+           @#GET_MEM#@   @"FILE-CHECKING"@
+           @#CLEAR_MEM#@ @"FILE-CHECKING"@
+    @#END_IF#@
+    ;
+    ; Logical Expression
+    ;
+    @#DEF_IF#@ @+_VALIDATE_SYS_ISLOGICALEXPRESSION+@
+      * EXPRESSION
+           IF NOT (@+_VALIDATE_ATR_LOGICALEXPRESSION+@)
+              MOVE 1 TO VALID-LOGICAL-TMPVAL
+           END-IF
+    @#END_IF#@
+    ;
+    ; List Checking
+    ;
+    @#DEF_IF#@ @+_VALIDATE_SYS_ISLISTCHECKING+@
+      * LIST CHECKING
+      * @+_OBJ_ATR_NAME+@ ** @!G_EXTRANAME!@
+           MOVE @!G_VALIDFIELD!@ TO @+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@LSTCHKBUF@!G_MODE!@
+           IF NOT VALID-@+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@LISTCHECKING@!G_MODE!@
+              MOVE 1 TO VALID-LISTCHECK-TMPVAL
+           END-IF
+    @#END_IF#@
+    ;
+    ; Range Checking
+    ;
+    @#DEF_IF#@ @+_VALIDATE_SYS_ISRANGECHECKING+@
+      * RANGE CHECKING
+           IF @!G_VALIDFIELD!@ < @+_VALIDATE_ATR_RANGECHECKINGSTART+@ OR @!G_VALIDFIELD!@ > @+_VALIDATE_ATR_RANGECHECKINGEND+@
+              MOVE 1 TO VALID-RANGE-TMPVAL
+           END-IF
+    @#END_IF#@
+           IF (VALID-FILE-TMPVAL      NOT = 0) OR
+                 (VALID-LOGICAL-TMPVAL   NOT = 0) OR
+                    (VALID-LISTCHECK-TMPVAL NOT = 0) OR
+                       (VALID-RANGE-TMPVAL     NOT = 0)
+              MOVE 1 TO @+_VALIDATE_ATR_STATUSVARIABLE+@
+           END-IF
+           .
+
+@#END_LOOP#@
+;
+;
+@$FORM-VALIDATION$@
+      * @+_OBJ_ATR_NAME+@'s Validation
+       @+_OBJ_ATR_NAME+@-@!G_EXTRANAME!@VALIDATION@!G_MODE!@.
+           PERFORM @+_OBJ_ATR_NAME+@-BEFORE-VALIDATION@!G_MODE!@
+           @#GET_MEM#@   @"VALIDATION-LOOP-CHECK"@
+           @#CLEAR_MEM#@ @"VALIDATION-LOOP-CHECK"@
+           SET TOTEM-CHECK-OK TO TRUE
+           PERFORM @+_OBJ_ATR_NAME+@-AFTER-VALIDATION@!G_MODE!@
+           .
+
+   @#DEF_IF#@ @+_VALIDATE_SYS_VALIDATIONNO+@
+           @#GET_MEM#@   @"VALIDATION-PROCEDURE"@
+           @#CLEAR_MEM#@ @"VALIDATION-PROCEDURE"@
+   @#END_IF#@
+;

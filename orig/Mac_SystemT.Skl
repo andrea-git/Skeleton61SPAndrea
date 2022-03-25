@@ -1,0 +1,337 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Macro File 1 Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+;   1. 
+;      Define a Macro called "XXXXXX" with 3 parameters.
+;
+;      @{MACRO-XXXXXX}@
+;          MOVE @+_SYS_PARA1+@ TO @+_SYS_PARA2+@
+;          COMPUTE @+_SYS_PARA3+@ = @+_SYS_PARA3+@ + @+_SYS_PARA2+@
+;      @{END-MACRO}@
+;   2.
+;      In Macro, the default Division is @$MACRO-MacroName$@, so that
+;      you can jump to other Division or Skeleton, then come back.
+;   
+; Macro-Listing :
+;
+; ===================================================================
+; ===================================================================
+;  Macro Name : ACCEPT_FORM_T
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_ACCEPT_FORM_T}@
+      * MACRO : ACCEPT_FORM_T
+           PERFORM @+_SYS_PARA1+@-BUF-TO-FLD-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : ADD_TO_LIST_T
+;  Parameters : 1.ControlName
+;               2.InsertionIndex
+;               3.AddValue
+;  Remarks :
+; ===================================================================
+@{MACRO_ADD_TO_LIST_T}@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @<_SET_FORM_BY_PARAMETERS>@
+   @#DEF_SET#@ @!L_FORMNAME!@ @+_OBJ_ATR_NAME+@
+      * MACRO : ADD_TO_LIST_T
+   @#DEF_IF#@ @#EXP: @+_SYS_PARA3+@ EQUAL @""@ #@
+           PERFORM @!L_FORMNAME!@-BUF-TO-FLD-T
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           ITEM-TO-ADD = @+_SYS_PARA1+@-BUF
+   @#ELSE#@
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           ITEM-TO-ADD = @+_SYS_PARA3+@
+   @#END_IF#@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : CLEAR_FORM_T
+;  Parameters : 1. FormName
+;  Remarks :
+; ===================================================================
+@{MACRO_CLEAR_FORM_T}@
+      * MACRO : CLEAR_FORM_T
+           PERFORM @+_SYS_PARA1+@-CLEAR-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : DELETE_PROCESS_T
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_DELETE_PROCESS_T}@
+      * MACRO : DELETE_PROCESS_T
+           PERFORM @+_SYS_PARA1+@-DELETE-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : DISPLAY_FORM_T
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_DISPLAY_FORM_T}@
+      * MACRO : DISPLAY_FORM_T
+           PERFORM @+_SYS_PARA1+@-DISPLAY-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : FIELD_TO_BUFFER_T
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_FIELD_TO_BUFFER_T}@
+      * MACRO : FIELD_TO_BUFFER_T
+           PERFORM @+_SYS_PARA1+@-FLD-TO-BUF-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INIT_FORM_BUFFER_T
+;  Parameters : 1.FormName
+;  Remarks :
+; ===================================================================
+@{MACRO_INIT_FORM_BUFFER_T}@
+      * MACRO : INIT_FORM_BUFFER_T
+           PERFORM @+_SYS_PARA1+@-Init-Value-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INQUIRE_CURRENT_T
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_INQUIRE_CURRENT_T}@
+      * MACRO : INQUIRE_CURRENT_T
+           PERFORM @+_SYS_PARA1+@-Curr-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INQUIRE_FIRST_T
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_INQUIRE_FIRST_T}@
+      * MACRO : INQUIRE_FIRST_T
+           PERFORM @+_SYS_PARA1+@-First-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INQUIRE_LAST_T
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_INQUIRE_LAST_T}@
+      * MACRO : INQUIRE_LAST_T
+           PERFORM @+_SYS_PARA1+@-Last-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INQUIRE_NEXT_T
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_INQUIRE_NEXT_T}@
+      * MACRO : INQUIRE_NEXT_T
+           PERFORM @+_SYS_PARA1+@-Next-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INQUIRE_PREVIOUS_T
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_INQUIRE_PREVIOUS_T}@
+      * MACRO : INQUIRE_PREVIOUS_T
+           PERFORM @+_SYS_PARA1+@-Prev-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INSERT_PROCESS_T
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_INSERT_PROCESS_T}@
+      * MACRO : INSERT_PROCESS_T
+           PERFORM @+_SYS_PARA1+@-Add-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : LOAD_AND_DISPLAY_T
+;  Parameters : 1.FormName
+;  Remarks :
+; ===================================================================
+@{MACRO_LOAD_AND_DISPLAY_T}@
+      * MACRO : LOAD_AND_DISPLAY_T
+           PERFORM @+_SYS_PARA1+@-FLD-TO-BUF-T
+           PERFORM @+_SYS_PARA1+@-DISPLAY-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : LOAD_DATA_T
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_LOAD_DATA_T}@
+      * MACRO : LOAD_DATA_T
+           PERFORM @+_SYS_PARA1+@-FLD-TO-BUF-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PRINT_DETAIL_T
+;  Parameters : 1. ReportName
+;  Remarks :
+; ===================================================================
+@{MACRO_PRINT_DETAIL_T}@
+      * MACRO : PRINT_DETAIL_T
+           PERFORM RPT-@+_SYS_PARA1+@-DETAIL-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PRINT_GROUP_T
+;  Parameters : 1. SectionName
+;  Remarks : 
+;       RPT-@+_SYS_PARA1+@-GROUP-HEADER : It will perform all of
+;          the GroupBy Sections. 
+;       @+_SYS_PARA1+@-GROUP-PRINT : It just print what section you
+;          assign.
+; ===================================================================
+@{MACRO_PRINT_GROUP_T}@
+      * MACRO : PRINT_GROUP_T
+           PERFORM @+_SYS_PARA1+@-GROUP-PRINT-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PRINT_PAGE_HEADER_T
+;  Parameters : 1. ReportName
+;  Remarks :
+; ===================================================================
+@{MACRO_PRINT_PAGE_HEADER_T}@
+      * MACRO : PRINT_PAGE_HEADER_T
+           PERFORM RPT-@+_SYS_PARA1+@-PAGE-HEADER-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PRINT_PAGE_FOOTER_T
+;  Parameters : 1. ReportName
+;  Remarks :
+; ===================================================================
+@{MACRO_PRINT_PAGE_FOOTER_T}@
+      * MACRO : PRINT_PAGE_FOOTER_T
+           PERFORM RPT-@+_SYS_PARA1+@-PAGE-FOOTER-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PRINT_REPORT_HEADER_T
+;  Parameters : 1. ReportName
+;  Remarks :
+; ===================================================================
+@{MACRO_PRINT_REPORT_HEADER_T}@
+      * MACRO : PRINT_REPORT_HEADER_T
+           PERFORM RPT-@+_SYS_PARA1+@-REPORT-HEADER-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PRINT_REPORT_FOOTER_T
+;  Parameters : 1. ReportName
+;  Remarks :
+; ===================================================================
+@{MACRO_PRINT_REPORT_FOOTER_T}@
+      * MACRO : PRINT_REPORT_FOOTER_T
+           PERFORM RPT-@+_SYS_PARA1+@-REPORT-FOOTER-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : REFRESH_COMBO_DATA_T
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_REFRESH_COMBO_DATA_T}@
+      * MACRO : REFRESH_COMBO_DATA_T
+           PERFORM @+_SYS_PARA1+@-Content-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : REFRESH_LISTBOX_DATA_T
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_REFRESH_LISTBOX_DATA_T}@
+      * MACRO : REFRESH_LISTBOX_DATA_T
+           PERFORM @+_SYS_PARA1+@-Content-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : SHOW_MESSAGE_T
+;  Parameters : 1.FormName
+;               2.MsgText
+;  Remarks :
+; ===================================================================
+@{MACRO_SHOW_MESSAGE_T}@
+      * MACRO : SHOW_MESSAGE_T
+           MOVE SPACES TO TOTEM-MSG-1 TOTEM-MSG-2 TOTEM-MSG-3
+           MOVE "@+_SYS_PARA2+@" TO TOTEM-MSG-1
+           PERFORM @+_SYS_PARA1+@-DISPLAY-MESSAGE-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : SKIP_PAGE_T
+;  Parameters : 1.ReportName
+;  Remarks :
+; ===================================================================
+@{MACRO_SKIP_PAGE_T}@
+      * MACRO : SKIP_PAGE_T
+           MOVE PAGE-HEIGHT OF @+_SYS_PARA1+@-HEIGHT-T TO CNT-INPAGEPIXELS
+           PERFORM RPT-@+_SYS_PARA1+@-PAGE-FOOTER-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : UPDATE_PROCESS_T
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_UPDATE_PROCESS_T}@
+      * MACRO : UPDATE_PROCESS_T
+           PERFORM @+_SYS_PARA1+@-UPDATE-T
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : UPDATE_TO_LIST_T
+;  Parameters : 1.ControlName
+;               2.UpdateIndex
+;               3.UpdateValue			(*)
+;  Remarks :
+; ===================================================================
+@{MACRO_UPDATE_TO_LIST_T}@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @<_SET_FORM_BY_PARAMETERS>@
+   @#DEF_SET#@ @!L_FORMNAME!@ @+_OBJ_ATR_NAME+@
+      * MACRO : UPDATE_TO_LIST_T
+   @#DEF_IF#@ @#EXP: @+_SYS_PARA3+@ EQUAL @""@ #@
+           PERFORM @!L_FORMNAME!@-FLD-TO-BUF-T
+           MODIFY @+_SYS_PARA1+@,
+           ITEM-TO-DELETE = @+_SYS_PARA2+@
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           ITEM-TO-ADD = @+_SYS_PARA1+@-BUF-T
+   @#ELSE#@
+           MODIFY @+_SYS_PARA1+@,
+           ITEM-TO-DELETE = @+_SYS_PARA2+@
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           ITEM-TO-ADD = @+_SYS_PARA3+@
+   @#END_IF#@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : VALIDATE_PROCESS_T
+;  Parameters : 1.FormName
+;  Remarks :
+; ===================================================================
+@{MACRO_VALIDATE_PROCESS_T}@
+      * MACRO : VALIDATE_PROCESS_T
+           PERFORM @+_SYS_PARA1+@-VALIDATION-ROUTINE-T
+@{END_MACRO}@
+;

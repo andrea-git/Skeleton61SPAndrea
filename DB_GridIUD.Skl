@@ -1,0 +1,342 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; DB_Grid 1-M Insert/Update/Delete Generation Rule.  2001/11/02
+;
+; ===================================================================
+;
+@$COMPARE_CONDITION$@
+    @#GET_ENTRYPOINT#@ @"CODEGEN"@ @"CODEGEN"@ @"CODE_RELATION_MAPCONDITION"@
+@#DEF_SETMEM#@ @!L_COMSTR!@ @"COMPARE_CONDITION"@
+@#CLEAR_MEM#@ @"COMPARE_CONDITION"@
+;
+@#DEF_SET#@ @!L_ROWBEGIN!@ @"1"@
+@#DEF_IF#@ @+_OBJ_ATR_COLUMNHEADINGS+@
+    @#DEF_SET#@ @!L_ROWBEGIN!@ @"2"@
+@#END_IF#@
+;
+@#DEF_IF#@ @#EXP: @+_RELATION_SYS_KEYNO+@ EQUAL @"1"@ #@
+   @#DEF_SET#@ @!L_MASTERKEY!@ @+_RELATION_KEY_MASTER+@
+@#ELSE#@
+   @#DEF_SET#@ @!L_MASTERKEY!@ @"@+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-BUF"@
+@#END_IF#@
+;
+@#DEF_SET#@ @!L_SLAVEKEY!@  @+_RELATION_KEY_SLAVE+@
+@<_PUSH_MEM>@
+   @<_SET_RELATION_KEYSLAVE>@
+   ;
+   ; Get KeyIs's info.
+   ;
+   @#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+      @#DEF_SET#@ @!L_SLAVEKEY!@  @"@+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF"@
+   @#END_IF#@
+   @#DEF_SET#@ @!L_SLAVESTATUS88!@ @+_FDSL_SYS_FILESTATUS88+@
+   ;
+   ; Get PKey's info.
+   ;
+   @#DEF_SET#@ @!L_PKEY!@      @+_FDSL_SYS_SLPKEY+@
+   @#DEF_SET#@ @!L_PKEYNAME!@  @+_FDSL_SYS_SLPKEY+@
+   @#DEF_SET#@ @!L_PKEYSPLIT!@ @""@
+   @<_PUSH_MEM>@
+      @<_SET_FDSL_PKEY>@
+      @#DEF_IF#@ @+_FDSL_SYS_ISSPLITKEY+@
+         @#DEF_SET#@ @!L_PKEY!@ @"@+_FDSL_SYS_FDNAME+@-@+_KEY_SYS_KEYNAME+@-SPLITBUF"@
+         @#DEF_SET#@ @!L_PKEYSPLIT!@ @"YES"@
+      @#END_IF#@
+   @<_POP_MEM>@
+@<_POP_MEM>@
+;
+;
+  @<_PUSH_MEM>@
+  @<_SET_SLAVEFD_FDSL>@
+  @<_SET_FDSL_RELATION>@
+      @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+         @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@ #@
+            @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_INSERT+@ EQUAL @"RESTRICTED"@) #@
+@$NEXT-FDSL-M-INS$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS
+            @#END_IF#@
+            @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_UPDATE+@ EQUAL @"RESTRICTED"@) #@
+@$NEXT-FDSL-M-UPD$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD
+            @#END_IF#@
+            @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+@$NEXT-FDSL-M-DEL$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-DEL
+            @#END_IF#@
+         @#ELSE#@
+            @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_INSERT+@ EQUAL @"RESTRICTED"@) #@
+@$NEXT-FDSL-S-INS$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-INS
+            @#END_IF#@
+            @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_UPDATE+@ EQUAL @"RESTRICTED"@) #@
+@$NEXT-FDSL-S-UPD$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-UPD
+            @#END_IF#@
+            @#DEF_IF#@ @#EXP: NOT (@+_RELATION_RI_DELETE+@ EQUAL @"RESTRICTED"@) #@
+@$NEXT-FDSL-S-DEL$@
+              PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-DEL
+            @#END_IF#@
+         @#END_IF#@
+      @#END_LOOP#@
+  @<_POP_MEM>@
+;
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_CASCADEPROCEDURE+@ EQUAL @"ROW BY ROW"@ #@
+; ===================================================================
+;   ROW BY ROW : inquire each row, then insert or update it.
+; ===================================================================
+;
+   @#DEF_IF#@ @#EXP: (@+_RELATION_RI_INSERT+@ EQUAL @"CASCADE FOR GRID"@) #@
+@$REL1M_INS_@+_FDSL_RELATION_NAME+@$@
+      * INSERT DATA FROM GRID TO FD
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW @+_OBJ_ATR_NAME+@-IDX1
+           PERFORM VARYING @+_OBJ_ATR_NAME+@-IDX2 FROM @!L_ROWBEGIN!@ BY 1 UNTIL @+_OBJ_ATR_NAME+@-IDX2 >  @+_OBJ_ATR_NAME+@-IDX1
+     @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+                   OR TOTEM-TRANSACTION-FLAG NOT = SPACES
+     @#END_IF#@
+     @#DEF_IF#@ @!L_PKEY!@
+               Inquire @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(@+_OBJ_ATR_NAME+@-IDX2, 1 ), 
+                   HIDDEN-DATA IN @!L_PKEY!@
+     @#END_IF#@
+     @#DEF_IF#@ @!L_PKEYSPLIT!@
+               PERFORM @+_FDSL_RELATION_SLAVEFD+@-@!L_PKEYNAME!@-SPLITBUF-TOFLD
+     @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+               PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+               PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+                  MODIFY  @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, Y = @+_OBJ_ATR_NAME+@-IDX2 
+                  INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                       RECORD-DATA IN @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+               END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+               END-PERFORM
+           @#END_IF#@           
+               PERFORM @!G_SCREENNAME!@-Buf-To-Fld
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, BeforeCascadeInsert>
+               @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"BeforeCascadeInsert"@ @"Noperiod"@
+      * <TOTEM:END>
+               PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INSERT
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, AfterCascadeInsert>
+              @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"AfterCascadeInsert"@ @"Noperiod"@
+      * <TOTEM:END>
+               @#GET_MEM#@   @"NEXT-FDSL-M-INS"@
+               @#GET_MEM#@   @"NEXT-FDSL-S-INS"@
+           END-PERFORM
+   @#END_IF#@
+;
+   @#DEF_IF#@ @#EXP: (@+_RELATION_RI_UPDATE+@ EQUAL @"CASCADE FOR GRID"@) #@
+@$REL1M_UPD_@+_FDSL_RELATION_NAME+@$@
+      * UPDATE DATA FROM GRID TO FD (THE SAME AS INSERT)
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW @+_OBJ_ATR_NAME+@-IDX1
+           PERFORM VARYING @+_OBJ_ATR_NAME+@-IDX2 FROM @!L_ROWBEGIN!@ BY 1 UNTIL @+_OBJ_ATR_NAME+@-IDX2 >  @+_OBJ_ATR_NAME+@-IDX1
+     @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+                   OR TOTEM-TRANSACTION-FLAG NOT = SPACES
+     @#END_IF#@
+     @#DEF_IF#@ @!L_PKEY!@
+               Inquire @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(@+_OBJ_ATR_NAME+@-IDX2, 1 ), 
+                   HIDDEN-DATA IN @!L_PKEY!@
+     @#END_IF#@
+     @#DEF_IF#@ @!L_PKEYSPLIT!@
+               PERFORM @+_FDSL_RELATION_SLAVEFD+@-@!L_PKEYNAME!@-SPLITBUF-TOFLD
+     @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+               PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+               PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+                  MODIFY  @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, Y = @+_OBJ_ATR_NAME+@-IDX2 
+                  INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                       RECORD-DATA IN @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+               END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+               END-PERFORM
+           @#END_IF#@           
+               PERFORM @!G_SCREENNAME!@-Buf-To-Fld
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, BeforeCascadeUpdate>
+               @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"BeforeCascadeUpdate"@ @"Noperiod"@
+      * << END   : BeforeCascadeUpdate >>
+               PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INSERT
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, AfterCascadeUpdate>
+               @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"AfterCascadeUpdate"@ @"Noperiod"@
+      * << END   : AfterCascadeUpdate >>
+               @#GET_MEM#@   @"NEXT-FDSL-M-UPD"@
+               @#GET_MEM#@   @"NEXT-FDSL-S-UPD"@
+           END-PERFORM
+   @#END_IF#@
+;
+;
+@#ELSE#@
+; ===================================================================
+;   RESET ALL : Delete All, then insert All.
+; ===================================================================
+;
+@$REL1M_DEL_@+_FDSL_RELATION_NAME+@$@
+      * DELETE ALL DATA FROM FD
+           INITIALIZE @!L_SLAVEKEY!@
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INITSTART
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_MASTERFD+@-REF-@+_FDSL_RELATION_SLAVEFD+@-KEY
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-EXPRESSION
+           PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-START
+           IF @!L_SLAVESTATUS88!@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Read-Next
+           END-IF
+           PERFORM UNTIL NOT @!L_SLAVESTATUS88!@
+      @#DEF_IF#@ @!L_COMSTR!@
+                 OR (@!L_SLAVESTATUS88!@ 
+                     AND NOT (@!L_COMSTR!@))
+      @#END_IF#@
+     @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+                   OR TOTEM-TRANSACTION-FLAG NOT = SPACES
+     @#END_IF#@
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, BeforeCascadeDelete>
+              @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"BeforeCascadeDelete"@ @"Noperiod"@
+      * <TOTEM:END>
+     @#DEF_IF#@ @+_RELATION_SYS_CONDITION+@
+              IF (@+_RELATION_SYS_CONDITION+@)
+                 PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Delete
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, AfterCascadeDelete>
+              @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"AfterCascadeDelete"@ @"Noperiod"@
+      * <TOTEM:END>
+                 @#GET_MEM#@   @"NEXT-FDSL-M-DEL"@
+                 @#GET_MEM#@   @"NEXT-FDSL-S-DEL"@
+              END-IF
+     @#ELSE#@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Rec-Delete
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, AfterCascadeDelete>
+              @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"AfterCascadeDelete"@ @"Noperiod"@
+      * <TOTEM:END>
+              @#GET_MEM#@   @"NEXT-FDSL-M-DEL"@
+              @#GET_MEM#@   @"NEXT-FDSL-S-DEL"@
+     @#END_IF#@
+              PERFORM @!G_FORMBASESET!@-@+_FDSL_RELATION_SLAVEFD+@-Read-Next
+           END-PERFORM
+;
+   @#DEF_IF#@ @#EXP: (@+_RELATION_RI_INSERT+@ EQUAL @"CASCADE FOR GRID"@) #@
+@$REL1M_INS_@+_FDSL_RELATION_NAME+@$@
+      @#GET_MEM#@ @"REL1M_DEL_@+_FDSL_RELATION_NAME+@"@
+      * INSERT DATA FROM GRID TO FD
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW @+_OBJ_ATR_NAME+@-IDX1
+           PERFORM VARYING @+_OBJ_ATR_NAME+@-IDX2 FROM @!L_ROWBEGIN!@ BY 1 UNTIL @+_OBJ_ATR_NAME+@-IDX2 >  @+_OBJ_ATR_NAME+@-IDX1
+     @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+                   OR TOTEM-TRANSACTION-FLAG NOT = SPACES
+     @#END_IF#@
+     @#DEF_IF#@ @!L_PKEY!@
+               Inquire @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(@+_OBJ_ATR_NAME+@-IDX2, 1 ), 
+                   HIDDEN-DATA IN @!L_PKEY!@
+     @#END_IF#@
+     @#DEF_IF#@ @!L_PKEYSPLIT!@
+               PERFORM @+_FDSL_RELATION_SLAVEFD+@-@!L_PKEYNAME!@-SPLITBUF-TOFLD
+     @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+               PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+               PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+                  MODIFY  @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, Y = @+_OBJ_ATR_NAME+@-IDX2 
+                  INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                       RECORD-DATA IN @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+               END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+               END-PERFORM
+           @#END_IF#@           
+               PERFORM @!G_SCREENNAME!@-Buf-To-Fld
+               @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"CascadeInsert"@
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, BeforeCascadeInsert>
+               @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"BeforeCascadeInsert"@ @"Noperiod"@
+      * <TOTEM:END>
+               PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INSERT
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, AfterCascadeInsert>
+              @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"AfterCascadeInsert"@ @"Noperiod"@
+      * <TOTEM:END>
+               @#GET_MEM#@   @"NEXT-FDSL-M-INS"@
+               @#GET_MEM#@   @"NEXT-FDSL-S-INS"@
+           END-PERFORM
+   @#END_IF#@
+;
+   @#DEF_IF#@ @#EXP: (@+_RELATION_RI_UPDATE+@ EQUAL @"CASCADE FOR GRID"@) #@
+@$REL1M_UPD_@+_FDSL_RELATION_NAME+@$@
+      @#GET_MEM#@ @"REL1M_DEL_@+_FDSL_RELATION_NAME+@"@
+      * UPDATE DATA FROM GRID TO FD (THE SAME AS INSERT)
+         @#DEF_IF#@ @#EXP: @+_OBJ_SYS_OCCURSTIME1+@ OR @+_OBJ_SYS_OCCURSTIME2+@ #@
+           MOVE 1 TO TOTEM-OCC1, TOTEM-OCC2
+		 @#END_IF#@
+           @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+           @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+           INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, LAST-ROW @+_OBJ_ATR_NAME+@-IDX1
+           PERFORM VARYING @+_OBJ_ATR_NAME+@-IDX2 FROM @!L_ROWBEGIN!@ BY 1 UNTIL @+_OBJ_ATR_NAME+@-IDX2 >  @+_OBJ_ATR_NAME+@-IDX1
+     @#DEF_IF#@ @+_PRG_SYS_TRANSACTION+@
+                   OR TOTEM-TRANSACTION-FLAG NOT = SPACES
+     @#END_IF#@
+     @#DEF_IF#@ @!L_PKEY!@
+               Inquire @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@(@+_OBJ_ATR_NAME+@-IDX2, 1 ), 
+                   HIDDEN-DATA IN @!L_PKEY!@
+     @#END_IF#@
+     @#DEF_IF#@ @!L_PKEYSPLIT!@
+               PERFORM @+_FDSL_RELATION_SLAVEFD+@-@!L_PKEYNAME!@-SPLITBUF-TOFLD
+     @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+               PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+               PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+           @#END_IF#@
+                  MODIFY  @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, Y = @+_OBJ_ATR_NAME+@-IDX2 
+                  INQUIRE @+_OBJ_ATR_NAME+@@+_OBJ_SYS_OCCURSSUBSCRIPT+@, 
+                       RECORD-DATA IN @+_OBJ_ATR_NAME+@-BUF@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+               END-PERFORM
+           @#END_IF#@
+           @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+               END-PERFORM
+           @#END_IF#@           
+               PERFORM @!G_SCREENNAME!@-Buf-To-Fld
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, BeforeCascadeUpdate>
+               @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"BeforeCascadeUpdate"@ @"Noperiod"@
+      * <TOTEM:END>
+               PERFORM @+_DATASET_SYS_NAME+@-@+_FDSL_RELATION_NAME+@-@+_FDSL_RELATION_SLAVEFD+@-INSERT
+      * <TOTEM:EPT. RELATION:@+_DATASET_SYS_NAME+@, RELATION:@+_FDSL_RELATION_NAME+@, AfterCascadeUpdate>
+               @#GET_ENTRYPOINT#@ @"RELATION"@ @"RELATION"@ @"AfterCascadeUpdate"@ @"Noperiod"@
+      * <TOTEM:END>
+               @#GET_MEM#@   @"NEXT-FDSL-M-UPD"@
+               @#GET_MEM#@   @"NEXT-FDSL-S-UPD"@
+           END-PERFORM
+   @#END_IF#@
+;
+;
+@#END_IF#@
+;
+@#CLEAR_MEM#@ @"NEXT-FDSL-M-INS"@
+@#CLEAR_MEM#@ @"NEXT-FDSL-M-UPD"@
+@#CLEAR_MEM#@ @"NEXT-FDSL-M-DEL"@
+@#CLEAR_MEM#@ @"NEXT-FDSL-S-INS"@
+@#CLEAR_MEM#@ @"NEXT-FDSL-S-UPD"@
+@#CLEAR_MEM#@ @"NEXT-FDSL-S-DEL"@
+;
+;

@@ -1,0 +1,53 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report Generation Rule.  2001/11/02
+;
+; Remarks:
+; 
+;  1. Everytime when summary control was display, the value of it
+;     would be reset except it was in Detail Section.
+;
+;  2. You should call -MULTI-SUMMARY paragraph in every Loop which
+;     read each FD's data of DataSet, to calculate the Summary info.
+;
+;  3. But there's two different ways : 
+;     1. Normal detail : It will go until the record belong to another
+;        group. In this case, the summary would be executed over one
+;        time. So you should display -SUMBUF-OLD data instead of -SUMBUF.
+;
+;     2. Grid detail : It will calculate exactly summary value. So you
+;        just display SUM-BUF.
+;
+;     And it depend on @+_RPT_ATR_NAME+@-OFF-GROUP value.
+;
+; ===================================================================
+;
+@$RPT-OTHER-PARAGRAPH$@
+       @!G_REPORTNAME!@-@+_FDSL_SYS_FDNAME+@-MULTI-SUMMARY@!G_MODE!@.
+   @<_PUSH_MEM>@
+   @<_SET_FDSL_RELATION>@
+   @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+      @<_FETCH_NEXT_FDSL_RELATION>@
+      @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-1"@ #@
+           PERFORM @!G_REPORTNAME!@-@+_FDSL_RELATION_SLAVEFD+@-MULTI-SUMMARY@!G_MODE!@
+      @#END_IF#@
+   @#END_LOOP#@
+   @<_POP_MEM>@
+           @#GET_MEM#@   @"SUMMARY-@+_FDSL_SYS_FDNAME+@"@
+           @#CLEAR_MEM#@ @"SUMMARY-@+_FDSL_SYS_FDNAME+@"@
+           .
+
+       @!G_REPORTNAME!@-@+_FDSL_SYS_FDNAME+@-ON-SUMMARY@!G_MODE!@.
+           @#GET_MEM#@   @"SUMMARY-ON-@+_FDSL_SYS_FDNAME+@"@
+           @#CLEAR_MEM#@ @"SUMMARY-ON-@+_FDSL_SYS_FDNAME+@"@
+           .
+
+       @!G_REPORTNAME!@-@+_FDSL_SYS_FDNAME+@-OFF-SUMMARY@!G_MODE!@.
+           @#GET_MEM#@   @"SUMMARY-OFF-@+_FDSL_SYS_FDNAME+@"@
+           @#CLEAR_MEM#@ @"SUMMARY-OFF-@+_FDSL_SYS_FDNAME+@"@
+           .
+
+@$MULTI-ALL-SUM-PARAGRAPH$@
+           @#GET_MEM#@   @"SUMMARY-FINAL-@+_FDSL_SYS_FDNAME+@"@
+           @#CLEAR_MEM#@ @"SUMMARY-FINAL-@+_FDSL_SYS_FDNAME+@"@
+;

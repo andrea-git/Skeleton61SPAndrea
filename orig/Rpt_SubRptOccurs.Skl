@@ -1,0 +1,139 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Rpt.Occurs Control Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+; HTML :
+;
+; ===================================================================
+;
+@#DEF_IF#@ @+_GRID_SYS_OCCURSDEPENDS+@
+   @#DEF_SET#@ @!L_OCCDEPENDSTIMES!@ @+_GRID_SYS_OCCURSDEPENDS+@
+@#ELSE#@
+   @#DEF_SET#@ @!L_OCCDEPENDSTIMES!@ @+_GRID_SYS_OCCURSTIMES+@
+@#END_IF#@
+;
+@$CALLBY-ALL-SUBREPORT$@
+           IF CALLBY-INDEX = @!G_SCREENINDEX!@ AND SUBREPORT-DISPATCH = SUBRPT-OCCURS
+                           AND SUBRPT-DISPATCH-NAME = "@!G_CTRLSUBREPORT!@"
+               PERFORM @+_RPT_ATR_NAME+@-TABBODY-SUBBY-@!G_CTRLSUBREPORT!@
+               EXIT PARAGRAPH
+           END-IF
+;
+; ===================================================================
+; ===================================================================
+;
+@$RPT-OTHER-PARAGRAPH$@
+      * RPT.Occurs in SubReport : @+_RPT_ATR_NAME+@ call by @!G_CTRLSUBREPORT!@
+       @+_RPT_ATR_NAME+@-TABBODY-SUBBY-@!G_CTRLSUBREPORT!@.
+           MOVE 0 TO @+_RPT_ATR_NAME+@-OCCHEIGHT
+           MOVE 0 TO NEW-PAGE
+           PERFORM @+_RPT_ATR_NAME+@-TABHEADER
+;
+; ========================= HTML TABLE BODY =========================
+;
+    @#DEF_IF#@ @#EXP: NOT @+_RPT_ATR_AUTORESIZE+@ #@
+           COMPUTE TMP-PIXELS = @+_RPT_ATR_NAME+@-OCCHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+           PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL 
+                     (TOTEM-IDX1 > @!L_OCCDEPENDSTIMES!@ OR TMP-PIXELS > @+_RPT_SYS_HEIGHTPIXELS+@)
+			@#DEF_IF#@ @#EXP: @+_RPT_ATR_BLANKPROCESS+@ EQUAL @"Eliminate Blank Row"@ #@
+              PERFORM @+_RPT_ATR_NAME+@-CHECK-ISEMPTY
+              IF @+_RPT_ATR_NAME+@-ISEMPTY = 0
+			@#ELSE_IF#@ @#EXP: @+_RPT_ATR_BLANKPROCESS+@ EQUAL @"Cut when Blank Row"@ #@
+              PERFORM @+_RPT_ATR_NAME+@-CHECK-ISEMPTY
+              IF @+_RPT_ATR_NAME+@-ISEMPTY = 1
+                EXIT PERFORM
+              ELSE
+            @#END_IF#@
+               MOVE '         <TR>' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               PERFORM @+_RPT_ATR_NAME+@-TABROW
+               MOVE '         </TR>' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               COMPUTE @+_RPT_ATR_NAME+@-OCCHEIGHT = @+_RPT_ATR_NAME+@-OCCHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+               COMPUTE TMP-PIXELS = @+_RPT_ATR_NAME+@-OCCHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+			@#DEF_IF#@ @#EXP: NOT ( @+_RPT_ATR_BLANKPROCESS+@ EQUAL @"Keep Blank Row"@ ) #@
+               END-IF
+            @#END_IF#@
+           END-PERFORM
+    @#ELSE#@
+           PERFORM VARYING TOTEM-IDX1 FROM 1 BY 1 UNTIL TOTEM-IDX1 > @!L_OCCDEPENDSTIMES!@
+      * Grid Control's Height
+               COMPUTE @+_RPT_ATR_NAME+@-OCCHEIGHT = @+_RPT_ATR_NAME+@-OCCHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+               COMPUTE TMP-PIXELS = @+_RPT_ATR_NAME+@-OCCHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+      * Check if it's over Occurs's Size
+               IF TMP-PIXELS > @+_RPT_SYS_HEIGHTPIXELS+@
+      * New Detail-Section's Height
+                   IF NEW-PAGE = 0
+                       COMPUTE @!G_SUBSECNAME!@-HEIGHT OF @!G_SUBRPTNAME!@-HEIGHT = @!G_SUBSECNAME!@-DEF-HEIGHT OF @!G_SUBRPTNAME!@-HEIGHT + @+_RPT_ATR_NAME+@-OCCHEIGHT - @+_RPT_SYS_HEIGHTPIXELS+@
+                       COMPUTE CURRENT-HEIGHT = @+_RPT_SYS_TOPPIXELS+@ + @+_RPT_ATR_NAME+@-OCCHEIGHT + SECTION-HIGH-STACK
+                   ELSE
+                       COMPUTE @!G_SUBSECNAME!@-HEIGHT OF @!G_SUBRPTNAME!@-HEIGHT = @!G_SUBSECNAME!@-DEF-HEIGHT OF @!G_SUBRPTNAME!@-HEIGHT - @+_RPT_SYS_HEIGHTPIXELS+@ - @+_RPT_SYS_TOPPIXELS+@ + @+_RPT_ATR_NAME+@-OCCHEIGHT
+                       COMPUTE CURRENT-HEIGHT = @+_RPT_ATR_NAME+@-OCCHEIGHT + SECTION-HIGH-STACK
+                   END-IF
+      * Check if it's over Page Size
+                   MOVE 0 TO RPT-RETURN-VALUE
+                   PERFORM RPT-@!G_REPORTNAME!@-PAGE-FOOTER-OVERPAGE
+                   IF RPT-RETURN-VALUE NOT = 0
+      * End of the Table.
+                       PERFORM @+_RPT_ATR_NAME+@-TABFOOTER
+                       INITIALIZE PRINT-BUF
+      * End of the Section.
+      *                Cause Grid-Heigh had been add this Row already.
+                       IF NEW-PAGE = 0
+                           COMPUTE TMP-PIXELS = @+_RPT_SYS_TOPPIXELS+@ + @+_RPT_ATR_NAME+@-OCCHEIGHT - @+_RPT_SYS_ROWHEIGHT+@
+                       ELSE
+                           COMPUTE TMP-PIXELS = @+_RPT_ATR_NAME+@-OCCHEIGHT - @+_RPT_SYS_ROWHEIGHT+@
+                       END-IF
+                       STRING '      <DIV STYLE="POSITION:RELATIVE; HEIGHT:', 
+                              TMP-PIXELS, 
+							  ';"> </DIV>'
+                               DELIMITED BY SIZE INTO PRINT-BUF
+                       WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                       INITIALIZE PRINT-BUF
+                       MOVE '   </DIV>' TO PRINT-BUF
+                       WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+                       MOVE PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT TO CURRENT-HEIGHT
+      * Change New-Page Status
+                       MOVE 1 TO NEW-PAGE
+                       PERFORM RPT-@!G_CTRLSUBREPORT!@-PFOOT-SUB
+                       PERFORM RPT-@!G_CTRLSUBREPORT!@-PHEAD-SUB
+      * Rebegin the Section.
+                       PERFORM @!G_SUBSECNAME!@-SEC-HEAD
+      * Rebegin the Table.
+                       MOVE 0 TO SECTION-HIGH-STACK
+                       MOVE 0 TO @+_RPT_ATR_NAME+@-OCCHEIGHT
+                       PERFORM @+_RPT_ATR_NAME+@-TABHEADER
+      * Reset All Variable.
+                       COMPUTE @+_RPT_ATR_NAME+@-OCCHEIGHT = @+_RPT_ATR_NAME+@-OCCHEIGHT + @+_RPT_SYS_ROWHEIGHT+@
+                       COMPUTE @!G_SUBSECNAME!@-HEIGHT OF @!G_SUBRPTNAME!@-HEIGHT = @!G_SUBSECNAME!@-DEF-HEIGHT OF @!G_SUBRPTNAME!@-HEIGHT - @+_RPT_SYS_HEIGHTPIXELS+@ - @+_RPT_SYS_TOPPIXELS+@ + @+_RPT_ATR_NAME+@-OCCHEIGHT
+                   END-IF
+               END-IF
+			@#DEF_IF#@ @#EXP: @+_RPT_ATR_BLANKPROCESS+@ EQUAL @"Eliminate Blank Row"@ #@
+              PERFORM @+_RPT_ATR_NAME+@-CHECK-ISEMPTY
+              IF @+_RPT_ATR_NAME+@-ISEMPTY = 0
+			@#ELSE_IF#@ @#EXP: @+_RPT_ATR_BLANKPROCESS+@ EQUAL @"Cut when Blank Row"@ #@
+              PERFORM @+_RPT_ATR_NAME+@-CHECK-ISEMPTY
+              IF @+_RPT_ATR_NAME+@-ISEMPTY = 1
+                EXIT PERFORM
+              ELSE
+            @#END_IF#@
+               MOVE '         <TR>' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               PERFORM @+_RPT_ATR_NAME+@-TABROW
+               MOVE '         </TR>' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+            @#DEF_IF#@ @#EXP: NOT ( @+_RPT_ATR_BLANKPROCESS+@ EQUAL @"Keep Blank Row"@ ) #@
+              END-IF
+            @#END_IF#@
+           END-PERFORM
+    @#END_IF#@
+           PERFORM @+_RPT_ATR_NAME+@-TABFOOTER
+           MOVE 0 TO @+_RPT_ATR_NAME+@-OCCHEIGHT
+           .
+;

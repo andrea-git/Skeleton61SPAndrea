@@ -1,0 +1,61 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; ZoomProgram Generation Rule.  2001/04/19
+;
+; Remarks:
+;
+; ===================================================================
+@#DEF_SET#@ @!L_SNAME!@ @!G_SCREENNAME!@
+@#DEF_IF#@ @!G_FRAMENAME!@
+    @#DEF_SET#@ @!L_SNAME!@ @!G_FRAMENAME!@
+@#END_IF#@
+;
+@$PROCEDURE$@
+      * zoom program
+       @+_OBJ_ATR_NAME+@-EXECUTE@!G_MODE!@.
+           PERFORM @!L_SNAME!@-BUF-TO-FLD@!G_MODE!@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.ZoomProgram:@+_OBJ_ATR_NAME+@, BeforeZoom>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.ZoomProgram"@ @"BeforeZoom"@
+      * <TOTEM:END>
+@#DEF_IF#@ @+_ZOOMPROGRAM_SYS_NAME+@
+@<_PUSH_MEM>@
+  @<_SET_ZOOMPROG_DATAITEM>@
+  @#DEF_SET#@ @!L_LOOPCNT!@ @"0"@
+  @#DEF_IF#@ @+_ZOOMPROGRAM_SYS_DATAITEMNO+@
+           CALL "@+_ZOOMPROGRAM_SYS_NAME+@" USING 
+  @#ELSE#@
+           CALL "@+_ZOOMPROGRAM_SYS_NAME+@"
+  @#END_IF#@
+  @#DEF_LOOP#@ @+_ZOOMPROGRAM_SYS_DATAITEMNO+@
+    @#DEF_ADD#@ @!L_LOOPCNT!@ @"1"@
+	@<_FETCH_NEXT_ZOOMPROG_DATAITEM>@
+	@#DEF_IF#@ @#EXP: @!L_LOOPCNT!@ EQUAL @+_ZOOMPROGRAM_SYS_DATAITEMNO+@ #@
+                @+_ZOOMPROGRAM_SYS_DATAITEMNAME+@
+    @#ELSE#@
+                @+_ZOOMPROGRAM_SYS_DATAITEMNAME+@,
+    @#END_IF#@
+  @#END_LOOP#@
+@<_POP_MEM>@
+  @#DEF_IF#@ @+_OBJ_ATR_STATUSVAR+@
+               GIVING @+_OBJ_ATR_STATUSVAR+@
+  @#END_IF#@
+@#END_IF#@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.ZoomProgram:@+_OBJ_ATR_NAME+@, AfterZoom>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.ZoomProgram"@ @"AfterZoom"@
+      * <TOTEM:END>
+@#DEF_IF#@ @+_OBJ_ATR_STATUSVAR+@
+           IF @+_OBJ_ATR_STATUSVAR+@ = 1
+@#ELSE#@
+           IF RETURN-CODE = 1
+@#END_IF#@
+              PERFORM @!L_SNAME!@-FLD-TO-BUF@!G_MODE!@
+@#DEF_IF#@ @+_ZOOMPROGRAM_SYS_REFRESHSCREEN+@
+              PERFORM @!L_SNAME!@-CURR@!G_MODE!@
+              PERFORM @!L_SNAME!@-IUD-DISPLAY@!G_MODE!@
+@#ELSE#@
+              DISPLAY @!L_SNAME!@
+@#END_IF#@
+           END-IF
+           .
+
+;

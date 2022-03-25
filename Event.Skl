@@ -1,0 +1,150 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Event Procedure Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+;   We want to solve the problem is : Maybe there're many Controls 
+;   even Screens have the same Event procedure Name. If so, we should
+;   merge them to one Event Paragraph. So
+;   
+;    In Skeleton :
+;           We should go through all Screens & Controls to collect
+;       the same Event Prcedure Name. That's why we need a 
+;       Event_Dispatch.Skl, like the DispatchCtrl.Skl, to solve 
+;       the situation that Ctrls in Ctrls. 
+;       Ex :
+;            Screen ---- Tab -- Ctrls.
+;                    |-- Ctrls.
+;
+;    In Cobol flow :
+;           In each switch (Event-ID), we should depend on four 
+;       variable to check which Ctrl belong it.
+;       1. Event Type.
+;            what kind of Event.
+;       2. Control ID.
+;            which Controls.
+;       3. Window Handle. 
+;            which Forms. (Cause Forms without Control-ID.)
+;       4. HAS-GRAPHICAL-INTERFACE.
+;            To check if it's in Graphical or Text mode.
+;
+; ===================================================================
+;
+; ======================= PRD -- EVENT PROCESS ======================
+;
+@$EVENT$@
+@#DEF_SETANSI#@ @"EVENT"@
+@<_SET_OBJ_SCREEN>@
+@#DEF_LOOP#@ @+_PRG_SYS_SRNNO+@
+   @<_FETCH_NEXT_OBJ_SCREEN>@
+   @#DEF_SET#@ @!G_MODE!@ @""@
+   @#DEF_IF#@ @+_OBJ_SYS_ISTEXTMODE+@
+      @#DEF_SET#@ @!G_MODE!@ @"-T"@
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (NOT @+_PRG_SYS_ISIMPORT+@) OR (NOT @+_OBJ_SYS_ISIMPORTSCREEN+@) #@
+      @#DEF_SET#@ @!G_USERSCREEN!@ @"YES"@
+   @#ELSE#@
+      @#DEF_SET#@ @!G_USERSCREEN!@ @""@
+   @#END_IF#@
+   @%Event_Para.Skl%@
+   @<_SET_OBJ_CTRLCHILD>@
+   @#DEF_LOOP#@ @+_OBJ_SYS_CTRLNO+@
+      @<_FETCH_NEXT_OBJ_CTRL>@
+      @%Event_Dispatch.Skl%@
+   @#END_LOOP#@
+   @<_SET_CURRENTOBJ_SCREEN>@
+@#END_LOOP#@
+;
+;
+; ============ PRD -- PARAGRAPH ( USER DEFINE & EVENT ) =============
+;
+@$PARAGRAPH_EVENT$@
+      * EVENT PARAGRAPH
+@$PARAGRAPH_USER$@
+      * USER DEFINE PARAGRAPH
+@$PARAGRAPH_IMPORT$@
+      * IMPORT PARAGRAPH
+;
+;
+  @<_SET_PRG_PARAGRAPH>@
+  @#DEF_LOOP#@ @+_PRG_SYS_PARAGRAPHNO+@
+     @<_FETCH_NEXT_PRG_PARAGRAPH>@
+     @#DEF_IF#@ @#EXP: @+_PARAGRAPH_SYS_TYPE+@ EQUAL @"EVENT_PARAGRAPH"@ #@
+         @#DEF_SETPARA#@ @"1"@ @+_PARAGRAPH_SYS_NAME+@
+         @#DEF_IF#@ @#EXP: (NOT @+_PARAGRAPH_SYS_ISDEFAULTCODE+@) AND (NOT @+_SYS_CHECK_EXCLUDEPARAGRAPH+@) AND (NOT (@+_SYS_CHECK_EXISTPARAGRAPH+@ EQUAL @"IMPORT"@)) #@
+@$PARAGRAPH_EVENT$@
+       @+_PARAGRAPH_SYS_NAME+@.
+      * <TOTEM:PARA. @+_PARAGRAPH_SYS_NAME+@>
+           @#GET_EMBEDDEDCODE#@ @"NOPERIOD"@
+           .
+      * <TOTEM:END>
+         @#ELSE#@
+           @#DEF_IF#@ @+_PARAGRAPH_SYS_ISDEFAULTCODE+@
+@$PARAGRAPH_EVENT$@         
+       @+_PARAGRAPH_SYS_NAME+@.
+      * <TOTEM:PARA. @+_PARAGRAPH_SYS_NAME+@>
+           @#GET_DEFAULTEVENT_BEFORE#@ @+_PARAGRAPH_SYS_NAME+@
+		   @#GET_MEM#@   @"DEFAULTCODE_@+_PARAGRAPH_SYS_NAME+@"@
+		   @#CLEAR_MEM#@ @"DEFAULTCODE_@+_PARAGRAPH_SYS_NAME+@"@
+           @#GET_DEFAULTEVENT_AFTER#@  @+_PARAGRAPH_SYS_NAME+@
+           .
+      * <TOTEM:END>
+
+           @#END_IF#@
+         @#END_IF#@
+     @#ELSE_IF#@ @#EXP: @+_PARAGRAPH_SYS_TYPE+@ EQUAL @"USERDEFINED_PARAGRAPH"@ #@
+         @#DEF_SETPARA#@ @"1"@ @+_PARAGRAPH_SYS_NAME+@
+         @#DEF_IF#@ @#EXP: (NOT @+_SYS_CHECK_EXCLUDEPARAGRAPH+@) AND (NOT (@+_SYS_CHECK_EXISTPARAGRAPH+@ EQUAL @"IMPORT"@)) #@
+@$PARAGRAPH_USER$@
+       @+_PARAGRAPH_SYS_NAME+@.
+      * <TOTEM:PARA. @+_PARAGRAPH_SYS_NAME+@>
+           @#GET_EMBEDDEDCODE#@ @"NOPERIOD"@
+           .
+      * <TOTEM:END>
+
+         @#END_IF#@
+     @#ELSE_IF#@ @#EXP: @+_PARAGRAPH_SYS_TYPE+@ EQUAL @"IMPORTED_PROCEDURE"@ #@
+@$PARAGRAPH_IMPORT$@
+      * <TOTEM:PARA. @+_PARAGRAPH_SYS_NAME+@>
+           @#GET_EMBEDDEDCODE#@ @""@
+      * <TOTEM:END>
+
+     @#ELSE_IF#@ @#EXP: @+_PARAGRAPH_SYS_TYPE+@ EQUAL @"PROCEDURE_PARAMETER"@ #@
+@$PROCEDURE_PARAMETER$@               
+         XXX
+;           @#GET_EMBEDDEDCODE#@ @""@
+   @<_SET_PRG_EVENTPARAGRAPHLINE>@
+      @#DEF_SET#@ @!L_NO!@ @"1"@
+	  @#DEF_SET#@ @!L_REST!@ @""@
+      @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+      @<_FETCH_NEXT_OBJ_LINEINDEX>@
+        @#DEF_IF#@ @#EXP: NOT (@!L_NO!@ EQUAL @"1"@) #@
+	       @#DEF_SET#@ @!L_REST!@ @"                           "@
+		@#END_IF#@
+        @#DEF_IF#@ @#EXP: @!L_NO!@ EQUAL @+_OBJ_SYS_LINECOUNT+@ #@
+@!L_REST!@@+_OBJ_SYS_LINEINDEX+@.
+        @#ELSE#@
+@!L_REST!@@+_OBJ_SYS_LINEINDEX+@
+        @#END_IF#@
+		@#DEF_ADD#@ @!L_NO!@ @"1"@
+      @#END_LOOP#@
+     @#ELSE_IF#@ @#EXP: @+_PARAGRAPH_SYS_TYPE+@ EQUAL @"COPY_RESOURCE"@ #@
+@$COPY_RESOURCE$@
+           @#GET_EMBEDDEDCODE#@ @""@
+     @#ELSE_IF#@ @#EXP: @+_PARAGRAPH_SYS_TYPE+@ EQUAL @"OTHER_WORKING"@ #@
+@$WORKING-OTHER$@
+           @#GET_EMBEDDEDCODE#@ @""@
+     @#ELSE_IF#@ @#EXP: @+_PARAGRAPH_SYS_TYPE+@ EQUAL @"OTHER_LINKAGE"@ #@
+@$LINKAGE-OTHER$@
+           @#GET_EMBEDDEDCODE#@ @""@
+     @#END_IF#@
+  @#END_LOOP#@
+;
+@$EVENT$@
+@#GET_MEM#@   @"PARAGRAPH_USER"@
+@#CLEAR_MEM#@ @"PARAGRAPH_USER"@
+@#GET_MEM#@   @"PARAGRAPH_EVENT"@
+@#CLEAR_MEM#@ @"PARAGRAPH_EVENT"@
+@#DEF_SETANSI#@ @""@
+;

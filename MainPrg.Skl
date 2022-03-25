@@ -1,0 +1,136 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; MainPrg.Cbl Generation Rule.  2001/11/02
+; ===================================================================
+;
+@#DEF_IF#@ @#EXP: @+_SYS_TAGGEDAREAONLY+@ AND @+_SYS_EXISTCBLFILE+@ #@
+   @<_CALL_GENERATE_TAGGEDPRG>@
+@#ELSE#@
+;
+; Main Body
+;
+@#PUT_FILE#@ @"@+_PRJ_SYS_DIRSOURCE+@\\@+_PRG_ATR_ID+@.cbl"@ @"SOURCE"@ @+_SYS_PROGRAMREADONLY+@
+      *{TOTEM}PRG-COMMENT
+       @#GET_MEM#@ @"PRG-COMMENT"@
+      *{TOTEM}END
+       IDENTIFICATION       DIVISION.
+      *{TOTEM}PRGID
+       @#GET_MEM#@ @"PRGID"@
+      *{TOTEM}END
+
+       ENVIRONMENT          DIVISION.
+       CONFIGURATION        SECTION.
+       SPECIAL-NAMES.
+@#DEF_IF#@ @+_PRG_SYS_ISIMPORT+@
+      *{TOTEM}SPECIAL-NAME
+           @#GET_MEM#@   @"SPECIAL-NAME"@
+           @#CLEAR_MEM#@ @"SPECIAL-NAME"@
+      *{TOTEM}END
+@#ELSE#@
+      *{TOTEM}SPECIAL-NAME
+           @#GET_MEM#@   @"SPECIAL-NAME"@
+           @#CLEAR_MEM#@ @"SPECIAL-NAME"@
+      *{TOTEM}END
+      *{TOTEM}ACTIVEX-DEF
+       @#GET_MEM#@ @"ACTIVEX-DEF"@
+      *{TOTEM}END
+      *{TOTEM}DECIMAL-POINT
+       @#GET_MEM#@ @"DECIMAL-POINT"@
+      *{TOTEM}END
+@#END_IF#@
+
+       INPUT-OUTPUT         SECTION.
+       FILE-CONTROL.
+      *{TOTEM}FILE-CONTROL
+           @#GET_MEM#@   @"FILE-CONTROL"@
+           @#CLEAR_MEM#@ @"FILE-CONTROL"@
+      *{TOTEM}END
+	   @#DEF_IF#@ @!G_IOCONTROL!@
+       I-O-CONTROL.
+      *{TOTEM}I-O-CONTROL
+           @#GET_MEM#@   @"I-O-CONTROL"@
+           @#CLEAR_MEM#@ @"I-O-CONTROL"@
+      *{TOTEM}END
+	   @#END_IF#@
+       DATA                 DIVISION.
+       FILE                 SECTION.
+      *{TOTEM}FILE
+           @#GET_MEM#@   @"FILE"@
+           @#CLEAR_MEM#@ @"FILE"@
+      *{TOTEM}END
+
+       WORKING-STORAGE      SECTION.
+      *{TOTEM}ACU-DEF
+           @#GET_MEM#@   @"ACU-DEF"@
+           @#CLEAR_MEM#@ @"ACU-DEF"@
+      *{TOTEM}END
+
+      *{TOTEM}COPY-WORKING
+           @#GET_MEM#@   @"COPY-WORKING"@
+      *{TOTEM}END
+
+; **********************************************
+;   ID Logico - inizio
+; **********************************************
+      *{TOTEM}ID-LOGICI
+      ***** Elenco ID Logici *****
+     @#GET_MEM#@   @"WORKING-ID-LOGICO"@
+     @#CLEAR_MEM#@ @"WORKING-ID-LOGICO"@
+      ***** Fine ID Logici *****
+      *{TOTEM}END
+; **********************************************
+;   ID Logico - fine
+; **********************************************
+
+       LINKAGE          SECTION.
+      *{TOTEM}LINKAGE
+           @#GET_MEM#@   @"LINKAGE"@
+      *{TOTEM}END
+
+       SCREEN           SECTION.
+      *{TOTEM}COPY-SCREEN
+           @#GET_MEM#@   @"COPY-SCREEN"@
+      *{TOTEM}END
+
+      *{TOTEM}LINKPARA
+           @#GET_MEM#@   @"LINKPARA"@
+      *{TOTEM}END
+
+      *{TOTEM}DECLARATIVE
+           @#GET_MEM#@   @"DECLARATIVE"@
+      *{TOTEM}END
+
+@#DEF_IF#@ @+_PRG_SYS_ISIMPORT+@
+      *{TOTEM}COPY-PROCEDURE
+           @#GET_MEM#@   @"COPY-PROCEDURE"@
+      *{TOTEM}END
+
+      *{TOTEM}SHOW-MSG
+           @#GET_MEM#@   @"SHOW-MSG"@
+      *{TOTEM}END
+@#ELSE#@
+       MAIN-LOGIC.
+      *{TOTEM}ENTRY-BEFPRG
+      *    Before-Program
+           @#GET_MEM#@   @"ENTRY-BEFPRG"@
+      *{TOTEM}END
+           PERFORM INITIALIZE-ROUTINE.
+      * run main screen
+      *{TOTEM}RUN-MAINSCR
+           @#GET_MEM#@   @"RUN-MAINSCR"@
+      *{TOTEM}END
+
+      *{TOTEM}COPY-PROCEDURE
+           @#GET_MEM#@   @"COPY-PROCEDURE"@
+      *{TOTEM}END
+
+      *{TOTEM}SHOW-MSG
+           @#GET_MEM#@   @"SHOW-MSG"@
+      *{TOTEM}END
+
+@#END_IF#@
+@#END_PUT_FILE#@
+@#SHOW_MSG#@ @"Msg9"@
+;
+@#END_IF#@
+;

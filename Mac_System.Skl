@@ -1,0 +1,722 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Macro File 1 Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+;   1. 
+;      Define a Macro called "XXXXXX" with 3 parameters.
+;
+;      @{MACRO-XXXXXX}@
+;          MOVE @+_SYS_PARA1+@ TO @+_SYS_PARA2+@
+;          COMPUTE @+_SYS_PARA3+@ = @+_SYS_PARA3+@ + @+_SYS_PARA2+@
+;      @{END-MACRO}@
+;   2.
+;      In Macro, the default Division is @$MACRO-MacroName$@, so that
+;      you can jump to other Division or Skeleton, then come back.
+;   
+; Macro-Listing :
+;
+; ===================================================================
+;
+; ===================================================================
+;  Macro Name : ACCEPT_FORM_G
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_ACCEPT_FORM_G}@
+      * MACRO : ACCEPT_FORM_G
+           PERFORM @+_SYS_PARA1+@-BUF-TO-FLD
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : ADD_TO_COMBO
+;  Parameters : 1.ControlName
+;               2.InsertionIndex
+;               3.AddValue			(*)
+;  Remarks :
+; ===================================================================
+@{MACRO_ADD_TO_COMBO}@
+      * MACRO : ADD_TO_COMBO
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           ITEM-TO-ADD = @+_SYS_PARA3+@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : ADD_TO_GRID_G
+;  Parameters : 1.ControlName
+;               2.InsertionIndex
+;               3.AddValue			(*)
+;  Remarks :
+; ===================================================================
+@{MACRO_ADD_TO_GRID_G}@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @<_SET_FORM_BY_PARAMETERS>@
+   @#DEF_SET#@ @!L_FORMNAME!@ @+_OBJ_ATR_NAME+@
+      * MACRO : ADD_TO_GRID_G
+   @#DEF_IF#@ @#EXP: @+_SYS_PARA3+@ EQUAL @""@ #@
+           PERFORM @!L_FORMNAME!@-BUF-TO-FLD
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           RECORD-TO-ADD = @+_SYS_PARA1+@-BUF
+   @#ELSE#@
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           RECORD-TO-ADD = @+_SYS_PARA3+@
+   @#END_IF#@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : ADD_TO_LIST_G
+;  Parameters : 1.ControlName
+;               2.InsertionIndex
+;               3.AddValue			(*)
+;  Remarks :
+; ===================================================================
+@{MACRO_ADD_TO_LIST_G}@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @<_SET_FORM_BY_PARAMETERS>@
+   @#DEF_SET#@ @!L_FORMNAME!@ @+_OBJ_ATR_NAME+@
+      * MACRO : ADD_TO_LIST_G
+   @#DEF_IF#@ @#EXP: @+_SYS_PARA3+@ EQUAL @""@ #@
+           PERFORM @!L_FORMNAME!@-BUF-TO-FLD
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           ITEM-TO-ADD = @+_SYS_PARA1+@-BUF
+   @#ELSE#@
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           ITEM-TO-ADD = @+_SYS_PARA3+@
+   @#END_IF#@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : CLEAR_FORM_G
+;  Parameters : 1. FormName
+;  Remarks :
+; ===================================================================
+@{MACRO_CLEAR_FORM_G}@
+      * MACRO : CLEAR_FORM_G
+           PERFORM @+_SYS_PARA1+@-CLEAR
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : CLOSE_FILES
+;  Parameters : 
+;  Remarks :
+; ===================================================================
+@{MACRO_CLOSE_FILES}@
+      * MACRO : CLOSE_FILES
+           PERFORM CLOSE-FILE-RTN
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : DELETE_FROM_COMBO
+;  Parameters : 1.ControlName
+;               2.Index
+;  Remarks :
+; ===================================================================
+@{MACRO_DELETE_FROM_COMBO}@
+      * MACRO : DELETE_FROM_COMBO
+           MODIFY @+_SYS_PARA1+@,
+           ITEM-TO-DELETE = @+_SYS_PARA2+@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : DELETE_FROM_GRID_G
+;  Parameters : 1.ControlName
+;               2.Index
+;  Remarks :
+; ===================================================================
+@{MACRO_DELETE_FROM_GRID_G}@
+      * MACRO : DELETE_FROM_GRID_G
+           MODIFY @+_SYS_PARA1+@,
+           RECORD-TO-DELETE = @+_SYS_PARA2+@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : DELETE_FROM_LIST
+;  Parameters : 1.ControlName
+;               2.Index
+;  Remarks :
+; ===================================================================
+@{MACRO_DELETE_FROM_LIST}@
+      * MACRO : DELETE_FROM_LIST
+           MODIFY @+_SYS_PARA1+@,
+           ITEM-TO-DELETE = @+_SYS_PARA2+@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : DELETE_PROCESS_G
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_DELETE_PROCESS_G}@
+      * MACRO : DELETE_PROCESS_G
+           PERFORM @+_SYS_PARA1+@-DELETE
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : DELETE_RECORD
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_DELETE_RECORD}@
+      * MACRO : DELETE_RECORD
+           PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-REC-DELETE
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : DISPLAY_BITMAP
+;  Parameters : 1.ControlName
+;               2.FileName
+;  Remarks :
+; ===================================================================
+@{MACRO_DISPLAY_BITMAP}@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @<_SET_CONTROL_BY_PARAMETERS>@
+      * MACRO : DISPLAY_BITMAP
+   @#DEF_IF#@ @+_SYS_PARA2+@
+           CALL "w$bitmap" USING WBITMAP-LOAD, "@+_SYS_PARA2+@",
+                   GIVING @+_OBJ_ATR_BITMAPHANDLE+@
+   @#ELSE#@
+      @#DEF_IF#@ @#EXP: @+_OBJ_SYS_TYPE+@ EQUAL @"Bitmap"@ #@
+           CALL "w$bitmap" USING WBITMAP-LOAD, "@+_OBJ_ATR_BITMAPFILE+@",
+                   GIVING @+_OBJ_ATR_BITMAPHANDLE+@
+      @#ELSE#@
+           CALL "w$bitmap" USING WBITMAP-LOAD, @+_OBJ_ATR_NAME+@-BUF,
+                   GIVING @+_OBJ_ATR_BITMAPHANDLE+@
+      @#END_IF#@
+   @#END_IF#@
+           DISPLAY @+_SYS_PARA1+@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : DISPLAY_CONTROL
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_DISPLAY_CONTROL}@
+      * MACRO : DISPLAY_CONTROL
+           DISPLAY @+_SYS_PARA1+@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : DISPLAY_FORM_G
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_DISPLAY_FORM_G}@
+      * MACRO : DISPLAY_FORM_G
+           PERFORM @+_SYS_PARA1+@-DISPLAY
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : FETCH_FILE
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_FETCH_FILE}@
+      * MACRO : FETCH_FILE
+           PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-Read
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : FETCH_NEXT
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_FETCH_NEXT}@
+      * MACRO : FETCH_NEXT
+           PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-Read-Next
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : FETCH_PREVIOUS
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_FETCH_PREVIOUS}@
+      * MACRO : FETCH_PREVIOUS
+           PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-Read-Prev
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : FIELD_TO_BUFFER_G
+;  Parameters : 1.FormName/FrameName
+;  Remarks :
+; ===================================================================
+@{MACRO_FIELD_TO_BUFFER_G}@
+      * MACRO : FIELD_TO_BUFFER_G
+           PERFORM @+_SYS_PARA1+@-FLD-TO-BUF
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : GRID_CELL_SETTING_G
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_GRID_CELL_SETTING_G}@
+      * MACRO : GRID_CELL_SETTING_G
+           PERFORM @+_SYS_PARA1+@-CellSetting
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INIT_FORM_BUFFER_G
+;  Parameters : 1.FormName
+;  Remarks :
+; ===================================================================
+@{MACRO_INIT_FORM_BUFFER_G}@
+      * MACRO : INIT_FORM_BUFFER_G
+           PERFORM @+_SYS_PARA1+@-Init-Value
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INITIALIZE
+;  Parameters :
+;  Remarks :
+; ===================================================================
+@{MACRO_INITIALIZE}@
+      * MACRO : INITIALIZE
+           PERFORM INITIALIZE-ROUTINE
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INQUIRE_CURRENT_G
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_INQUIRE_CURRENT_G}@
+      * MACRO : INQUIRE_CURRENT_G
+           PERFORM @+_SYS_PARA1+@-Curr
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INQUIRE_FIRST_G
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_INQUIRE_FIRST_G}@
+      * MACRO : INQUIRE_FIRST_G
+           PERFORM @+_SYS_PARA1+@-First
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INQUIRE_LAST_G
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_INQUIRE_LAST_G}@
+      * MACRO : INQUIRE_LAST_G
+           PERFORM @+_SYS_PARA1+@-Last
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INQUIRE_NEXT_G
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_INQUIRE_NEXT_G}@
+      * MACRO : INQUIRE_NEXT_G
+           PERFORM @+_SYS_PARA1+@-Next
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INQUIRE_PREVIOUS_G
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_INQUIRE_PREVIOUS_G}@
+      * MACRO : INQUIRE_PREVIOUS_G
+           PERFORM @+_SYS_PARA1+@-Prev
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INSERT_RECORD
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_INSERT_RECORD}@
+      * MACRO : INSERT_RECORD
+           PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-Rec-Write
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : INSERT_PROCESS_G
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_INSERT_PROCESS_G}@
+      * MACRO : INSERT_PROCESS_G
+           PERFORM @+_SYS_PARA1+@-Add
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : LIST_CELL_SETTING
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_LIST_CELL_SETTING}@
+      * MACRO : LIST_CELL_SETTING
+           PERFORM @+_SYS_PARA1+@-CellSetting
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : OCCURS_HEADER_SETTING_G
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_OCCURS_HEADER_SETTING_G}@
+      * MACRO : OCCURS_HEADER_SETTING_G
+           PERFORM @+_SYS_PARA1+@-CellSetting
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : OPEN_FILES
+;  Parameters :
+;  Remarks :
+; ===================================================================
+@{MACRO_OPEN_FILES}@
+      * MACRO : OPEN_FILES
+           PERFORM OPEN-FILE-RTN
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PLAY_SOUND
+;  Parameters : 1. WaveName    : The full path name of the wave file
+;               2. SoundFlag   : Numeric parameter, one or more optional
+;                                values added together.
+;               3. SoundStatus : singed numeric data item.
+;  Remarks :
+; ===================================================================
+@{MACRO_PLAY_SOUND}@
+      * MACRO : PLAY_SOUND
+           CALL "WIN$PLAYSOUND" USING  @+_SYS_PARA1+@, @+_SYS_PARA2+@
+                                GIVING @+_SYS_PARA3+@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PRINT_DETAIL_G
+;  Parameters : 1. ReportName
+;  Remarks :
+; ===================================================================
+@{MACRO_PRINT_DETAIL_G}@
+      * MACRO : PRINT_DETAIL_G
+           PERFORM RPT-@+_SYS_PARA1+@-DETAIL
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PRINT_GROUP_G
+;  Parameters : 1. SectionName
+;  Remarks : 
+;       RPT-@+_SYS_PARA1+@-GROUP-HEADER : It will perform all of
+;          the GroupBy Sections. 
+;       @+_SYS_PARA1+@-GROUP-PRINT : It just print what section you
+;          assign.
+; ===================================================================
+@{MACRO_PRINT_GROUP_G}@
+      * MACRO : PRINT_GROUP_G
+           PERFORM @+_SYS_PARA1+@-GROUP-PRINT
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PRINT_PAGE_HEADER_G
+;  Parameters : 1. ReportName
+;  Remarks :
+; ===================================================================
+@{MACRO_PRINT_PAGE_HEADER_G}@
+      * MACRO : PRINT_PAGE_HEADER_G
+           PERFORM RPT-@+_SYS_PARA1+@-PAGE-HEADER
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PRINT_PAGE_FOOTER_G
+;  Parameters : 1. ReportName
+;  Remarks :
+; ===================================================================
+@{MACRO_PRINT_PAGE_FOOTER_G}@
+      * MACRO : PRINT_PAGE_FOOTER_G
+           PERFORM RPT-@+_SYS_PARA1+@-PAGE-FOOTER
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PRINT_REPORT_HEADER_G
+;  Parameters : 1. ReportName
+;  Remarks :
+; ===================================================================
+@{MACRO_PRINT_REPORT_HEADER_G}@
+      * MACRO : PRINT_REPORT_HEADER_G
+           PERFORM RPT-@+_SYS_PARA1+@-REPORT-HEADER
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : PRINT_REPORT_FOOTER_G
+;  Parameters : 1. ReportName
+;  Remarks :
+; ===================================================================
+@{MACRO_PRINT_REPORT_FOOTER_G}@
+      * MACRO : PRINT_REPORT_FOOTER_G
+           PERFORM RPT-@+_SYS_PARA1+@-REPORT-FOOTER
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : REFRESH_COMBO_DATA_G
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_REFRESH_COMBO_DATA_G}@
+      * MACRO : REFRESH_COMBO_DATA_G
+           PERFORM @+_SYS_PARA1+@-Content
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : REFRESH_GRID_DATA_G
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_REFRESH_GRID_DATA_G}@
+      * MACRO : REFRESH_GRID_DATA_G
+           PERFORM @+_SYS_PARA1+@-Content
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : REFRESH_LISTBOX_DATA_G
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_REFRESH_LISTBOX_DATA_G}@
+      * MACRO : REFRESH_LISTBOX_DATA_G
+           PERFORM @+_SYS_PARA1+@-Content
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : REFRESH_OCCURS_DATA_G
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_REFRESH_OCCURS_DATA_G}@
+      * MACRO : REFRESH_OCCURS_DATA_G
+           PERFORM @+_SYS_PARA1+@-Content
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : RESET_COMBO
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_RESET_COMBO}@
+      * MACRO : RESET_COMBO
+           MODIFY @+_SYS_PARA1+@, RESET-LIST = 1
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : RESET_GRID_G
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_RESET_GRID_G}@
+      * MACRO : RESET_GRID_G
+           MODIFY @+_SYS_PARA1+@, RESET-GRID = 1
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : RESET_LISTBOX
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_RESET_LISTBOX}@
+      * MACRO : RESET_LISTBOX
+           MODIFY @+_SYS_PARA1+@, RESET-LIST = 1
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : RESET_OCCURS_G
+;  Parameters : 1.ControlName
+;  Remarks :
+; ===================================================================
+@{MACRO_RESET_OCCURS_G}@
+      * MACRO : RESET_OCCURS_G
+           MODIFY @+_SYS_PARA1+@, RESET-GRID = 1
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : SHOW_MESSAGE_G
+;  Parameters : 1.FormName
+;               2.MsgText
+;  Remarks :
+; ===================================================================
+@{MACRO_SHOW_MESSAGE_G}@
+      * MACRO : SHOW_MESSAGE_G
+           MOVE SPACES TO TOTEM-MSG-1 TOTEM-MSG-2 TOTEM-MSG-3
+           MOVE "@+_SYS_PARA2+@" TO TOTEM-MSG-1
+           PERFORM @+_SYS_PARA1+@-DISPLAY-MESSAGE
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : SKIP_PAGE_G
+;  Parameters : 1.ReportName
+;  Remarks :
+; ===================================================================
+@{MACRO_SKIP_PAGE_G}@
+      * MACRO : SKIP_PAGE_G
+           MOVE PAGE-HEIGHT OF @+_SYS_PARA1+@-HEIGHT TO CNT-INPAGEPIXELS
+           PERFORM RPT-@+_SYS_PARA1+@-PAGE-FOOTER
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : START_FILE
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_START_FILE}@
+      * MACRO : START_FILE
+           PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-START
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : START_GREATER
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_START_GREATER}@
+      * MACRO : START_GREATER
+           PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-START-GREATER
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : START_LESS
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_START_LESS}@
+      * MACRO : START_LESS
+           PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-START-LESS
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : START_NOT_GREATER
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_START_NOT_GREATER}@
+      * MACRO : START_NOT_GREATER
+           PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-START-NOTGREATER
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : UPDATE_CELL_DATA_G
+;  Parameters : 1.ControlName
+;               2.UpdateRow
+;               3.UpdateColumn
+;               4.UpdateValue
+;  Remarks :
+; ===================================================================
+@{MACRO_UPDATE_CELL_DATA_G}@
+      * MACRO : UPDATE_CELL_DATA_G
+           MODIFY @+_SYS_PARA1+@, X = @+_SYS_PARA3+@, Y = @+_SYS_PARA2+@,
+                CELL-DATA = @+_SYS_PARA4+@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : UPDATE_RECORD
+;  Parameters : 1.DatasetName
+;               2.FDName
+;  Remarks :
+; ===================================================================
+@{MACRO_UPDATE_RECORD}@
+      * MACRO : UPDATE_RECORD
+           PERFORM @+_SYS_PARA1+@-@+_SYS_PARA2+@-Rec-Rewrite
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : UPDATE_PROCESS_G
+;  Parameters : 1.FormName : Form or DB_Frame Name
+;  Remarks :
+; ===================================================================
+@{MACRO_UPDATE_PROCESS_G}@
+      * MACRO : UPDATE_PROCESS_G
+           PERFORM @+_SYS_PARA1+@-UPDATE
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : UPDATE_TO_GRID_G
+;  Parameters : 1.ControlName
+;               2.UpdateIndex
+;               3.UpdateValue		(*)
+;  Remarks :
+; ===================================================================
+@{MACRO_UPDATE_TO_GRID_G}@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @<_SET_FORM_BY_PARAMETERS>@
+   @#DEF_SET#@ @!L_FORMNAME!@ @+_OBJ_ATR_NAME+@
+      * MACRO : UPDATE_TO_GRID_G
+   @#DEF_IF#@ @#EXP: @+_SYS_PARA3+@ EQUAL @""@ #@
+           PERFORM @!L_FORMNAME!@-FLD-TO-BUF
+           MODIFY @+_SYS_PARA1+@,
+           RECORD-TO-DELETE = @+_SYS_PARA2+@
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           RECORD-TO-ADD = @+_SYS_PARA1+@-BUF
+   @#ELSE#@
+           MODIFY @+_SYS_PARA1+@,
+           RECORD-TO-DELETE = @+_SYS_PARA2+@
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           RECORD-TO-ADD = @+_SYS_PARA3+@
+   @#END_IF#@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : UPDATE_TO_LIST_G
+;  Parameters : 1.ControlName
+;               2.UpdateIndex
+;               3.UpdateValue		(*)
+;  Remarks :
+; ===================================================================
+@{MACRO_UPDATE_TO_LIST_G}@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @<_SET_FORM_BY_PARAMETERS>@
+   @#DEF_SET#@ @!L_FORMNAME!@ @+_OBJ_ATR_NAME+@
+      * MACRO : UPDATE_TO_LIST_G
+   @#DEF_IF#@ @#EXP: @+_SYS_PARA3+@ EQUAL @""@ #@
+           PERFORM @!L_FORMNAME!@-FLD-TO-BUF
+           MODIFY @+_SYS_PARA1+@,
+           ITEM-TO-DELETE = @+_SYS_PARA2+@
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           ITEM-TO-ADD = @+_SYS_PARA1+@-BUF
+   @#ELSE#@
+           MODIFY @+_SYS_PARA1+@,
+           ITEM-TO-DELETE = @+_SYS_PARA2+@
+           MODIFY @+_SYS_PARA1+@, INSERTION-INDEX = @+_SYS_PARA2+@,
+           ITEM-TO-ADD = @+_SYS_PARA3+@
+   @#END_IF#@
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : UPDATE_TO_OCCURS_G
+;  Parameters : 1.ControlName
+;  Remarks :
+;     Fld-To-Buf would move Fields data to buffer &
+;     write to Occurs Control at the same time.
+; ===================================================================
+@{MACRO_UPDATE_TO_OCCURS_G}@
+   @#DEF_SETPARA#@ @"1"@ @+_SYS_PARA1+@
+   @<_SET_FORM_BY_PARAMETERS>@
+   @#DEF_SET#@ @!L_FORMNAME!@ @+_OBJ_ATR_NAME+@
+      * MACRO : UPDATE_TO_OCCURS_G
+           PERFORM @!L_FORMNAME!@-FLD-TO-BUF
+@{END_MACRO}@
+;
+; ===================================================================
+;  Macro Name : VALIDATE_PROCESS_G
+;  Parameters : 1.FormName
+;  Remarks :
+; ===================================================================
+@{MACRO_VALIDATE_PROCESS_G}@
+      * MACRO : VALIDATE_PROCESS_G
+           PERFORM @+_SYS_PARA1+@-VALIDATION-ROUTINE
+@{END_MACRO}@
+;

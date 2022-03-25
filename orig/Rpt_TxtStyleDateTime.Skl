@@ -1,0 +1,110 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report DateTime Generation Rule.  2001/04/19
+;
+; Remarks:
+;   The same as RPT.Label.
+;
+; ===================================================================
+;
+@%Rpt_DateTimeFormat.Skl%@
+;
+; ========================== Pre-Checking ===========================
+;
+; If this Control didn't contain FIELDVARIABLE, it would get the
+; system Data & Time as the result of displaying. So we don't check
+; if there's fieldvariable in it.
+;
+; ====================== Initial Local Variable =====================
+;
+   @#DEF_IF#@ @+_RPT_ATR_FIELDVARIABLE+@
+           @#DEF_SET#@ @!G_EXISTRPTBUF!@ @"YES"@
+;
+; ================ WRK -- RPT -- Pre DateTime Buf ===================
+; Remarks:
+;   There's a Entry-Field's property : Print if Repeat. Every time when
+;   you fetch next record and going to print the field out, you should
+;   check if the data value is the same as previous time, then decide
+;   whether to print it or not.
+;
+@$RPT_PRE_DATABUF$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-PRE-BUF-T PIC @+_RPT_ATR_FIELDPICTURE+@.
+;
+; ====================== WRK -- RPT -- DateTime =====================
+;
+@$RPT_DB_WORKING_BUFBODY$@
+      * @+_RPT_SYS_TYPE+@
+           03 @+_RPT_ATR_NAME+@-BUF-T PIC @+_RPT_ATR_FIELDPICTURE+@.
+;
+; ========================= PRT -- BUFTOFLD =========================
+;
+@$RPT_FDSL_FLDTOBUF$@
+      * RPT.DateTime : @+_RPT_ATR_NAME+@
+           MOVE @+_RPT_ATR_FIELDVARIABLE+@ TO @+_RPT_ATR_NAME+@-BUF-T
+   @#END_IF#@
+;
+   @#DEF_IF#@ @+_RPT_ATR_PRINTWHENNEWPAGE+@
+@$RPT_ISNEWPAGE_BUF$@
+           @#DEF_SET#@ @!G_EXISTISNEWPAGE!@ @"YES"@
+           03 @!G_REPORTNAME!@-@+_RPT_ATR_NAME+@-ISNEW     PIC   9   VALUE 0.
+   @#END_IF#@
+;
+@#DEF_SET#@ @!L_LINE!@ @"1"@
+@#DEF_ADD#@ @!L_LINE!@ @+_RPT_ATR_LINE+@
+;
+@#DEF_SET#@ @!L_COLUMN!@ @"1"@
+@#DEF_ADD#@ @!L_COLUMN!@ @+_RPT_ATR_COLUMN+@
+;
+@#DEF_SET#@ @!L_SIZE!@ @"0"@
+@#DEF_ADD#@ @!L_SIZE!@ @+_RPT_ATR_SIZE+@
+;
+@$RPT-CTRL-PRINT$@
+      * RPT.DateTime : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Data-Time:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Date-Time"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Detail"@) AND 
+                      (NOT @+_RPT_ATR_PRINTIFREPEAT+@) #@
+      * PRINT IF REPEAT : FALSE
+             IF (@+_RPT_ATR_NAME+@-BUF-T NOT = @+_RPT_ATR_NAME+@-PRE-BUF-T)
+        @#DEF_IF#@ @+_RPT_ATR_PRINTWHENNEWPAGE+@
+      * PRINT WHEN NEW PAGE : TRUE
+                OR (@!G_REPORTNAME!@-@+_RPT_ATR_NAME+@-ISNEW = 0)
+               MOVE 1 TO @!G_REPORTNAME!@-@+_RPT_ATR_NAME+@-ISNEW
+        @#END_IF#@
+   @#END_IF#@
+               PERFORM @+_RPT_ATR_NAME+@-FORMAT-CONVERT-T
+        @#DEF_IF#@ @#EXP: (NOT @+_RPT_ATR_DATEFORMAT+@ EQUAL @"NONE"@) AND
+                          (NOT @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"NONE"@) #@
+               INITIALIZE PRINT-BUF
+               STRING WRK-DATE-REF OF @+_RPT_ATR_NAME+@-DATEBUF-T,
+                      " ",
+                      WRK-TIME-REF OF @+_RPT_ATR_NAME+@-DATEBUF-T
+                   DELIMITED BY SIZE INTO PRINT-BUF
+               MOVE PRINT-BUF TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:@!L_SIZE!@)
+        @#ELSE_IF#@ @#EXP: NOT @+_RPT_ATR_DATEFORMAT+@ EQUAL @"NONE"@ #@
+               MOVE WRK-DATE-REF OF @+_RPT_ATR_NAME+@-DATEBUF-T TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:@!L_SIZE!@)
+        @#ELSE_IF#@ @#EXP: NOT @+_RPT_ATR_TIMEFORMAT+@ EQUAL @"NONE"@ #@
+               MOVE WRK-TIME-REF OF @+_RPT_ATR_NAME+@-DATEBUF-T TO @!G_SECTIONNAME!@-LINES(@!L_LINE!@)(@!L_COLUMN!@:@!L_SIZE!@)
+        @#END_IF#@
+   @#DEF_IF#@ @#EXP: (@+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Detail"@) AND
+                      (NOT @+_RPT_ATR_PRINTIFREPEAT+@) #@
+             END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.Data-Time:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.Date-Time"@ @"AfterPrint"@
+      * <TOTEM:END>
+;

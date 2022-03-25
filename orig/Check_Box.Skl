@@ -1,0 +1,389 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Check Box Generation Rule.  2001/11/01
+;
+; ===================================================================
+;
+; ================== SCR -- DB -- SCREEN  SECTION ===================
+;
+@$SCREEN$@
+      * CHECK BOX
+       @+_OBJ_SYS_LEVEL+@
+           @+_OBJ_ATR_NAME+@, 
+           Check-Box, 
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@ PIXELS,
+  @#ELSE#@
+           COL @+_OBJ_ATR_COLUMNINPIXELS+@ PIXELS, 
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_COLUMN+@
+           COL @+_OBJ_ATR_COLUMN+@, 
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CCOL+@
+           CCOL @+_OBJ_ATR_CCOL+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@ PIXELS,
+  @#ELSE#@
+           LINE @+_OBJ_ATR_LINEINPIXELS+@ PIXELS,
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_LINE+@
+           LINE @+_OBJ_ATR_LINE+@,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CLINE+@
+           CLINE @+_OBJ_ATR_CLINE+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_LINESUNIT+@ EQUAL @"PIXELS"@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+           LINES @+_OBJ_ATR_LINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+     @#DEF_SET#@ @!L_VALUE!@ @+_OBJ_ATR_LINESINPIXELS+@
+     @#DEF_ADD#@ @!L_VALUE!@ @"7"@
+           LINES @!L_VALUE!@ @+_OBJ_SYS_LINESUNIT+@,
+;           LINES @+_OBJ_ATR_LINESINPIXELS+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+           LINES @+_OBJ_ATR_LINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINES+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CLINES+@
+           CLINES @+_OBJ_ATR_CLINES+@ @+_OBJ_SYS_CLINESUNIT+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_SIZEUNIT+@ EQUAL @"PIXELS"@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZEVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+     @#DEF_SET#@ @!L_VALUE!@ @+_OBJ_ATR_SIZEINPIXELS+@
+     @#DEF_ADD#@ @!L_VALUE!@ @"8"@
+           SIZE @!L_VALUE!@ @+_OBJ_SYS_SIZEUNIT+@,
+;           SIZE @+_OBJ_ATR_SIZEINPIXELS+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZEVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CSIZE+@
+           CSIZE @+_OBJ_ATR_CSIZE+@ @+_OBJ_SYS_CSIZEUNIT+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_BITMAPHANDLE+@
+   @#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_BITMAPHANDLE+@ EQUAL @"Dummy-bmp"@) #@
+           BITMAP-HANDLE @+_OBJ_ATR_BITMAPHANDLE+@,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_BITMAPNUMBER+@
+           BITMAP-NUMBER @+_OBJ_ATR_BITMAPNUMBER+@,
+   @#ELSE#@
+           BITMAP-NUMBER 1,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_BITMAPFRAME+@
+           FRAMED,
+   @#ELSE#@
+           UNFRAMED,
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_ATR_BITMAPSQUARE+@
+           SQUARE,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_COLORVARIABLE+@
+           COLOR IS @+_OBJ_ATR_COLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_COLOR+@
+           COLOR IS @+_OBJ_ATR_COLOR+@,
+@#END_IF#@
+@#DEF_CASE#@ @+_OBJ_ATR_DESTROYTYPE+@
+   @#CASE#@ @"PERMANENT"@
+           PERMANENT,
+   @#CASE#@ @"TEMPORARY"@
+           TEMPORARY,
+@#END_CASE#@
+@#DEF_IF#@ @+_OBJ_ATR_ENABLEVARIABLE+@
+           ENABLED @+_OBJ_ATR_ENABLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_ENABLE+@ EQUAL @"1"@ #@
+           ENABLED 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_ENABLE+@ EQUAL @"2"@ #@
+           ENABLED 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+           @#DEF_SET#@ @!G_CHECK88PARA!@ @+_OBJ_ATR_EXCEPTIONVARIABLE+@
+           @%Check88.Skl%@
+           EXCEPTION-VALUE @!G_CHECK88PARA!@,
+@#ELSE_IF#@ @+_OBJ_ATR_EXCEPTIONVALUE+@
+           EXCEPTION-VALUE @+_OBJ_ATR_EXCEPTIONVALUE+@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FLAT+@
+           FLAT,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FONTVARIABLE+@
+           FONT IS @+_OBJ_ATR_FONTVARIABLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HELPIDVARIABLE+@
+           HELP-ID @+_OBJ_ATR_HELPIDVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HELPID+@
+           HELP-ID @+_OBJ_ATR_HELPID+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_IDVARIABLE+@
+           ID IS @+_OBJ_ATR_IDVARIABLE+@,
+		   @#DEF_SET#@ @!L_SYSID!@ @+_OBJ_ATR_IDVARIABLE+@
+@#ELSE_IF#@ @+_OBJ_ATR_ID+@
+           ID IS @+_OBJ_ATR_ID+@,
+		   @#DEF_SET#@ @!L_SYSID!@ @+_OBJ_ATR_ID+@
+@#ELSE#@
+		   @#DEF_SET#@ @!L_SYSID!@ @!G_SYSID!@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: NOT (@+_OBJ_ATR_OCCURS+@ EQUAL @"0"@ OR @+_OBJ_ATR_OCCURS+@ EQUAL @"1"@) #@
+           OCCURS @+_OBJ_ATR_OCCURS+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_KEYVARIABLE+@
+           KEY IS @+_OBJ_ATR_KEYVARIABLE+@,
+@#ELSE_IF#@ @#EXP: NOT (@+_OBJ_ATR_KEY+@ EQUAL @""@) #@
+           KEY IS "@+_OBJ_ATR_KEY+@",
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEIGHTINCELLS+@
+           HEIGHT-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_WIDTHINCELLS+@
+           WIDTH-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_LEFTTEXT+@
+           LEFT-TEXT,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_NOTAB+@
+           NO-TAB,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_NOTIFY+@
+           NOTIFY,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_POPUPMENU+@
+           POP-UP MENU IS @+_OBJ_ATR_POPUPMENU+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_SELFACT+@
+           SELF-ACT,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_TERMINATIONVARIABLE+@
+           @#DEF_SET#@ @!G_CHECK88PARA!@ @+_OBJ_ATR_TERMINATIONVARIABLE+@
+           @%Check88.Skl%@
+           TERMINATION-VALUE @!G_CHECK88PARA!@,
+@#ELSE_IF#@ @+_OBJ_ATR_TERMINATIONVALUE+@
+           TERMINATION-VALUE @+_OBJ_ATR_TERMINATIONVALUE+@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_TITLEVARIABLE+@
+           TITLE @+_OBJ_ATR_TITLEVARIABLE+@,
+@#ELSE_IF#@ @#EXP: NOT (@+_OBJ_ATR_TITLE+@ EQUAL @"\"\""@) #@
+           TITLE @+_OBJ_ATR_TITLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VALUEVARIABLE+@
+  @#DEF_IF#@ @+_SYS_CHECK_EXISTTOPHRASE+@
+           FROM @+_OBJ_ATR_VALUEVARIABLE+@,
+  @#ELSE#@
+           VALUE @+_OBJ_ATR_VALUEVARIABLE+@,
+  @#END_IF#@
+@#ELSE_IF#@ @+_OBJ_ATR_VALUE+@
+           VALUE 1,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEVARIABLE+@
+           VISIBLE @+_OBJ_ATR_VISIBLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"1"@ #@
+           VISIBLE 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"2"@ #@
+           VISIBLE 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ADDITIONALPROPERTIES+@
+    @<_SET_OBJ_ADDITIONALLINE>@
+    @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+       @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+    @#END_LOOP#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_EVT_AFTERPROCEDURE+@ AND @+_OBJ_EVT_AFTERPROCEDURETHRU+@ #@
+           AFTER PROCEDURE @+_OBJ_EVT_AFTERPROCEDURE+@ THRU @+_OBJ_EVT_AFTERPROCEDURETHRU+@, 
+@#ELSE_IF#@ @+_OBJ_EVT_AFTERPROCEDURE+@
+           AFTER PROCEDURE @+_OBJ_EVT_AFTERPROCEDURE+@, 
+@#END_IF#@
+@#DEF_IF#@ @!G_USERSCREEN!@
+ @#DEF_IF#@ @#EXP: NOT ( @+_OBJ_ATR_HINT+@ OR @+_OBJ_ATR_HINTVARIABLE+@ ) #@
+  @#DEF_IF#@ @#EXP: @+_OBJ_EVT_BEFOREPROCEDURE+@ AND @+_OBJ_EVT_BEFOREPROCEDURETHRU+@ #@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@ THRU @+_OBJ_EVT_BEFOREPROCEDURETHRU+@, 
+  @#ELSE_IF#@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@, 
+  @#END_IF#@
+ @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_EVT_BEFOREPROCEDURE+@ AND @+_OBJ_EVT_BEFOREPROCEDURETHRU+@ #@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@ THRU @+_OBJ_EVT_BEFOREPROCEDURETHRU+@, 
+  @#ELSE_IF#@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+           BEFORE PROCEDURE @+_OBJ_EVT_BEFOREPROCEDURE+@, 
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_EVT_PROCEDURE+@ AND @+_OBJ_EVT_THRUPROCEDURE+@ #@
+           EVENT PROCEDURE @+_OBJ_EVT_PROCEDURE+@ THRU @+_OBJ_EVT_THRUPROCEDURE+@,
+@#ELSE_IF#@ @#EXP: @+_OBJ_EVT_PROCEDURE+@ #@
+           EVENT PROCEDURE @+_OBJ_EVT_PROCEDURE+@,
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_SYS_EVENT+@
+           EVENT PROCEDURE @+_OBJ_ATR_NAME+@-Event@!G_MODE!@,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_EXPEVT_PROCEDURE+@ AND @+_OBJ_EXPEVT_THRUPROCEDURE+@ #@
+           EXCEPTION PROCEDURE @+_OBJ_EXPEVT_PROCEDURE+@ THRU @+_OBJ_EXPEVT_THRUPROCEDURE+@, 
+@#ELSE_IF#@ @+_OBJ_EXPEVT_PROCEDURE+@
+           EXCEPTION PROCEDURE @+_OBJ_EXPEVT_PROCEDURE+@, 
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_SYS_EXPEVENT+@
+           EXCEPTION PROCEDURE @+_OBJ_ATR_NAME+@-Exception@!G_MODE!@,
+   @#END_IF#@
+@#END_IF#@
+           .
+
+@#DEF_SETANSI#@ @"EVENT"@
+;
+; ======================= PRD -- EVENT PROCESS ======================
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_EVENT+@ OR @+_OBJ_EVT_PROCEDURE+@ #@
+   @#DEF_IF#@ @+_OBJ_EVT_PROCEDURE+@
+       @#DEF_SET#@ @!L_EVENT!@ @+_OBJ_EVT_PROCEDURE+@
+   @#ELSE#@
+       @#DEF_SET#@ @!L_EVENT!@ @"@+_OBJ_ATR_NAME+@-Event@!G_MODE!@"@
+   @#END_IF#@
+@$EVENT-PRO-@!L_EVENT!@$@
+   @#DEF_IF#@ @+_OBJ_CMD_CLICKED+@
+           WHEN Cmd-Clicked ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_CMD_CLICKED+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_CMD_GOTO+@
+           WHEN Cmd-Goto ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_CMD_GOTO+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_CMD_HELP+@
+           WHEN Cmd-Help ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_CMD_HELP+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_MSG_ENDMENU+@
+           WHEN Msg-End-Menu ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_ENDMENU+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_MSG_INITMENU+@
+           WHEN Msg-Init-Menu ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_INITMENU+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_MSG_MENUINPUT+@
+           WHEN Msg-Menu-Input ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_MENUINPUT+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_MSG_VALIDATE+@
+           WHEN Msg-Validate ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+              PERFORM @+_OBJ_MSG_VALIDATE+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_EVT_OTHER+@
+@$EVENT-OTHER-@!L_EVENT!@$@
+              WHEN @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+                 PERFORM @+_OBJ_EVT_OTHER+@
+   @#END_IF#@
+@#END_IF#@
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_EXPEVENT+@ OR @+_OBJ_EXPEVT_PROCEDURE+@ #@
+   @#DEF_IF#@ @+_OBJ_EXPEVT_PROCEDURE+@
+       @#DEF_SET#@ @!L_EXPEVENT!@ @+_OBJ_EXPEVT_PROCEDURE+@
+   @#ELSE#@
+       @#DEF_SET#@ @!L_EXPEVENT!@ @"@+_OBJ_ATR_NAME+@-Exception@!G_MODE!@"@
+   @#END_IF#@
+@$EXPEVENT-PRO-@!L_EXPEVENT!@$@
+   @#DEF_IF#@ @+_OBJ_EXPCMD_CLICKED+@
+              WHEN Cmd-Clicked ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+                 PERFORM @+_OBJ_EXPCMD_CLICKED+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_EXPCMD_GOTO+@
+              WHEN Cmd-Goto ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+                 PERFORM @+_OBJ_EXPCMD_GOTO+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_EXPCMD_HELP+@
+              WHEN Cmd-Help ALSO @!L_SYSID!@ ALSO
+                    @!G_SCREENHANDLE!@
+                 PERFORM @+_OBJ_EXPCMD_HELP+@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_EXPEVT_OTHER+@
+@$EXPEVENT-OTHER-@!L_EXPEVENT!@$@
+                 WHEN @!L_SYSID!@
+                    PERFORM @+_OBJ_EXPEVT_OTHER+@
+   @#END_IF#@
+@#END_IF#@
+@#DEF_SETANSI#@ @""@
+@#DEF_IF#@ @!G_USERSCREEN!@
+; ======================= BEFORE PROCEDURE ======================
+; collact in form's before procedure 
+@$BEFOREPROCEDURE$@
+@#DEF_SETANSI#@ @"EVENT"@
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_HINT+@ OR @+_OBJ_ATR_HINTVARIABLE+@ #@
+  @#DEF_IF#@ @#EXP: @+_OBJ_EVT_BEFOREPROCEDURE+@ AND @+_OBJ_EVT_BEFOREPROCEDURETHRU+@ #@
+           When @!L_SYSID!@ PERFORM @+_OBJ_EVT_BEFOREPROCEDURE+@ THRU @+_OBJ_EVT_BEFOREPROCEDURETHRU+@
+  @#ELSE_IF#@ @+_OBJ_EVT_BEFOREPROCEDURE+@
+           When @!L_SYSID!@ PERFORM @+_OBJ_EVT_BEFOREPROCEDURE+@
+  @#END_IF#@
+@#END_IF#@
+@#DEF_SETANSI#@ @""@
+;
+; ========================== PRD -- LINK TO =========================
+;
+@#DEF_IF#@ @+_OBJ_EVT_LINKTO+@
+   @%ExceptTermin.Skl%@
+@#END_IF#@
+;
+; ======================= PRD -- FONT PROCESS =======================
+;
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+   @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_OBJ_ATR_FONTVARIABLE+@
+   @%FontProcess.Skl%@
+@#END_IF#@
+;
+; ====================== PRD -- BITMAP PROCESS ======================
+;
+@#DEF_IF#@ @+_OBJ_ATR_BITMAP+@
+   @#DEF_SET#@ @!G_TMPBITMAP!@          @+_OBJ_ATR_BITMAP+@
+   @#DEF_SET#@ @!G_TMPBITMAPFILE!@      @+_OBJ_ATR_BITMAPFILE+@
+   @#DEF_SET#@ @!G_TMPBMPHANDLE!@       @+_OBJ_ATR_BITMAPHANDLE+@
+   @#DEF_SET#@ @!G_TMPBMPRELATIVEFILE!@ @+_OBJ_ATR_BITMAPRELATIVEFILE+@
+   @#DEF_SET#@ @!G_COPYRESOURCE!@		@+_OBJ_ATR_COPYRESOURCE+@
+   @%BmpProcess.Skl%@
+@#END_IF#@
+;
+;End of Bitmap Process
+;
+;
+; Hint property
+@#DEF_IF#@ @+_OBJ_ATR_HINTVARIABLE+@
+@$HINT$@
+           WHEN @!L_SYSID!@ MOVE @+_OBJ_ATR_HINTVARIABLE+@ to TOTEM-HINT-TEXT
+@#ELSE_IF#@ @+_OBJ_ATR_HINT+@
+@$HINT$@
+           WHEN @!L_SYSID!@ MOVE "@+_OBJ_ATR_HINT+@" to TOTEM-HINT-TEXT
+@#END_IF#@
+;
+; end of @!G_USERSCREEN!@
+@#END_IF#@

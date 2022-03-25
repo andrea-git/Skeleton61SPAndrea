@@ -1,0 +1,117 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Skeleton Syntax .  2001/11/12
+; ===================================================================
+;
+; === Find the Index of string ======================================
+; @#GET_INDEXCHAR#@ @!L_VAR!@ @"TARGET-STRING"@ @"BEGINNUM"@ @"LEN"@
+;
+; EX:
+;     @#DEF_SET#@ @!L_TARGET!@ @"ABCDEFG"@
+;     @#GET_INDEXCHAR#@ @!L_VALUE!@ @!L_TARGET!@ @"2"@ @"3"@
+; RESULT:
+;     @!L_VALUE!@ => "CDE"
+;
+;
+; === Find the Length of string =====================================
+; @#GET_VARLENGTH#@ @!L_VALUE!@ @"TARGET-STRING"@
+;
+; EX:
+;     @#DEF_SET#@ @!L_TARGET!@ @"ABCDEFG"@
+;     @#GET_VARLENGTH#@ @!L_VALUE!@ @!L_TARGET!@
+; RESULT:
+;     @!L_VALUE!@ => "7"
+;
+;
+; === IF enhancement GREATER LESS ===================================
+; @#DEF_IF#@ @#EXP: @!L_VAR1!@ GREATER @!L_VAR2!@ #@
+; @#DEF_IF#@ @#EXP: @!L_VAR1!@ LESS @!L_VAR2!@ #@
+;
+; EX:
+;     @#DEF_SET#@ @!L_VAR1!@ @"01"@
+;     @#DEF_SET#@ @!L_VAR2!@ @"10"@
+;     @#DEF_IF#@ @#EXP: @!L_VAR1!@ GREATER @!L_VAR2!@ #@
+;           * @!L_VAR1!@ > @!L_VAR2!@
+;     @#ELSE#@
+;           * @!L_VAR1!@ <= @!L_VAR2!@
+;     @#END_IF#@
+; RESULT:
+;           * @!L_VAR1!@ <= @!L_VAR2!@
+;
+;
+; === LOOP enhancement EXIT ========================================
+; @#EXIT_LOOP#@
+;
+; EX:
+;     @#DEF_SET#@ @!L_MYVARIABLE!@ @"Walter"@
+;     @#GET_VARLENGTH#@ @!L_LENGTH!@ @!L_MYVARIABLE!@
+;     @#DEF_SET#@ @!L_IDX!@ @"0"@
+;     @#DEF_LOOP#@ @!L_LENGTH!@
+;         @#DEF_ADD#@ @!L_IDX!@ @"1"@
+;         @#GET_INDEXCHAR#@ @!L_CHAR!@ @!L_MYVARIABLE!@ @!L_IDX!@ @"1"@
+;         @#DEF_IF#@ @#EXP: @!L_CHAR!@ EQUAL @"t"@ #@
+;             @#EXIT_LOOP#@
+;         @#END_IF#@
+;           * @!L_CHAR!@
+;     @#END_LOOP#@
+; RESULT:
+;           * W
+;           * a
+;           * l
+;
+;
+; === Working Storage Item ========================================
+; EX:
+;     @<_SET_PRG_WORKINGITEM>@
+;     @#DEF_LOOP#@ @+_ITEM_SYS_NO+@
+;     @<_FETCH_NEXT_ITEM>@
+;       @+_ITEM_SYS_LEVEL+@            |  item's level
+;       @+_ITEM_SYS_FIELDNAME+@        |  item's name
+;       @+_ITEM_SYS_PICTURE+@          |  item's picture
+;       @+_ITEM_SYS_USAGE+@            |  item's usage
+;       @+_ITEM_SYS_VALUE+@            |  item's value
+;       @+_ITEM_SYS_REDEFINES+@        |  item's redefines
+;       @+_ITEM_SYS_OCCURS+@           |  item's max occurs times
+;       @+_ITEM_SYS_OCCURSMIN+@        |  item's min occurs times
+;       @+_ITEM_SYS_OCCURSDEPEND+@     |  item's occurs depend on variable
+;       @+_ITEM_SYS_GLOBAL+@           |  is global item
+;       @+_ITEM_SYS_EXTERNAL+@         |  is external item
+;       @+_ITEM_SYS_SPECIALNAMES+@     |  item's special names
+;       @+_ITEM_SYS_SIGN+@             |  item's sign
+;       @+_ITEM_SYS_SYNCHRONIZE+@      |  item's synchronize
+;       @+_ITEM_SYS_JUSTIFIEDRIGHT+@   |  is justified right
+;       @+_ITEM_SYS_BLANKWHENZERO+@    |  is blank when zero
+;	    @<_SET_ITEM_COMMENTLINE>@
+;    	@#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+;	    @<_FETCH_NEXT_OBJ_LINEINDEX>@
+;    	*@+_OBJ_SYS_LINEINDEX+@
+;	    @#END_LOOP#@
+;     @#END_LOOP#@
+; RESULT:
+;       88            |  item's level
+;       Valid-STATUS-FD1        |  item's name
+;                 |  item's picture
+;                   |  item's usage
+;       "00" THRU "09"            |  item's value
+;               |  item's redefines
+;       0           |  item's max occurs times
+;       0        |  item's min occurs times
+;            |  item's occurs depend on variable
+;       0           |  is global item
+;       0         |  is external item
+;       [None]     |  item's special names
+;       [None]             |  item's sign
+;             |  item's synchronize
+;       0   |  is justified right
+;       0    |  is blank when zero
+;
+;
+; === Linkage Item ========================================
+; EX:
+;     @<_SET_PRG_LINKAGEITEM>@
+;
+;
+; === FDSL Item ========================================
+; EX:
+;     @<_SET_CURRENT_FDSLITEM>@
+;

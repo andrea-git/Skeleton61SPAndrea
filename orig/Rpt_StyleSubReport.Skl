@@ -1,0 +1,264 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Rpt.Occurs Control Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+;   1. We allow several SubReport Controls in one section, So the Naming
+;      of Paragraph should depend on the Control Name, not Report Name.
+;
+;   2. The unfixed-heigh control, like SubReport / Grid and Occurs, would
+;      affect the next control's position. So CodeGen would prepare the
+;      order of control by the high, or it would cause mess.
+;
+;   3. SubReport's limitations :
+;      1. We don't allow there's SubReport Control in the SubReport, to
+;         avoid recursive.
+;      2. SubReport can't locate at Page-Footer. The same as Grid/Occurs ..
+;      3. If you locate a SubReport in Page-Header, you should make sure
+;         that there's no other SubReport would across the page, or it
+;         will be a mass. (like SubReport in SubReport.)
+;
+; HTML :
+;
+; ===================================================================
+;
+@#DEF_IF#@ @#EXP: NOT @+_RPT_ATR_SUBREPORT+@ #@
+   @#SHOW_MSG#@ @"Error6"@
+@#END_IF#@
+;
+@$STYLE_CSS_SUBREPORT$@
+           PERFORM @+_RPT_ATR_SUBREPORT+@-HTML-CSS
+;
+@$SUBREPORT-@+_RPT_ATR_SUBREPORT+@$@
+           IF CALLBY-INDEX = @!G_SCREENINDEX!@
+               PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-DETAIL-BY-@+_RPT_ATR_NAME+@
+               EXIT PARAGRAPH
+           END-IF
+@$RPT-CTRL-PRINT$@
+      * RPT.SubReport : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.SubReport:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.SubReport"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+               MOVE CNT-INPAGEPIXELS   TO CNT-INPAGEPIXELS-TMP
+               MOVE CNT-PIXELS         TO CNT-PIXELS-TMP
+               MOVE TOTEM-PAGENUM-SYS  TO CNT-PAGENUM-TMP
+               MOVE CNT-INPAGEPIXELS   TO HIGH-OFFSET
+               COMPUTE HIGH-OFFSET-IN = CNT-INPAGEPIXELS + @+_RPT_SYS_TOPPIXELS+@ + SECTION-HIGH-STACK
+               COMPUTE HIGH-OFFSET    = CNT-PIXELS + @+_RPT_SYS_TOPPIXELS+@ + SECTION-HIGH-STACK
+               MOVE HIGH-OFFSET-IN TO CNT-INPAGEPIXELS
+               MOVE HIGH-OFFSET    TO CNT-PIXELS
+               PERFORM @!G_REPORTNAME!@-BACKUP-KEY
+               PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-Fld-To-Buf
+               PERFORM @+_RPT_ATR_NAME+@-DO-SUBREPORT
+               PERFORM @!G_REPORTNAME!@-RESTORE-KEY
+               IF TOTEM-PAGENUM-SYS > CNT-PAGENUM-TMP
+                   COMPUTE @!G_SECTIONNAME!@-HEIGHT = CNT-PIXELS - HIGH-OFFSET + @!G_SECTIONNAME!@-DEF-HEIGHT - @+_RPT_SYS_TOPPIXELS+@ - @+_RPT_SYS_HEIGHTPIXELS+@
+                   MOVE HIGH-OFFSET TO CNT-PIXELS
+                   COMPUTE CNT-INPAGEPIXELS = HIGH-OFFSET - (TOTEM-PAGENUM-SYS - 1) * PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT
+               ELSE
+                   COMPUTE @!G_SECTIONNAME!@-HEIGHT = CNT-PIXELS - HIGH-OFFSET + (@!G_SECTIONNAME!@-HEIGHT - @+_RPT_SYS_HEIGHTPIXELS+@)
+                   IF @!G_SECTIONNAME!@-HEIGHT < @!G_SECTIONNAME!@-DEF-HEIGHT
+                      MOVE @!G_SECTIONNAME!@-DEF-HEIGHT TO @!G_SECTIONNAME!@-HEIGHT
+                   END-IF
+                   MOVE CNT-INPAGEPIXELS-TMP TO CNT-INPAGEPIXELS
+                   MOVE CNT-PIXELS-TMP TO CNT-PIXELS
+               END-IF
+;               COMPUTE SECTION-HIGH-STACK = SECTION-HIGH-STACK + @!G_SECTIONNAME!@-HEIGHT - @!G_SECTIONNAME!@-DEF-HEIGHT
+               COMPUTE SECTION-HIGH-STACK = @!G_SECTIONNAME!@-HEIGHT - @!G_SECTIONNAME!@-DEF-HEIGHT
+               MOVE 0 TO HIGH-OFFSET
+               MOVE 0 TO HIGH-OFFSET-IN
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.SubReport:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.SubReport"@ @"AfterPrint"@
+      * <TOTEM:END>
+;
+;
+@$RPT-OTHER-PARAGRAPH$@
+       RPT-@+_RPT_ATR_NAME+@-SUBHEAD-SEC.
+           MOVE '      <!-- SubReport (@+_RPT_ATR_NAME+@) -->' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           IF TOTEM-PAGENUM-SYS > CNT-PAGENUM-TMP
+               COMPUTE TMP-PIXELS = SECTION-HIGH-STACK
+           ELSE
+               COMPUTE TMP-PIXELS = @+_RPT_SYS_TOPPIXELS+@ + SECTION-HIGH-STACK
+           END-IF
+           STRING '      <DIV STYLE="POSITION:ABSOLUTE; TOP:',
+                      TMP-PIXELS, 
+                      '; LEFT:@+_RPT_SYS_LEFTPIXELS+@;" >'
+               DELIMITED BY SIZE INTO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-SUBFOOT-SEC.
+           MOVE '      <!-- End(SubReport) --></DIV>' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+           .
+
+;
+;
+@#DEF_SET#@ @!G_CTRLSUBREPORT!@  @+_RPT_ATR_NAME+@
+@#DEF_SET#@ @!L_CURSECTIONTYPE!@ @+_RPT_SYS_SECTIONTYPE+@
+@#DEF_SET#@ @!L_PARENTHEADER!@   @""@
+@#DEF_SET#@ @!L_PARENTFOOTER!@   @""@
+;
+@<_PUSH_MEM>@
+@<_SET_CURRENTOBJ_REPORT>@
+    @<_SET_RPT_SECTION>@
+    @#DEF_LOOP#@ @+_RPT_SYS_SECTIONNO+@
+        @<_FETCH_NEXT_RPT_SECTION>@
+        @#DEF_IF#@ @#EXP: (@+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Page-Header"@) OR
+                          (@+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Page-Footer"@) #@
+            @#DEF_IF#@ @#EXP: @+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Page-Header"@ #@
+               @#DEF_SET#@ @!L_PARENTHEADER!@ @"YES"@
+            @#END_IF#@
+            @#DEF_IF#@ @#EXP: @+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Page-Footer"@ #@
+               @#DEF_SET#@ @!L_PARENTFOOTER!@ @"YES"@
+            @#END_IF#@
+            @#DEF_SET#@ @!G_DONTPAGEHEADER!@ @""@
+            @#DEF_IF#@ @#EXP: @!L_CURSECTIONTYPE!@ EQUAL @+_RPT_SYS_SECTIONTYPE+@ #@
+               @#DEF_SET#@ @!G_DONTPAGEHEADER!@ @"YES"@
+            @#END_IF#@
+            @%Rpt_SubReport.Skl%@
+        @#END_IF#@
+    @#END_LOOP#@
+@<_POP_MEM>@
+;
+@#DEF_SET#@ @!G_SUBRPTTOPPIX!@ @+_RPT_SYS_TOPPIXELS+@
+@<_PUSH_MEM>@
+@<_SET_RPT_SUBREPORT>@
+    @#DEF_SET#@ @!G_SUBRPTNAME!@ @+_RPT_ATR_NAME+@
+    @<_SET_RPT_SECTION>@
+    @#DEF_LOOP#@ @+_RPT_SYS_SECTIONNO+@
+        @<_FETCH_NEXT_RPT_SECTION>@
+        @#DEF_IF#@ @#EXP: NOT ((@+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Page-Header"@) OR
+                               (@+_RPT_SYS_SECTIONTYPE+@ EQUAL @"Page-Footer"@)) #@
+           @%Rpt_SubReport.Skl%@
+        @#END_IF#@
+        @#DEF_SET#@ @!G_SUBSECNAME!@ @+_RPT_ATR_NAME+@
+        @<_PUSH_MEM>@
+        @<_SET_RPT_CTRLCHILD>@
+        @#DEF_LOOP#@ @+_RPT_SYS_CTRLNO+@
+            @<_FETCH_NEXT_RPT_CTRL>@
+            @#DEF_IF#@ @#EXP: @+_RPT_SYS_TYPE+@ EQUAL @"RPT.Grid"@ #@
+                @%Rpt_SubRptGrid.Skl%@
+            @#END_IF#@
+            @#DEF_IF#@ @#EXP: @+_RPT_SYS_TYPE+@ EQUAL @"RPT.Occurs"@ #@
+                @%Rpt_SubRptOccurs.Skl%@
+            @#END_IF#@
+            @#DEF_IF#@ @#EXP: @+_RPT_SYS_TYPE+@ EQUAL @"RPT.Text-Box"@ #@
+                @%Rpt_SubRptTextBox.Skl%@
+            @#END_IF#@
+        @#END_LOOP#@
+        @<_POP_MEM>@
+    @#END_LOOP#@
+@<_POP_MEM>@
+;
+;
+@$RPT-OTHER-PARAGRAPH$@
+      * 
+       @+_RPT_ATR_NAME+@-DO-SUBREPORT.
+           PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-BEFORE-PRINT
+           MOVE 0 TO @+_RPT_ATR_SUBREPORT+@-CLEFTOFFSET
+           MOVE "@+_RPT_ATR_NAME+@" TO SUBRPT-DISPATCH-NAME
+           PERFORM RPT-@+_RPT_ATR_NAME+@-SUBHEAD-SEC
+      * The SubReport's Group should be reset.
+           PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-ALL-RESET
+           PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-MASTER-PRINT-LOOP
+           PERFORM @+_RPT_ATR_SUBREPORT+@-MULTI-SUMMARY
+           PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-GROUP-MUSTDSP
+           PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-GFOOT-BY-@+_RPT_ATR_NAME+@
+           PERFORM RPT-@+_RPT_ATR_NAME+@-SUBFOOT-SEC
+           PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-AFTER-PRINT
+           MOVE @!G_SCREENINDEX!@ TO TOTEM-Form-Index
+           .
+
+       RPT-@+_RPT_ATR_SUBREPORT+@-GFOOT-BY-@+_RPT_ATR_NAME+@.
+           @#GET_MEM#@   @"SUB-GROUP-FOOTER-PARAGRAPH"@
+           @#CLEAR_MEM#@ @"SUB-GROUP-FOOTER-PARAGRAPH"@
+           .
+
+       RPT-@+_RPT_ATR_SUBREPORT+@-GHEAD-BY-@+_RPT_ATR_NAME+@.
+           @#GET_MEM#@   @"SUB-GROUP-HEADER-PARAGRAPH"@
+           @#CLEAR_MEM#@ @"SUB-GROUP-HEADER-PARAGRAPH"@
+           .
+
+       RPT-@+_RPT_ATR_NAME+@-PHEAD-SUB.
+   @#DEF_IF#@ @!L_PARENTHEADER!@
+           @#GET_MEM#@   @"SUB-PHEADER-PARAGRAPH"@
+           @#CLEAR_MEM#@ @"SUB-PHEADER-PARAGRAPH"@
+   @#ELSE#@
+           MOVE 0 TO RPT-RETURN-VALUE 
+           COMPUTE TMP-PIXELS = CNT-INPAGEPIXELS + HIGH-OFFSET-IN
+           IF TMP-PIXELS <= 0
+;              PERFORM @!G_REPORTNAME!@-ZEBRA-COLOR-CHANGE
+              PERFORM @!G_SECTIONNAME!@-SEC-HEAD
+              MOVE CNT-PIXELS       TO HIGH-OFFSET
+              MOVE CNT-INPAGEPIXELS TO HIGH-OFFSET-IN
+              PERFORM RPT-@!G_CTRLSUBREPORT!@-SUBHEAD-SEC
+              MOVE 1 TO RPT-RETURN-VALUE
+           END-IF
+   @#END_IF#@
+           .
+
+       RPT-@!G_CTRLSUBREPORT!@-PFOOT-SUB.
+   @#DEF_IF#@ @!L_PARENTFOOTER!@
+           @#GET_MEM#@   @"SUB-PFOOTER-PARAGRAPH"@
+           @#CLEAR_MEM#@ @"SUB-PFOOTER-PARAGRAPH"@
+   @#ELSE#@
+           COMPUTE TMP-PIXELS = CNT-INPAGEPIXELS + CURRENT-HEIGHT
+           IF TMP-PIXELS > PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT
+;              COMPUTE CNT-PIXELS = TOTEM-PAGENUM-SYS * PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT
+              COMPUTE CNT-PIXELS = TOTEM-PAGENUM-SYS * PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT - @+_RPT_SYS_HEIGHTPIXELS+@
+              COMPUTE CNT-INPAGEPIXELS = PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT - @+_RPT_SYS_HEIGHTPIXELS+@
+              PERFORM RPT-@!G_CTRLSUBREPORT!@-SUBFOOT-SEC
+              IF TOTEM-PAGENUM-SYS > CNT-PAGENUM-TMP
+                 COMPUTE @!G_SECTIONNAME!@-HEIGHT = PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT
+              ELSE
+                 COMPUTE @!G_SECTIONNAME!@-HEIGHT = PAGE-HEIGHT OF @!G_REPORTNAME!@-HEIGHT - CNT-INPAGEPIXELS-TMP
+              END-IF
+              MOVE 0 TO HIGH-OFFSET-IN
+              MOVE 0 TO HIGH-OFFSET
+              PERFORM @!G_REPORTNAME!@-Page-BREAK-RTN
+           END-IF
+   @#END_IF#@
+           .
+
+       RPT-@!G_SUBRPTNAME!@-DETAIL-BY-@!G_CTRLSUBREPORT!@.
+	        @#GET_MEM#@ @"SUB-DETAIL-PARAGRAPH"@
+	        @#CLEAR_MEM#@ @"SUB-DETAIL-PARAGRAPH"@
+            PERFORM @!G_SUBRPTNAME!@-ZEBRA-COLOR-CHANGE
+           .
+
+;
+;
+@$CALLBY-ALL-SUBREPORT$@
+           IF CALLBY-INDEX = @!G_SCREENINDEX!@ AND SUBREPORT-DISPATCH = SUBRPT-MASTER
+		                   AND SUBRPT-DISPATCH-NAME = "@+_RPT_ATR_NAME+@"
+              PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-GFOOT-BY-@+_RPT_ATR_NAME+@
+              PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-GHEAD-BY-@+_RPT_ATR_NAME+@
+;
+; You can't promise the SubReport must contain Detail Section....
+; So we can't just perform it directly.
+;
+;             PERFORM RPT-@+_RPT_ATR_SUBREPORT+@-DETAIL-BY-@+_RPT_ATR_NAME+@
+;
+              PERFORM RPT-@!G_SUBRPTNAME!@-DETAIL-BY-@!G_CTRLSUBREPORT!@
+              EXIT PARAGRAPH
+           END-IF
+;
+;

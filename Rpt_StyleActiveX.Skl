@@ -1,0 +1,95 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Report Control Generation Rule.  2001/11/02
+;
+; Remarks:
+;   The same as RPT.Entry-Field.
+;
+; HTML :
+;        CSS
+;           .@+_RPT_ATR_NAME+@ 
+;            {
+;                POSITION:ABSOLUTE; TOP:999; LEFT:999; 
+;            }
+;
+;        BODY
+;            <DIV CLASS="@+_RPT_ATR_NAME+@"
+;				<object classid="clsid:8E27C92B-1264-101C-8A2F-040224009C02" id="Calendar1"WIDTH:999; HEIGHT:999;>
+;				  <param name="BackColor" value="-2147483633">
+;				  <param name="Year" value="2001">
+;				  <param name="Month" value="8">
+;				</object>
+;            </DIV> 
+;
+; ===================================================================
+;
+@#DEF_SET#@ @!L_CSS!@        @"   .@+_RPT_ATR_NAME+@ {"@
+;
+; ===================================================================
+;                   RPT -- CSS STYLE'S SETTING
+; ===================================================================
+;
+    @#DEF_APPEND#@ @!L_CSS!@ @"POSITION:ABSOLUTE; TOP:@+_RPT_SYS_TOPPIXELS+@; LEFT:@+_RPT_SYS_LEFTPIXELS+@; "@
+    @#DEF_APPEND#@ @!L_CSS!@ @"}"@
+@$STYLE_CSS_ALL$@
+      * @+_RPT_ATR_NAME+@'S CSS SETTING
+           MOVE '@!L_CSS!@' TO PRINT-BUF
+           WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+           INITIALIZE PRINT-BUF
+;
+; ====================== RPT -- REGULAR SETTING =====================
+;
+; <object classid="clsid:8E27C92B-1264-101C-8A2F-040224009C02" id="Calendar1">
+;	 <param name="BackColor" value="-2147483633">
+;
+; ===================================================================
+;
+@$RPT-CTRL-PRINT$@
+      * RPT.ActiveX : @+_RPT_ATR_NAME+@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.ActiveX:@+_RPT_ATR_NAME+@, BeforePrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.ActiveX"@ @"BeforePrint"@
+      * <TOTEM:END>
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           IF @+_RPT_ATR_VISIBLEVARIABLE+@ NOT = 0
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            IF (@+_RPT_ATR_PRINTCONDITION+@)
+   @#END_IF#@
+               MOVE '      <!-- ActiveX (@+_RPT_ATR_NAME+@) -->' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               MOVE '      <DIV CLASS="@+_RPT_ATR_NAME+@" >' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+               MOVE '        <object classid="clsid:@+_ACTIVEX_SYS_CLSID+@" id="@+_RPT_ATR_NAME+@" WIDTH=@+_RPT_SYS_WIDTHPIXELS+@ HEIGHT=@+_RPT_SYS_HEIGHTPIXELS+@ >' TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+@<_PUSH_MEM>@
+@<_SET_ACTIVEX_PARA>@
+  @#DEF_LOOP#@ @+_ACTIVEX_SYS_PARANO+@
+  @<_FETCH_NEXT_ACTIVEX_PARA>@
+       @#DEF_IF#@ @#EXP: @+_ACTIVEX_SYS_PARATYPE+@ EQUAL @"VARIABLE"@ #@
+               STRING '        <param name="@+_ACTIVEX_SYS_PARANAME+@" value="',
+                      @+_ACTIVEX_SYS_PARAVALUE+@, '">' 
+                   DELIMITED BY SIZE INTO PRINT-BUF
+       @#ELSE#@
+               MOVE '        <param name="@+_ACTIVEX_SYS_PARANAME+@" value="@+_ACTIVEX_SYS_PARAVALUE+@">' TO PRINT-BUF
+       @#END_IF#@
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+  @#END_LOOP#@
+@<_FREE_ACTIVEX_PARA>@
+@<_POP_MEM>@
+               MOVE "         </object></DIV>" TO PRINT-BUF
+               WRITE PRINTF-R FROM PRINT-BUF AFTER 001
+               INITIALIZE PRINT-BUF
+   @#DEF_IF#@ @+_RPT_ATR_PRINTCONDITION+@
+            END-IF
+   @#END_IF#@
+   @#DEF_IF#@ @+_RPT_ATR_VISIBLEVARIABLE+@
+           END-IF
+   @#END_IF#@
+      * <TOTEM:EPT. REPORT:@!G_REPORTNAME!@, RPT.ActiveX:@+_RPT_ATR_NAME+@, AfterPrint>
+           @#GET_ENTRYPOINT#@ @"REPORT"@ @"RPT.ActiveX"@ @"AfterPrint"@
+      * <TOTEM:END>
+;

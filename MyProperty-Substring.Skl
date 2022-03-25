@@ -1,0 +1,37 @@
+; ===================================================================
+; MyProperty-Substring
+; ===================================================================
+;
+@#DEF_SET#@ @!L_OFFSET!@ @!G_MYPROPERTY_SUBSTRING_IDX!@
+@#DEF_SET#@ @!L_INPUT!@  @!G_MYPROPERTY_SUBSTRING_INPUT!@
+@#DEF_SET#@ @!L_APPEND_ITEM!@ @"YES"@
+@#DEF_SET#@ @!L_ITEM_NAME!@ @""@
+@#DEF_SET#@ @!L_ITEM_VALUE!@ @""@
+@#DEF_LOOP#@ @!G_MYPROPERTY_ITEM_LENGHT!@
+      @#GET_INDEXCHAR#@ @!L_VALUE!@ @!L_INPUT!@ @!L_OFFSET!@ @"1"@
+      @#DEF_ADD#@ @!L_OFFSET!@ @"1"@
+      @#DEF_IF#@ @!L_APPEND_ITEM!@
+         @#DEF_CASE#@ @!L_VALUE!@
+         @#CASE#@ @""@
+            @#EXIT_LOOP#@
+         @#CASE#@ @"="@
+            @#DEF_SET#@ @!L_APPEND_ITEM!@ @""@
+         @#CASE_DEFAULT#@ @""@
+            @#DEF_APPEND#@ @!L_ITEM_NAME!@ @!L_VALUE!@
+         @#END_CASE#@
+      @#ELSE#@
+         @#DEF_IF#@ @#EXP: (@!L_VALUE!@ EQUAL @""@) OR (@!L_VALUE!@ EQUAL @";"@)
+                    #@
+            @#DEF_SET#@ @!G_MYPROPERTY_SUBSTRING_IDX!@ @!L_OFFSET!@
+            @#EXIT_LOOP#@
+         @#ELSE#@
+            @#DEF_APPEND#@ @!L_ITEM_VALUE!@ @!L_VALUE!@
+         @#END_IF#@
+      @#END_IF#@
+@#END_LOOP#@
+@#DEF_SET#@ @!G_MYPROPERTY_ITEM_NAME!@ @!L_ITEM_NAME!@
+@#DEF_SET#@ @!G_MYPROPERTY_ITEM_VALUE!@ @!L_ITEM_VALUE!@
+;
+; ===================================================================
+; MyProperty-Substring End
+; ===================================================================

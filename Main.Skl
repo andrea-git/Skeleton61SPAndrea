@@ -1,0 +1,189 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; Main Generation Rule.  2001/11/02
+;
+; Remarks:
+;
+;  Global Variables Listing :
+;
+;    1. @!G_SCREENNAME!@  : 
+;      To keep the current screen's Name.
+;
+;    2. @!G_SCREENINDEX!@ : 
+;      To keep the current screen's Sequential Num.
+;      (only used in 1-M Relations' -REF- paragraphs to identify
+;       which Screen's paragraph should be called)
+;
+;    3. @!G_FRAMEINDEX!@ :
+;      To solve 1-M Relation in DB_Frame, we should identify
+;      which Frame we were in. So it has the same function with
+;      TOTEM-Form-Index (@!G_SCREENINDEX!@)
+;
+;    4. @!G_EXISTACCEPTCONTROL!@ :
+;      To check if there's acceptable control in the form. It will
+;      affect the CodeGen of Form-Proc.
+;
+;    5. @!G_ITEMLEVEL!@ :
+;      To record the current control's level in Screen Section.
+;	   not use anymore from Totem6.01, replace by @+_OBJ_SYS_LEVEL+@
+;
+;    6. @!G_OPERATIONMODE!@ :
+;      To record the operation mode, it included Block / Interactive
+;      mode. The variable will affect the controls with Validation
+;      property like DB_Entry_Field / DB_ComboBox ...
+;
+;    7. @!G_FORMBASESET!@ :
+;      The Form's base DataSet Name.
+;
+;    8. @!G_ISMESSAGELINE!@ :
+;      There're two kind of Message Process : MessageBox & MessageLine.
+;      It will be set to YES if it's MessageLine.
+;
+;    9. @!G_EXISTOPENFILE!@ :
+;      If you use Open File Dialog in codegen, the flag should be 
+;      set ON to include definition file in MainPrg. (copy "OPENSAVE.DEF")
+;      Like Data.Image.
+;
+;    10. @!G_MODE!@
+;      Both Text & Graphical Mode in same Form Name is totally different
+;      two screen for us. Because we may have different DataSet, same 
+;      Ctrls with different FieldVariable ....
+;      So we add "-T" at the bottom of Text's all Paragraph.
+;
+;    11. @!G_ALLRADIOVARS!@
+;      We allow same Group Number of Data Radio Button in different
+;      Screen, so we should reset its value when we change to a new Screen.
+;
+;    12. @!G_SYSEXCEPTVAL!@
+;      After Exception Value 32000, it would be reserved by CodeGen.
+;      < used by DB_Image's button & Navigator >
+;
+;    13. @!G_MANUID!@
+;      After Value 4000, it would be reserved by CodeGen.
+;      < used by DB_MasterGrid, DB_MasterGridPage >
+;
+; ===================================================================
+;
+@#SHOW_MSG#@ @"Msg1"@
+@#DEF_SETANSI#@ @""@
+;
+; Prepare the Linkage Section.
+; PS. Because of StatusKey would be used in Form.Skl, so we should
+;     parse Linkage.Skl to figure out what's the name of Value 27 & 96
+;
+@%Linkage.Skl%@
+;
+; Prepare all Screens & Controls' data, including
+;    WORKING STORAGE / SCREEN SECTION / PROCEDURE DIVISION ...
+;
+; ===================================================================
+;  Program's variable
+;
+@#DEF_SET#@ @!G_EXISTEXTERNALVAR!@ @""@
+@#DEF_SET#@ @!G_EXISTDATASET!@ @""@
+@#DEF_SET#@ @!G_EXITSTATUS!@ @""@
+@#DEF_SET#@ @!G_EXISTKEYSTROK!@ @""@
+@#DEF_SET#@ @!G_EXISTACTIVEX!@ @""@
+@#DEF_SET#@ @!G_ALLACTIVEXS!@  @""@
+@#DEF_SET#@ @!G_INITFONT!@ @""@
+@#DEF_SET#@ @!G_EXISTCUSTOMCOLOR!@  @""@
+@#DEF_SET#@ @!G_SYSEXCEPTVAL!@ @"32000"@
+@#DEF_SET#@ @!G_SYSNAVIID!@ @"32700"@
+@#DEF_SET#@ @!G_MANUID!@ @"4000"@
+;
+@<_SET_OBJ_SCREEN>@
+@#DEF_SET#@ @!G_SCREENINDEX!@      @"0"@
+@#DEF_SET#@ @!G_EXISTOPENFILE!@    @"0"@
+@#DEF_SET#@ @!G_EXISTFDSL!@        @"0"@
+@#DEF_SET#@ @!G_EXISTNAVIBMPHDL!@  @""@
+@#DEF_SET#@ @!G_EXISTSPECIALNAME!@ @""@
+@#DEF_SET#@ @!G_EXISTDECLARETIVE!@ @""@
+@#DEF_SET#@ @!G_EXITUSERSCREEN!@   @""@
+@#DEF_LOOP#@ @+_PRG_SYS_SRNNO+@
+   @<_FETCH_NEXT_OBJ_SCREEN>@
+   @#DEF_SET#@ @!G_FRAMEINDEX!@ @"0"@
+   @#DEF_SET#@ @!G_SCREENNAME!@ @+_OBJ_ATR_NAME+@
+   @#DEF_SET#@ @!G_EXISTACCEPTCONTROL!@ @"0"@
+   @#DEF_SET#@ @!G_EXISTDATAFRAME!@     @"0"@
+   @#DEF_SET#@ @!G_OPERATIONMODE!@ @+_OBJ_ATR_OPERATIONMODE+@
+   @#DEF_SET#@ @!G_SCREENHANDLE!@ @+_OBJ_ATR_HANDLEVARIABLE+@
+   @#DEF_SET#@ @!G_MODEINEVENT!@ @"HAS-GRAPHICAL-INTERFACE"@
+   @#DEF_SET#@ @!G_EXISTNAVIGATOR!@  @""@
+   @#DEF_SET#@ @!G_EXISTMASTERGRID!@ @""@
+   @#DEF_SET#@ @!G_ALLRADIOVARS!@    @""@
+   @#DEF_SET#@ @!G_TEXTMODE!@ @+_OBJ_SYS_TEXTMODE+@
+   @#DEF_SET#@ @!G_UNIT!@ @+_OBJ_ATR_UNIT+@
+   @#DEF_SET#@ @!G_SYSID!@ @"1"@
+; **********************************************
+;   ID Logico - inizio
+; **********************************************
+   @#DEF_SET#@ @!G_ID_LOGICO!@ @"5000"@
+; **********************************************
+;   ID Logico - fine
+; **********************************************
+   @#DEF_SET#@ @!G_CHECKKEYFIELD!@ @""@
+   @#DEF_IF#@ @#EXP: (NOT @+_PRG_SYS_ISIMPORT+@) OR (NOT @+_OBJ_SYS_ISIMPORTSCREEN+@) #@
+      @#DEF_SET#@ @!G_USERSCREEN!@ @"YES"@
+   @#ELSE#@
+      @#DEF_SET#@ @!G_USERSCREEN!@ @""@
+   @#END_IF#@
+   @#DEF_IF#@ @+_OBJ_SYS_TEXTMODE+@
+      @#DEF_SET#@ @!G_MODEINEVENT!@ @"NOT HAS-GRAPHICAL-INTERFACE"@
+   @#END_IF#@
+   @#DEF_SET#@ @!G_MODE!@ @""@
+   @#DEF_IF#@ @+_OBJ_SYS_ISTEXTMODE+@
+      @#DEF_SET#@ @!G_MODE!@ @"-T"@
+   @#END_IF#@
+   @#DEF_SET#@ @!G_EXISTDBCONTROL!@ @""@
+   ;
+   ;  Get DataSet Name
+   @#DEF_SET#@ @!G_FORMBASESET!@ @+_OBJ_ATR_DATASET+@
+   @#DEF_IF#@ @#EXP: NOT @+_OBJ_ATR_DATASET+@ #@
+      @#SHOW_MSG#@ @"Warning1"@
+   @#ELSE#@
+
+   @#END_IF#@
+   ;
+   @#DEF_ADD#@ @!G_SCREENINDEX!@ @"1"@
+   ;
+   ;  G_ISMESSAGE
+   @#DEF_SET#@ @!G_ISMESSAGELINE!@ @""@
+   @#DEF_IF#@ @#EXP: @+_OBJ_ATR_MESSAGEPROCESS+@ EQUAL @"MESSAGELINE"@ #@
+      @#DEF_SET#@ @!G_ISMESSAGELINE!@ @"YES"@
+   @#END_IF#@
+   ;
+   @<_SET_OBJ_CTRLCHILD>@
+   @#DEF_LOOP#@ @+_OBJ_SYS_CTRLNO+@
+      @<_FETCH_NEXT_OBJ_CTRL>@
+;      @#DEF_SET#@ @!G_ITEMLEVEL!@ @"03"@
+      @%DispatchCtrl.Skl%@
+   @#END_LOOP#@
+   @<_SET_CURRENTOBJ_SCREEN>@
+   @%Form.Skl%@
+@#END_LOOP#@
+;
+; Prepare the Report Writer's data.
+;
+@%Rpt_MainPrg.Skl%@
+;
+; Prepare All Event Paragraph.
+;
+@%Event.Skl%@
+;
+; Prepare the Relations' data, -REF- paragraphs.
+;
+@%Relations.Skl%@
+;
+; Prepare the FDs' data, including
+;      File Open / Read / Write / Close .....
+;
+@%FdSl.Skl%@
+;
+; Prepare the Procedure's data.
+;
+@%Procedure.Skl%@
+;
+; Generate the output File.
+;
+@%MainOption.Skl%@
+;

@@ -1,0 +1,129 @@
+      * TOTEM.DEF - Some useful TOTEM definitions.
+      * Last modified: 2001/11/02.
+
+      * Copyright (c) 1999 - 2001 by CaseMaker, Inc.  Users of TOTEM
+      * may freely include this file in their COBOL source code.  
+
+       01  TOTEM-PRINT-VARIABLE.
+           05  TOTEM-PAGENUM              PIC 9(06) VALUE 0.
+           05  TOTEM-PAGENUM-SYS          PIC 9(06) VALUE 0.
+           05  TOTEM-SETUPPRINT           PIC 9     VALUE 0.
+           05  TOTEM-STATUS-CODE          PIC 9     VALUE 0.
+           05  TOTEM-PRINTER-NAME         PIC X(125).
+           05  TOTEM-PAPER-SIZE           PIC X(20).
+           05  TOTEM-PAPER-SIZEINT.
+               10  TOTEM-PAPER-WIDTH      PIC 9(6).
+               10  FILLER                 PIC X  VALUE IS "|".
+               10  TOTEM-PAPER-HEIGHT     PIC 9(6).
+               10  FILLER                 PIC X  VALUE IS " ".
+           05  TOTEM-PAPER-HEADER         PIC X(30).
+           05  TOTEM-PAPER-FOOTER         PIC X(30).
+           05  TOTEM-PAPER-ORIENTATION    PIC X(10).
+           05  TOTEM-PAPER-ORIENTATIONINT SIGNED-INT.
+               88  TOTEM-PAPER-PORTRAIT   VALUE 1.
+               88  TOTEM-PAPER-LANDSCAPE  VALUE 2.
+           05  TOTEM-PAPER-COPIES         SIGNED-INT VALUE 0.
+           05  TOTEM-PAPER-MARGIN.
+               10  TOTEM-MARGIN-LEFT      PIC 9(6).
+               10  FILLER                 PIC X  VALUE IS "|".
+               10  TOTEM-MARGIN-RIGHT     PIC 9(6).
+               10  FILLER                 PIC X  VALUE IS "|".
+               10  TOTEM-MARGIN-TOP       PIC 9(6).
+               10  FILLER                 PIC X  VALUE IS "|".
+               10  TOTEM-MARGIN-BOTTOM    PIC 9(6).
+               10  FILLER                 PIC X  VALUE IS " ".
+           05  TOTEMPRINTDLL-STATUS           SIGNED-INT.
+               88  TOTEMPRINTDLL-FAIL         VALUE 0.
+               88  TOTEMPRINTDLL-SUCCESS      VALUE 1.
+
+       01 TOTEM-SHOW-MSG.
+           05 TOTEM-MSG-CALL-FAIL-CODE     PIC X(2).
+           05 TOTEM-MSG-ID                 PIC X(3).
+           05 TOTEM-MSG-ERR-FILE           PIC X(30).
+
+      * for message display
+           78 TOTEM-MSG-LENGTH VALUE 256.
+           78 TOTEM-MSG-FULL-LENGTH VALUE 256.
+       01 TOTEM-MSG-BOX.
+      * Mb-Default-Icon, Mb-Warning-Icon, Mb-Error-Icon, 4:QUESTION
+           05 TOTEM-MSG-ICON-TYPE PIC 9 VALUE 1.
+      * Mb-Yes, Mb-No, Mb-Cancel
+           05 TOTEM-MSG-DEFAULT-BUTTON PIC 9 VALUE 1.
+      * Mb-Ok, Mb-Yes-No, Mb-Ok-Cancel, Mb-Yes-No-Cancel
+           05 TOTEM-MSG-BUTTON-TYPE PIC 9 VALUE 1.
+      * Mb-Yes, Mb-No, Mb-Cancel
+           05 TOTEM-MSG-RETURN-VALUE PIC 9 VALUE 1.
+           05 TOTEM-MSG-1 PIC X(TOTEM-MSG-LENGTH).
+           05 TOTEM-MSG-2 PIC X(TOTEM-MSG-LENGTH).
+           05 TOTEM-MSG-3 PIC X(TOTEM-MSG-LENGTH).
+           05 TOTEM-MSG-TEXT  PIC X(TOTEM-MSG-FULL-LENGTH).
+           05 TOTEM-HINT-TEXT PIC X(TOTEM-MSG-FULL-LENGTH).
+           05 TOTEM-MSG-TEXT-POINTER   PIC S9(4) COMP-1.
+           05 TOTEM-MSG-SIZE           PIC S9(4) COMP-1.
+           05 TOTEM-MSG-TITLE          PIC X(TOTEM-MSG-LENGTH).
+
+      * Temporary variable
+       77 TOTEM-IDX1                        PIC 9(6).
+       77 TOTEM-IDX2                        PIC 9(6).
+       77 TOTEM-IDX3                        PIC 9(6).
+       77 TOTEM-TMP-VAR                     PIC 9(6).
+
+      * Form & Frame Index
+       77 TOTEM-Form-Index                  PIC 9(2).
+       77 TOTEM-Frame-Index                 PIC 9(2).
+
+       77 TOTEM-QUIT-MODE-FLAG              PIC S9(4) VALUE 0.
+
+       01 TOTEM-USER-DEFINED-VARIABLE.
+           10 TOTEM-CHECK-STATUS     PIC X.
+              88 TOTEM-CHECK-OK      VALUE "Y" FALSE SPACE.
+
+      * For FD Read / Next / Previous status buffer.
+       01  TOTEM-ERR-BUF.
+           05 TOTEM-ERR-MSG.
+               10 TOTEM-ERR-MODE         PIC  X(20).
+               10 TOTEM-ERR-FILE         PIC  X(20).
+           05 TOTEM-ERR-STAT         PIC  X(02).
+
+      * For Occurs in Relation Mapping (Please don't modify it).
+       77 TOTEM-OCCURS-IDX           PIC  9(4) VALUE 1.
+
+      * For Occurs Phrase in Screen Control (Please don't modify it).
+       77 TOTEM-OCC1           PIC  9(4) VALUE 1.
+       77 TOTEM-OCC2           PIC  9(4) VALUE 1.
+      * For Navigator's Enable Flags
+      *
+      * VALUE : FIRST / PREVIOUS / NEXT / LAST / CURRENT / 
+      *                REFRESH / ADD / UPDATE / DELETE / CLEAR / EXIT
+      *
+       77 NAVI-ENABLE-ID       PIC  X(11) VALUE "11111111111".
+       77 NAVI-ENABLE-ID-I     PIC  X(11) VALUE "11111100011".
+       77 NAVI-ENABLE-ID-O     PIC  X(11) VALUE "00000111111".
+       77 NAVI-ENABLE-IR       PIC  X(11) VALUE "00001111111".
+       77 NAVI-ENABLE-IR-I     PIC  X(11) VALUE "00001100011".
+       77 NAVI-ENABLE-IR-O     PIC  X(11) VALUE "00000111111".
+       77 NAVI-ENABLE-IS-I     PIC  X(11) VALUE "10101000011".
+       77 NAVI-ENABLE-IS-O     PIC  X(11) VALUE "00000010011".
+       77 NAVI-ENABLE-RD       PIC  X(11) VALUE "11111111111".
+       77 NAVI-ENABLE-RD-I     PIC  X(11) VALUE "11111100011".
+       77 NAVI-ENABLE-RD-O     PIC  X(11) VALUE "00000111111".
+       77 NAVI-ENABLE-RR       PIC  X(11) VALUE "00001111111".
+       77 NAVI-ENABLE-RR-I     PIC  X(11) VALUE "00001100011".
+       77 NAVI-ENABLE-RR-O     PIC  X(11) VALUE "00000111111".
+       77 NAVI-ENABLE-RS-I     PIC  X(11) VALUE "10101000011".
+       77 NAVI-ENABLE-RS-O     PIC  X(11) VALUE "00000010011".
+       77 NAVI-ENABLE-SS-I     PIC  X(11) VALUE "10101000011".
+       77 NAVI-ENABLE-SS-O     PIC  X(11) VALUE "00000010011".
+
+      * FOR TRANSACTION
+       77 TOTEM-TRANSACTION-FLAG     PIC  X(60).
+
+      * FOR BITMAP PROCESS
+       77  TOTEM-BITMAPPATH      pic x(256).
+       77  TOTEM-FULLBITMAPPATH  pic x(256).
+
+      * FOR Date-Time Control
+       78 TOTEM-MSG-TERMINATE-THREAD value "tTERMINATE". 
+
+      * FOR Program status
+       77  TOTEM-PgmStatus               signed-long.

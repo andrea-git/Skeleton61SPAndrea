@@ -1,0 +1,520 @@
+; ===================================================================
+; CaseMaker TOTEM 6.1
+; DB_Frame Generation Rule.  2001/11/02
+;
+; Remarks: (the same as Frame.Skl)
+;
+;  Program
+;     |----Form
+;     |--   |----Controls ...
+;           |----Frames ...
+;           |--     |-----Controls ...
+;
+;  So at the end of this Skeleton, you should still get the child
+;  Controls of this Frame to generate their codes.
+;
+; ===================================================================
+;
+@#DEF_IF#@ @#EXP: NOT @+_OBJ_ATR_DATASET+@ #@
+   @#SHOW_MSG#@ @"Error3"@
+@#END_IF#@
+;
+; ================== SCR -- DB -- SCREEN  SECTION ===================
+;
+@$SCREEN$@
+      * DB_FRAME
+       @+_OBJ_SYS_LEVEL+@
+           @+_OBJ_ATR_NAME+@, 
+           Frame, 
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@ PIXELS,
+  @#ELSE#@
+           COL @+_OBJ_ATR_COLUMNINPIXELS+@ PIXELS, 
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_COLUMNVARIABLE+@
+           COL @+_OBJ_ATR_COLUMNVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_COLUMN+@
+           COL @+_OBJ_ATR_COLUMN+@, 
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CCOL+@
+           CCOL @+_OBJ_ATR_CCOL+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @!G_UNIT!@ EQUAL @"PIXELS"@ #@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@ PIXELS,
+  @#ELSE#@
+           LINE @+_OBJ_ATR_LINEINPIXELS+@ PIXELS,
+  @#END_IF#@
+@#ELSE#@
+  @#DEF_IF#@ @+_OBJ_ATR_LINEVARIABLE+@
+           LINE @+_OBJ_ATR_LINEVARIABLE+@,
+  @#ELSE_IF#@ @+_OBJ_ATR_LINE+@
+           LINE @+_OBJ_ATR_LINE+@,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CLINE+@
+           CLINE @+_OBJ_ATR_CLINE+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_LINESUNIT+@ EQUAL @"PIXELS"@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+           LINES @+_OBJ_ATR_LINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINESINPIXELS+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_LINESVARIABLE+@
+           LINES @+_OBJ_ATR_LINESVARIABLE+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_LINES+@
+           LINES @+_OBJ_ATR_LINES+@ @+_OBJ_SYS_LINESUNIT+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CLINES+@
+           CLINES @+_OBJ_ATR_CLINES+@ @+_OBJ_SYS_CLINESUNIT+@,
+@#END_IF#@
+@#DEF_IF#@ @#EXP: @+_OBJ_SYS_SIZEUNIT+@ EQUAL @"PIXELS"@ #@
+   @#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZEVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZEINPIXELS+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#END_IF#@
+@#ELSE#@
+   @#DEF_IF#@ @+_OBJ_ATR_SIZEVARIABLE+@
+           SIZE @+_OBJ_ATR_SIZEVARIABLE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#ELSE_IF#@ @+_OBJ_ATR_SIZE+@
+           SIZE @+_OBJ_ATR_SIZE+@ @+_OBJ_SYS_SIZEUNIT+@,
+   @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_CSIZE+@
+           CSIZE @+_OBJ_ATR_CSIZE+@ @+_OBJ_SYS_CSIZEUNIT+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_3DSTYLE+@
+           @+_OBJ_ATR_3DSTYLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ALTERNATE+@
+           ALTERNATE,
+@#END_IF#@
+@#DEF_CASE#@ @+_OBJ_ATR_DESTROYTYPE+@
+  @#CASE#@ @"PERMANENT"@
+           PERMANENT,
+  @#CASE#@ @"TEMPORARY"@
+           TEMPORARY,
+@#END_CASE#@
+@#DEF_IF#@ @+_OBJ_ATR_COLORVARIABLE+@
+           COLOR IS @+_OBJ_ATR_COLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_COLOR+@
+           COLOR IS @+_OBJ_ATR_COLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FILLCOLOR+@
+           FILL-COLOR   @+_OBJ_ATR_FILLCOLOR+@,
+           FILL-PERCENT @+_OBJ_SYS_FILLPERCENT+@,
+  @#DEF_IF#@ @+_OBJ_SYS_FILLCOLOR2+@
+           FILL-COLOR2  @+_OBJ_SYS_FILLCOLOR2+@,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FULLHEIGHT+@
+           FULL-HEIGHT,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FONTVARIABLE+@
+           FONT IS @+_OBJ_ATR_FONTVARIABLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HELPIDVARIABLE+@
+           HELP-ID @+_OBJ_ATR_HELPIDVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HELPID+@
+           HELP-ID @+_OBJ_ATR_HELPID+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HIGHCOLORVARIABLE+@
+           HIGH-COLOR @+_OBJ_ATR_HIGHCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_HIGHCOLOR+@
+           HIGH-COLOR @+_OBJ_ATR_HIGHCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_IDVARIABLE+@
+           ID IS @+_OBJ_ATR_IDVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_ID+@
+           ID IS @+_OBJ_ATR_ID+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_FORMATPICTURE+@
+           PIC @+_OBJ_ATR_FORMATPICTURE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_HEIGHTINCELLS+@
+           HEIGHT-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_WIDTHINCELLS+@
+           WIDTH-IN-CELLS,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_KEYVARIABLE+@
+           KEY IS @+_OBJ_ATR_KEYVARIABLE+@,
+@#ELSE_IF#@ @#EXP: NOT (@+_OBJ_ATR_KEY+@ EQUAL @""@) #@
+           KEY IS "@+_OBJ_ATR_KEY+@",
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_LOWCOLORVARIABLE+@
+           LOW-COLOR @+_OBJ_ATR_LOWCOLORVARIABLE+@,
+@#ELSE_IF#@ @+_OBJ_ATR_LOWCOLOR+@
+           LOW-COLOR @+_OBJ_ATR_LOWCOLOR+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_THICKNESS+@
+           @+_OBJ_ATR_THICKNESS+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_TITLEVARIABLE+@
+           TITLE @+_OBJ_ATR_TITLEVARIABLE+@,
+@#ELSE_IF#@ @#EXP: NOT (@+_OBJ_ATR_TITLE+@ EQUAL @"\"\""@) #@
+           TITLE @+_OBJ_ATR_TITLE+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_TITLEPOSITION+@
+           TITLE-POSITION @+_OBJ_ATR_TITLEPOSITION+@,
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_VISIBLEVARIABLE+@
+           VISIBLE @+_OBJ_ATR_VISIBLEVARIABLE+@,
+@#ELSE#@
+  @#DEF_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"1"@ #@
+           VISIBLE 1,
+  @#ELSE_IF#@ @#EXP: @+_OBJ_ATR_VISIBLE+@ EQUAL @"2"@ #@
+           VISIBLE 0,
+  @#END_IF#@
+@#END_IF#@
+@#DEF_IF#@ @+_OBJ_ATR_ADDITIONALPROPERTIES+@
+    @<_SET_OBJ_ADDITIONALLINE>@
+    @#DEF_LOOP#@ @+_OBJ_SYS_LINECOUNT+@
+       @<_FETCH_NEXT_OBJ_LINEINDEX>@
+           @+_OBJ_SYS_LINEINDEX+@
+    @#END_LOOP#@
+@#END_IF#@
+           .
+
+;
+; ======================= PRD -- FONT PROCESS =======================
+;
+@$FONT_PROCESS$@
+@#DEF_IF#@ @#EXP: @+_OBJ_ATR_FONTVARIABLE+@ AND @+_OBJ_SYS_ISFONTCREATE+@ #@
+   @#DEF_SET#@ @!G_FONTVARIABLE!@ @+_OBJ_ATR_FONTVARIABLE+@
+   @%FontProcess.Skl%@
+@#END_IF#@
+;
+; ======== Process the Controls which belong to this Frame. =========
+;
+@$BACKUP_DB_WORKING_BUFBODY$@
+    @#GET_MEM#@   @"DB_WORKING_BUFBODY"@
+    @#CLEAR_MEM#@ @"DB_WORKING_BUFBODY"@
+@$BACKUP_INIT_VALUE$@
+    @#GET_MEM#@   @"INIT_VALUE"@
+    @#CLEAR_MEM#@ @"INIT_VALUE"@
+@$BACKUP_FORM-CLEAR$@
+    @#GET_MEM#@   @"FORM-CLEAR"@
+    @#CLEAR_MEM#@ @"FORM-CLEAR"@
+@$BACKUP_FORM-BUFTOFLD$@
+    @#GET_MEM#@   @"FDSL_BUFTOFLD"@
+    @#CLEAR_MEM#@ @"FDSL_BUFTOFLD"@
+@$BACKUP_FORM-BUFTOFLD-MGRID$@
+    @#GET_MEM#@   @"FDSL_BUFTOFLD_MGRID"@
+    @#CLEAR_MEM#@ @"FDSL_BUFTOFLD_MGRID"@
+@$BACKUP_FORM-FLDTOBUF$@
+    @#GET_MEM#@   @"FDSL_FLDTOBUF"@
+    @#CLEAR_MEM#@ @"FDSL_FLDTOBUF"@
+@$BACKUP_FORM_RESET_ALLGRID"@
+    @#GET_MEM#@   @"FORM_RESET_ALLGRID"@
+    @#CLEAR_MEM#@ @"FORM_RESET_ALLGRID"@
+@$BACKUP_NAVIGATOR-FOR-MASTERGRID$@
+    @#GET_MEM#@   @"NAVIGATOR-FOR-MASTERGRID"@
+    @#CLEAR_MEM#@ @"NAVIGATOR-FOR-MASTERGRID"@
+@$BACKUP_MASTERGRID-CALLBY-CHANGEVERIFY$@
+    @#GET_MEM#@   @"MASTERGRID-CALLBY-CHANGEVERIFY"@
+    @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-CHANGEVERIFY"@
+@$BACKUP_MASTERGRID-CALLBY-FIRST$@
+    @#GET_MEM#@   @"MASTERGRID-CALLBY-FIRST"@
+    @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-FIRST"@
+@$BACKUP_MASTERGRID-CALLBY-PREVIOUS$@
+    @#GET_MEM#@   @"MASTERGRID-CALLBY-PREVIOUS"@
+    @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-PREVIOUS"@
+@$BACKUP_MASTERGRID-CALLBY-NEXT$@
+    @#GET_MEM#@   @"MASTERGRID-CALLBY-NEXT"@
+    @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-NEXT"@
+@$BACKUP_MASTERGRID-CALLBY-LAST$@
+    @#GET_MEM#@   @"MASTERGRID-CALLBY-LAST"@
+    @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-LAST"@
+@$BACKUP_MASTERGRID-CALLBY-CURR$@
+    @#GET_MEM#@   @"MASTERGRID-CALLBY-CURR"@
+    @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-CURR"@
+@$BACKUP_MASTERGRID-CALLBY-ADD$@
+    @#GET_MEM#@   @"MASTERGRID-CALLBY-ADD"@
+    @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-ADD"@
+@$BACKUP_MASTERGRID-CALLBY-UPDATE$@
+    @#GET_MEM#@   @"MASTERGRID-CALLBY-UPDATE"@
+    @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-UPDATE"@
+@$BACKUP_MASTERGRID-CALLBY-UPDATE-INIT$@
+    @#GET_MEM#@   @"MASTERGRID-CALLBY-UPDATE-INIT"@
+    @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-UPDATE-INIT"@
+@$BACKUP_MASTERGRID-CALLBY-DELETE$@
+    @#GET_MEM#@   @"MASTERGRID-CALLBY-DELETE"@
+    @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-DELETE"@
+@$BACKUP_MASTERGRID-CALLBY-DELETE-INIT$@
+    @#GET_MEM#@   @"MASTERGRID-CALLBY-DELETE-INIT"@
+    @#CLEAR_MEM#@ @"MASTERGRID-CALLBY-DELETE-INIT"@
+@$BACKUP_PRE_INIT_DATA$@
+    @#GET_MEM#@   @"PRE_INIT_DATA"@
+    @#CLEAR_MEM#@ @"PRE_INIT_DATA"@
+@$BACKUP_INIT_DATA$@
+    @#GET_MEM#@   @"INIT_DATA"@
+    @#CLEAR_MEM#@ @"INIT_DATA"@
+@$BACKUP_VERIFY-ENABLECONDITION$@
+    @#GET_MEM#@   @"VERIFY-ENABLECONDITION"@
+    @#CLEAR_MEM#@ @"VERIFY-ENABLECONDITION"@
+;
+@#DEF_ADD#@ @!G_FRAMEINDEX!@      @"1"@
+@#DEF_SET#@ @!G_EXISTDATAFRAME!@  @"YES"@
+@#DEF_SET#@ @!G_FRAMENAME!@       @+_OBJ_ATR_NAME+@
+@#DEF_SET#@ @!L_TMPDATASET!@      @!G_FORMBASESET!@
+@#DEF_SET#@ @!G_FORMBASESET!@     @+_OBJ_ATR_DATASET+@
+@#DEF_SET#@ @!L_TMPRADIOVARS!@    @!G_ALLRADIOVARS!@
+@#DEF_SET#@ @!L_EXISTMGRID!@      @!G_EXISTMASTERGRID!@
+@#DEF_SET#@ @!G_EXISTMASTERGRID!@ @""@
+@<_PUSH_MEM>@
+@<_SET_OBJ_CTRLCHILD>@
+   @#DEF_LOOP#@ @+_OBJ_SYS_CTRLNO+@
+      @<_FETCH_NEXT_OBJ_CTRL>@
+      @%DispatchCtrl.Skl%@
+   @#END_LOOP#@
+@<_POP_MEM>@
+;
+@#DEF_IF#@ @+_OBJ_ATR_DATASET+@
+; ===================================================================
+;   You should Initialize all DataSet Files which was used by Form.
+; ===================================================================
+@$FRM_INI_RECORD$@
+      * DB_FRAME : @+_OBJ_ATR_NAME+@
+           PERFORM @+_OBJ_ATR_DATASET+@-INIT-RECORD
+;
+; ===================================================================
+;
+   @#DEF_SET#@ @!L_FORMDATASET!@ @+_DATASET_SYS_NAME+@
+   @<_PUSH_MEM>@
+      @<_SET_FRMDATASET_FDSLCHILD>@
+      @#DEF_LOOP#@ @+_DATASET_SYS_FDSLNO+@
+         @<_FETCH_NEXT_DATASET_FDSL>@
+         @<_SET_FDSL_RELATION>@
+         @#DEF_LOOP#@ @+_FDSL_SYS_RELATIONNO+@
+            @<_FETCH_NEXT_FDSL_RELATION>@
+            @#DEF_IF#@ @#EXP: @+_RELATION_SYS_TYPE+@ EQUAL @"1-M"@ #@
+               @%Frame_Relation.Skl%@
+            @#END_IF#@
+         @#END_LOOP#@
+      @#END_LOOP#@
+      @%Prg_FormDisp.skl%@
+   @<_POP_MEM>@
+@#END_IF#@
+;
+;
+; ======================== DATA.FRAME's I/U/D =======================
+;
+@#DEF_IF#@ @+_OBJ_ATR_DATASET+@
+   @%Form_IUD.Skl%@
+@#END_IF#@
+;
+@#DEF_SET#@ @!G_FRAMENAME!@       @""@
+@#DEF_SET#@ @!G_FORMBASESET!@     @!L_TMPDATASET!@
+@#DEF_SET#@ @!G_ALLRADIOVARS!@    @!L_TMPRADIOVARS!@
+@#DEF_SET#@ @!G_EXISTMASTERGRID!@ @!L_EXISTMGRID!@
+;
+;
+@#DEF_SETMEM#@ @!L_EXISTDATA!@ @"DB_WORKING_BUFBODY"@
+@#DEF_IF#@ @!L_EXISTDATA!@
+@#DEF_SET#@ @!L_LEVEL!@ @"@+_OBJ_SYS_LEVEL+@"@
+@#DEF_SUB#@ @!L_LEVEL!@ @"01"@
+@#DEF_FORMAT#@ @!L_LEVEL!@ @"2"@
+@$FRAME_WORKING_BUFBODY$@
+      * @+_OBJ_ATR_NAME+@
+           @!L_LEVEL!@ @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@.
+              @#GET_MEM#@   @"DB_WORKING_BUFBODY"@
+              @#CLEAR_MEM#@ @"DB_WORKING_BUFBODY"@
+@#END_IF#@
+;
+; =================== DATA.FRAME's PROCEDURE =================
+;
+@$FDSL_BUFTOFLD_FRAME$@
+           PERFORM @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@
+;
+@$FDSL_FLDTOBUF_FRAME$@
+           PERFORM @+_OBJ_ATR_NAME+@-Fld-To-Buf@!G_MODE!@
+@$VERIFY-ENABLECONDITION_FRAME$@
+	   @#DEF_SET#@ @!L_DOIT!@ @""@
+	   @#DEF_SETMEM#@ @!L_DOIT!@ @"VERIFY-ENABLECONDITION"@
+	   @#DEF_IF#@ @!L_DOIT!@
+           PERFORM @+_OBJ_ATR_NAME+@-VERIFY-ENABLECONDITION@!G_MODE!@
+       @#END_IF#@
+;
+@$FRAME_PROCEDURE$@
+       @+_OBJ_ATR_NAME+@-Buf-To-Fld@!G_MODE!@.
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Frame:@+_OBJ_ATR_NAME+@, BeforeBufToFld>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Frame"@ @"BeforeBufToFld"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"FDSL_BUFTOFLD"@
+           @#CLEAR_MEM#@ @"FDSL_BUFTOFLD"@
+           @#GET_MEM#@   @"FDSL_BUFTOFLD_MGRID"@
+           @#CLEAR_MEM#@ @"FDSL_BUFTOFLD_MGRID"@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Frame:@+_OBJ_ATR_NAME+@, AfterBufToFld>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Frame"@ @"AfterBufToFld"@
+      * <TOTEM:END>
+           .
+		    
+       @+_OBJ_ATR_NAME+@-Fld-To-Buf@!G_MODE!@.
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Frame:@+_OBJ_ATR_NAME+@, BeforeFldToBuf>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Frame"@ @"BeforeFldToBuf"@
+      * <TOTEM:END>
+           @#GET_MEM#@   @"FDSL_FLDTOBUF"@
+           @#CLEAR_MEM#@ @"FDSL_FLDTOBUF"@
+      * <TOTEM:EPT. FORM:@!G_SCREENNAME!@, Data.Frame:@+_OBJ_ATR_NAME+@, AfterFldToBuf>
+           @#GET_ENTRYPOINT#@ @"FORM"@ @"Data.Frame"@ @"AfterFldToBuf"@
+      * <TOTEM:END>
+           .
+
+       @+_OBJ_ATR_NAME+@-ALLGRID-RESET@!G_MODE!@.
+           @#GET_MEM#@   @"FORM_RESET_ALLGRID"@
+           @#CLEAR_MEM#@ @"FORM_RESET_ALLGRID"@
+           .
+
+       @+_OBJ_ATR_NAME+@-CLEAR@!G_MODE!@.
+           PERFORM @+_OBJ_ATR_NAME+@-INIT-VALUE@!G_MODE!@
+           @#GET_MEM#@   @"FORM-CLEAR"@
+           PERFORM @!G_SCREENNAME!@-DISPLAY@!G_MODE!@
+           .
+
+	   @#DEF_SET#@ @!L_DOIT!@ @""@
+	   @#DEF_SETMEM#@ @!L_DOIT!@ @"VERIFY-ENABLECONDITION"@
+	   @#DEF_IF#@ @!L_DOIT!@
+       @+_OBJ_ATR_NAME+@-VERIFY-ENABLECONDITION@!G_MODE!@.
+           @#GET_MEM#@   @"VERIFY-ENABLECONDITION"@
+           @#CLEAR_MEM#@ @"VERIFY-ENABLECONDITION"@
+           .
+
+       @#END_IF#@
+       @+_OBJ_ATR_NAME+@-INIT-DATA@!G_MODE!@.
+           @#GET_MEM#@   @"PRE_INIT_DATA"@
+           @#CLEAR_MEM#@ @"PRE_INIT_DATA"@
+           @#GET_MEM#@   @"INIT_DATA"@
+           @#CLEAR_MEM#@ @"INIT_DATA"@
+           .
+
+       @+_OBJ_ATR_NAME+@-Init-Value@!G_MODE!@.
+    @#DEF_IF#@ @!L_EXISTDATA!@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           PERFORM VARYING TOTEM-OCC1 FROM 1 BY 1 UNTIL TOTEM-OCC1 > @+_OBJ_SYS_OCCURSTIME1+@
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           PERFORM VARYING TOTEM-OCC2 FROM 1 BY 1 UNTIL TOTEM-OCC2 > @+_OBJ_SYS_OCCURSTIME2+@
+        @#END_IF#@
+          @#DEF_SETPARA#@ @"1"@ @"TOTEM-OCC1"@
+          @#DEF_SETPARA#@ @"2"@ @"TOTEM-OCC2"@
+              INITIALIZE @+_OBJ_ATR_NAME+@-BUF@!G_MODE!@@+_OBJ_SYS_OCCURSSUBSCRIPT+@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME1+@
+           END-PERFORM
+        @#END_IF#@
+        @#DEF_IF#@ @+_OBJ_SYS_OCCURSTIME2+@
+           END-PERFORM
+        @#END_IF#@           
+    @#END_IF#@
+           @#GET_MEM#@   @"INIT_VALUE"@
+           .
+
+@$INIT_DATA_FRAME$@
+      * DB_FRAME : @+_OBJ_ATR_NAME+@
+           PERFORM @+_OBJ_ATR_NAME+@-INIT-DATA@!G_MODE!@
+;
+; ===================================================================
+;
+@$DB_WORKING_BUFBODY$@
+    @#GET_MEM#@   @"BACKUP_DB_WORKING_BUFBODY"@
+    @#CLEAR_MEM#@ @"BACKUP_DB_WORKING_BUFBODY"@
+    @#GET_MEM#@   @"FRAME_WORKING_BUFBODY"@
+    @#CLEAR_MEM#@ @"FRAME_WORKING_BUFBODY"@
+;
+@$BACKUP_INIT_VALUE$@
+    @#GET_MEM#@   @"INIT_VALUE"@
+    @#CLEAR_MEM#@ @"INIT_VALUE"@
+@$INIT_VALUE$@
+    @#GET_MEM#@   @"BACKUP_INIT_VALUE"@
+    @#CLEAR_MEM#@ @"BACKUP_INIT_VALUE"@
+;
+@$BACKUP_FORM-CLEAR$@
+    @#GET_MEM#@   @"FORM-CLEAR"@
+    @#CLEAR_MEM#@ @"FORM-CLEAR"@
+;
+@$FORM-CLEAR$@
+    @#GET_MEM#@   @"BACKUP_FORM-CLEAR"@
+    @#CLEAR_MEM#@ @"BACKUP_FORM-CLEAR"@
+;
+@$FDSL_BUFTOFLD$@
+    @#GET_MEM#@   @"BACKUP_FORM-BUFTOFLD"@
+    @#CLEAR_MEM#@ @"BACKUP_FORM-BUFTOFLD"@
+;
+@$FDSL_BUFTOFLD_MGRID$@
+    @#GET_MEM#@   @"BACKUP_FORM-BUFTOFLD-MGRID"@
+    @#CLEAR_MEM#@ @"BACKUP_FORM-BUFTOFLD-MGRID"@
+;
+@$FDSL_FLDTOBUF$@
+    @#GET_MEM#@   @"BACKUP_FORM-FLDTOBUF"@
+    @#CLEAR_MEM#@ @"BACKUP_FORM-FLDTOBUF"@
+;
+@$FORM_RESET_ALLGRID"@
+    @#GET_MEM#@   @"BACKUP_FORM_RESET_ALLGRID"@
+    @#CLEAR_MEM#@ @"BACKUP_FORM_RESET_ALLGRID"@
+;
+@$NAVIGATOR-FOR-MASTERGRID$@
+    @#GET_MEM#@   @"BACKUP_NAVIGATOR-FOR-MASTERGRID"@
+    @#CLEAR_MEM#@ @"BACKUP_NAVIGATOR-FOR-MASTERGRID"@
+;
+@$MASTERGRID-CALLBY-CHANGEVERIFY$@
+    @#GET_MEM#@   @"BACKUP_MASTERGRID-CALLBY-CHANGEVERIFY"@
+    @#CLEAR_MEM#@ @"BACKUP_MASTERGRID-CALLBY-CHANGEVERIFY"@
+;
+@$MASTERGRID-CALLBY-FIRST$@
+    @#GET_MEM#@   @"BACKUP_MASTERGRID-CALLBY-FIRST"@
+    @#CLEAR_MEM#@ @"BACKUP_MASTERGRID-CALLBY-FIRST"@
+;
+@$MASTERGRID-CALLBY-PREVIOUS$@
+    @#GET_MEM#@   @"BACKUP_MASTERGRID-CALLBY-PREVIOUS"@
+    @#CLEAR_MEM#@ @"BACKUP_MASTERGRID-CALLBY-PREVIOUS"@
+;
+@$MASTERGRID-CALLBY-NEXT$@
+    @#GET_MEM#@   @"BACKUP_MASTERGRID-CALLBY-NEXT"@
+    @#CLEAR_MEM#@ @"BACKUP_MASTERGRID-CALLBY-NEXT"@
+;
+@$MASTERGRID-CALLBY-LAST$@
+    @#GET_MEM#@   @"BACKUP_MASTERGRID-CALLBY-LAST"@
+    @#CLEAR_MEM#@ @"BACKUP_MASTERGRID-CALLBY-LAST"@
+;
+@$MASTERGRID-CALLBY-CURR$@
+    @#GET_MEM#@   @"BACKUP_MASTERGRID-CALLBY-CURR"@
+    @#CLEAR_MEM#@ @"BACKUP_MASTERGRID-CALLBY-CURR"@
+;
+@$MASTERGRID-CALLBY-ADD$@
+    @#GET_MEM#@   @"BACKUP_MASTERGRID-CALLBY-ADD"@
+    @#CLEAR_MEM#@ @"BACKUP_MASTERGRID-CALLBY-ADD"@
+;
+@$MASTERGRID-CALLBY-UPDATE$@
+    @#GET_MEM#@   @"BACKUP_MASTERGRID-CALLBY-UPDATE"@
+    @#CLEAR_MEM#@ @"BACKUP_MASTERGRID-CALLBY-UPDATE"@
+;
+@$MASTERGRID-CALLBY-UPDATE-INIT$@
+    @#GET_MEM#@   @"BACKUP_MASTERGRID-CALLBY-UPDATE-INIT"@
+    @#CLEAR_MEM#@ @"BACKUP_MASTERGRID-CALLBY-UPDATE-INIT"@
+;
+@$MASTERGRID-CALLBY-DELETE$@
+    @#GET_MEM#@   @"BACKUP_MASTERGRID-CALLBY-DELETE"@
+    @#CLEAR_MEM#@ @"BACKUP_MASTERGRID-CALLBY-DELETE"@
+;
+@$MASTERGRID-CALLBY-DELETE-INIT$@
+    @#GET_MEM#@   @"BACKUP_MASTERGRID-CALLBY-DELETE-INIT"@
+    @#CLEAR_MEM#@ @"BACKUP_MASTERGRID-CALLBY-DELETE-INIT"@
+;
+@$PRE_INIT_DATA$@
+    @#GET_MEM#@   @"BACKUP_PRE_INIT_DATA"@
+    @#CLEAR_MEM#@ @"BACKUP_PRE_INIT_DATA"@
+@$INIT_DATA$@
+    @#GET_MEM#@   @"BACKUP_INIT_DATA"@
+    @#CLEAR_MEM#@ @"BACKUP_INIT_DATA"@
+@$VERIFY-ENABLECONDITION$@
+    @#GET_MEM#@   @"BACKUP_VERIFY-ENABLECONDITION"@
+    @#CLEAR_MEM#@ @"BACKUP_VERIFY-ENABLECONDITION"@
+;
+;
